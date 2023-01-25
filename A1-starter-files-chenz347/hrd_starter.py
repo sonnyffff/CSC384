@@ -1,7 +1,9 @@
+import copy
 from heapq import heappush, heappop
 import time
 import argparse
 import sys
+from typing import Optional
 
 # ====================================================================================
 
@@ -14,7 +16,7 @@ class Piece:
     This represents a piece on the Hua Rong Dao puzzle.
     """
 
-    def __init__(self, is_goal, is_single, coord_x, coord_y, orientation):
+    def __init__(self, is_goal, is_single, coord_x, coord_y, orientation: Optional[str]):
         """
         :param is_goal: True if the piece is the goal piece and False otherwise.
         :type is_goal: bool
@@ -45,7 +47,7 @@ class Board:
     Board class for setting up the playing board.
     """
 
-    def __init__(self, pieces):
+    def __init__(self, pieces: list[Piece]):
         """
         :param pieces: The list of Pieces
         :type pieces: List[Piece]
@@ -61,6 +63,11 @@ class Board:
         # A grid contains the symbol for representing the pieces on the board.
         self.grid = []
         self.__construct_grid()
+
+    def __eq__(self, other):
+        if self.grid == other.grid:
+            return True
+        return False
 
     def __construct_grid(self):
         """
@@ -215,41 +222,31 @@ def movable_pieces(inboard: Board, empty: list[list]):
     """ Return a mapping of movable pieces to its movable directions.
 
     """
-    movable = {}
-    empty_coord1_x,  empty_coord1_y = empty[0][0], empty[0][1]
+    successor = {}
+    empty_coord1_x, empty_coord1_y = empty[0][0], empty[0][1]
     empty_coord2_x, empty_coord2_y = empty[1][0], empty[1][1]
 
-    spot1_0 = [empty_coord1_x - 1,  empty_coord1_y - 1]
-    spot1_1 = [empty_coord1_x, empty_coord1_y - 1]
-    spot1_2 = [empty_coord1_x + 1, empty_coord1_y - 1]
-    spot1_3 = [empty_coord1_x - 1, empty_coord1_y]
-    spot1_4 = [empty_coord1_x, empty_coord1_y]
-    spot1_5 = [empty_coord1_x + 1, empty_coord1_y]
-    spot1_6 = [empty_coord1_x - 1, empty_coord1_y + 1]
-    spot1_7 = [empty_coord1_x, empty_coord1_y + 1]
-    spot1_8 = [empty_coord1_x + 1, empty_coord1_y + 1]
+    spot1_0 = [empty_coord1_x, empty_coord1_y - 1]
+    spot1_1 = [empty_coord1_x - 1, empty_coord1_y]
+    spot1_2 = [empty_coord1_x + 1, empty_coord1_y]
+    spot1_3 = [empty_coord1_x, empty_coord1_y + 1]
 
-    spot2_0 = [empty_coord2_x - 1, empty_coord2_y - 1]
-    spot2_1 = [empty_coord2_x, empty_coord2_y - 1]
-    spot2_2 = [empty_coord2_x + 1, empty_coord2_y - 1]
-    spot2_3 = [empty_coord2_x - 1, empty_coord2_y]
-    spot2_4 = [empty_coord2_x, empty_coord2_y]
-    spot2_5 = [empty_coord2_x + 1, empty_coord2_y]
-    spot2_6 = [empty_coord2_x - 1, empty_coord2_y + 1]
-    spot2_7 = [empty_coord2_x, empty_coord2_y + 1]
-    spot2_8 = [empty_coord2_x + 1, empty_coord2_y + 1]
-    spots = [spot1_0, spot1_0,  spot1_0,  spot1_0,  spot1_0, spot1_0,  spot1_0, spot1_0]
-    if check_spot_valid(spot2_8):
-        #do somthing
+    spot2_0 = [empty_coord2_x, empty_coord2_y - 1]
+    spot2_1 = [empty_coord2_x - 1, empty_coord2_y]
+    spot2_2 = [empty_coord2_x + 1, empty_coord2_y]
+    spot2_3 = [empty_coord2_x, empty_coord2_y + 1]
 
-
+    if check_spot_valid(spot1_0):
+        if inboard.grid[spot1_0[1]][spot1_0[0]] == char_goal:
+            if inboard.grid[spot1_0[1]][spot1_0[0] + 1] == char_goal and empty_coord1_x + 1 == empty_coord2_x \
+                    and empty_coord2_y == empty_coord1_y:
+                return
 
 
 def generate_successors(state: State):
     """ Return list of its possible successors of the given states.
 
     """
-    state.board
 
 
 def get_solution():
@@ -268,27 +265,42 @@ def dfs_search(init_board):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument(
-        "--inputfile",
-        type=str,
-        required=True,
-        help="The input file that contains the puzzle."
-    )
-    parser.add_argument(
-        "--outputfile",
-        type=str,
-        required=True,
-        help="The output file that contains the solution."
-    )
-    parser.add_argument(
-        "--algo",
-        type=str,
-        required=True,
-        choices=['astar', 'dfs'],
-        help="The searching algorithm."
-    )
-    args = parser.parse_args()
+    # parser = argparse.ArgumentParser()
+    # parser.add_argument(
+    #     "--inputfile",
+    #     type=str,
+    #     required=True,
+    #     help="The input file that contains the puzzle."
+    # )
+    # parser.add_argument(
+    #     "--outputfile",
+    #     type=str,
+    #     required=True,
+    #     help="The output file that contains the solution."
+    # )
+    # parser.add_argument(
+    #     "--algo",
+    #     type=str,
+    #     required=True,
+    #     choices=['astar', 'dfs'],
+    #     help="The searching algorithm."
+    # )
+    # args = parser.parse_args()
 
     # read the board from the file
-    board = read_from_file(args.inputfile)
+    # board = read_from_file(args.inputfile)
+    board1 = read_from_file('testhrd_easy1.txt')
+    board1.display()
+    pp = copy.deepcopy(board1.pieces)
+    for p in pp:
+        if p.is_goal:
+            p.coord_x = p.coord_x + 1
+    board2 = Board(pp)
+
+    print(board1 == board2)
+    pp2 = copy.deepcopy(board2.pieces)
+    for p in pp2:
+        if p.is_goal:
+            p.coord_x = p.coord_x - 1
+    board3 = Board(pp2)
+    print(board1 == board3)
