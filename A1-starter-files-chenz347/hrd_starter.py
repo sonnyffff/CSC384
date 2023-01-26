@@ -131,7 +131,7 @@ class State:
         self.f = f
         self.depth = depth
         self.parent = parent
-        self.id = hash(board)  # The id for breaking ties.
+        #self.id = hash(board)  # The id for breaking ties.
 
 
 def read_from_file(filename):
@@ -201,8 +201,8 @@ def find_empty_spot(inboard: Board):
 
     """
     empty_spots = []
-    for y in range(0, 4):
-        for x in range(0, 5):
+    for y in range(0, 5):
+        for x in range(0, 4):
             if inboard.grid[y][x] == '.':
                 empty_spots.append([x, y])
     return empty_spots
@@ -218,11 +218,181 @@ def check_spot_valid(spot: list):
     return False
 
 
-def movable_pieces(inboard: Board, empty: list[list]):
+def add_to_successor(new_pieces, state, successor):
+    new_board = Board(new_pieces)
+    if all(s.board != new_board for s in successor):
+        new_state = State(new_board, state.f, state.depth + 1, state)
+        successor.append(new_state)
+
+
+def check_upper(empty_coord1_x, empty_coord1_y, empty_coord2_x, empty_coord2_y, inboard, spot, state, successor):
+    if check_spot_valid(spot):
+        # goal above empty
+        if inboard.grid[spot[1]][spot[0]] == char_goal:
+            # not on right edge
+            if check_spot_valid([spot[0] + 1, spot[1]]):
+                if inboard.grid[spot[1]][spot[0] + 1] == char_goal and empty_coord1_x + 1 == empty_coord2_x \
+                        and empty_coord2_y == empty_coord1_y:
+                    new_pieces = copy.deepcopy(inboard.pieces)
+                    for p in new_pieces:
+                        if p.is_goal:
+                            p.coord_y = p.coord_y + 1
+                    add_to_successor(new_pieces, state, successor)
+        # horizontal above empty
+        if inboard.grid[spot[1]][spot[0]] == '<':
+            # not on right edge
+            if check_spot_valid([spot[0] + 1, spot[1]]):
+                if inboard.grid[spot[1]][spot[0] + 1] == '>' and empty_coord1_x + 1 == empty_coord2_x \
+                        and empty_coord2_y == empty_coord1_y:
+                    new_pieces = copy.deepcopy(inboard.pieces)
+                    for p in new_pieces:
+                        if p.coord_x == spot[0] and p.coord_y == spot[1]:
+                            p.coord_y = p.coord_y + 1
+                    add_to_successor(new_pieces, state, successor)
+        # vertical above empty
+        if inboard.grid[spot[1]][spot[0]] == 'v':
+            new_pieces = copy.deepcopy(inboard.pieces)
+            for p in new_pieces:
+                if p.coord_x == spot[0] and p.coord_y == spot[1] - 1:
+                    p.coord_y = p.coord_y + 1
+            add_to_successor(new_pieces, state, successor)
+        # single above empty
+        if inboard.grid[spot[1]][spot[0]] == char_single:
+            new_pieces = copy.deepcopy(inboard.pieces)
+            for p in new_pieces:
+                if p.coord_x == spot[0] and p.coord_y == spot[1]:
+                    p.coord_y = p.coord_y + 1
+            add_to_successor(new_pieces, state, successor)
+
+    return
+
+
+def check_left(empty_coord1_x, empty_coord1_y, empty_coord2_x, empty_coord2_y, inboard, spot, state, successor):
+    if check_spot_valid(spot):
+        # goal left empty
+        if inboard.grid[spot[1]][spot[0]] == char_goal:
+            if check_spot_valid([spot[0], spot[1] + 1]):
+                if inboard.grid[spot[1] + 1][spot[0]] == char_goal and empty_coord1_x == empty_coord2_x \
+                        and empty_coord1_y + 1 == empty_coord2_y:
+                    new_pieces = copy.deepcopy(inboard.pieces)
+                    for p in new_pieces:
+                        if p.is_goal:
+                            p.coord_x = p.coord_x + 1
+                    add_to_successor(new_pieces, state, successor)
+        # horizontal left empty
+        if inboard.grid[spot[1]][spot[0]] == '>':
+            new_pieces = copy.deepcopy(inboard.pieces)
+            for p in new_pieces:
+                if p.coord_x == spot[0] - 1 and p.coord_y == spot[1]:
+                    p.coord_x = p.coord_x + 1
+            add_to_successor(new_pieces, state, successor)
+        # vertical left empty
+        if inboard.grid[spot[1]][spot[0]] == '^':
+            if check_spot_valid([spot[0], spot[1] + 1]):
+                if inboard.grid[spot[1] + 1][spot[0]] == 'v' and empty_coord1_x == empty_coord2_x \
+                        and empty_coord1_y + 1 == empty_coord2_y:
+                    new_pieces = copy.deepcopy(inboard.pieces)
+                    for p in new_pieces:
+                        if p.coord_x == spot[0] and p.coord_y == spot[1]:
+                            p.coord_x = p.coord_x + 1
+                    add_to_successor(new_pieces, state, successor)
+        # single left empty
+        if inboard.grid[spot[1]][spot[0]] == char_single:
+            new_pieces = copy.deepcopy(inboard.pieces)
+            for p in new_pieces:
+                if p.coord_x == spot[0] and p.coord_y == spot[1]:
+                    p.coord_x = p.coord_x + 1
+            add_to_successor(new_pieces, state, successor)
+    return
+
+
+def check_right(empty_coord1_x, empty_coord1_y, empty_coord2_x, empty_coord2_y, inboard, spot, state, successor):
+    if check_spot_valid(spot):
+        # goal right empty
+        if inboard.grid[spot[1]][spot[0]] == char_goal:
+            if check_spot_valid([spot[0], spot[1] + 1]):
+                if inboard.grid[spot[1] + 1][spot[0]] == char_goal and empty_coord1_x == empty_coord2_x \
+                        and empty_coord1_y + 1 == empty_coord2_y:
+                    new_pieces = copy.deepcopy(inboard.pieces)
+                    for p in new_pieces:
+                        if p.is_goal:
+                            p.coord_x = p.coord_x - 1
+                    add_to_successor(new_pieces, state, successor)
+        # horizontal right empty
+        if inboard.grid[spot[1]][spot[0]] == '<':
+            new_pieces = copy.deepcopy(inboard.pieces)
+            for p in new_pieces:
+                if p.coord_x == spot[0] and p.coord_y == spot[1]:
+                    p.coord_x = p.coord_x - 1
+            add_to_successor(new_pieces, state, successor)
+        # vertical right empty
+        if inboard.grid[spot[1]][spot[0]] == '^':
+            if check_spot_valid([spot[0], spot[1] + 1]):
+                if inboard.grid[spot[1] + 1][spot[0]] == 'v' and empty_coord1_x == empty_coord2_x \
+                        and empty_coord1_y + 1 == empty_coord2_y:
+                    new_pieces = copy.deepcopy(inboard.pieces)
+                    for p in new_pieces:
+                        if p.coord_x == spot[0] and p.coord_y == spot[1]:
+                            p.coord_x = p.coord_x - 1
+                    add_to_successor(new_pieces, state, successor)
+        # single right empty
+        if inboard.grid[spot[1]][spot[0]] == char_single:
+            new_pieces = copy.deepcopy(inboard.pieces)
+            for p in new_pieces:
+                if p.coord_x == spot[0] and p.coord_y == spot[1]:
+                    p.coord_x = p.coord_x - 1
+            add_to_successor(new_pieces, state, successor)
+    return
+
+
+def check_bottom(empty_coord1_x, empty_coord1_y, empty_coord2_x, empty_coord2_y, inboard, spot, state, successor):
+    if check_spot_valid(spot):
+        # goal above empty
+        if inboard.grid[spot[1]][spot[0]] == char_goal:
+            # not on right edge
+            if check_spot_valid([spot[0] + 1, spot[1]]):
+                if inboard.grid[spot[1]][spot[0] + 1] == char_goal and empty_coord1_x + 1 == empty_coord2_x \
+                        and empty_coord2_y == empty_coord1_y:
+                    new_pieces = copy.deepcopy(inboard.pieces)
+                    for p in new_pieces:
+                        if p.is_goal:
+                            p.coord_y = p.coord_y - 1
+                    add_to_successor(new_pieces, state, successor)
+        # horizontal above empty
+        if inboard.grid[spot[1]][spot[0]] == '<':
+            # not on right edge
+            if check_spot_valid([spot[0] + 1, spot[1]]):
+                if inboard.grid[spot[1]][spot[0] + 1] == '>' and empty_coord1_x + 1 == empty_coord2_x \
+                        and empty_coord2_y == empty_coord1_y:
+                    new_pieces = copy.deepcopy(inboard.pieces)
+                    for p in new_pieces:
+                        if p.coord_x == spot[0] and p.coord_y == spot[1]:
+                            p.coord_y = p.coord_y - 1
+                    add_to_successor(new_pieces, state, successor)
+        # vertical above empty
+        if inboard.grid[spot[1]][spot[0]] == '^':
+            new_pieces = copy.deepcopy(inboard.pieces)
+            for p in new_pieces:
+                if p.coord_x == spot[0] and p.coord_y == spot[1]:
+                    p.coord_y = p.coord_y + 1
+            add_to_successor(new_pieces, state, successor)
+        # single above empty
+        if inboard.grid[spot[1]][spot[0]] == char_single:
+            new_pieces = copy.deepcopy(inboard.pieces)
+            for p in new_pieces:
+                if p.coord_x == spot[0] and p.coord_y == spot[1]:
+                    p.coord_y = p.coord_y - 1
+            add_to_successor(new_pieces, state, successor)
+
+    return
+
+
+def generate_successors(state: State, empty: list[list]):
     """ Return a mapping of movable pieces to its movable directions.
 
     """
-    successor = {}
+    inboard = state.board
+    successor = []
     empty_coord1_x, empty_coord1_y = empty[0][0], empty[0][1]
     empty_coord2_x, empty_coord2_y = empty[1][0], empty[1][1]
 
@@ -236,17 +406,16 @@ def movable_pieces(inboard: Board, empty: list[list]):
     spot2_2 = [empty_coord2_x + 1, empty_coord2_y]
     spot2_3 = [empty_coord2_x, empty_coord2_y + 1]
 
-    if check_spot_valid(spot1_0):
-        if inboard.grid[spot1_0[1]][spot1_0[0]] == char_goal:
-            if inboard.grid[spot1_0[1]][spot1_0[0] + 1] == char_goal and empty_coord1_x + 1 == empty_coord2_x \
-                    and empty_coord2_y == empty_coord1_y:
-                return
+    check_upper(empty_coord1_x, empty_coord1_y, empty_coord2_x, empty_coord2_y, inboard, spot1_0, state, successor)
+    check_upper(empty_coord1_x, empty_coord1_y, empty_coord2_x, empty_coord2_y, inboard, spot2_0, state, successor)
+    check_left(empty_coord1_x, empty_coord1_y, empty_coord2_x, empty_coord2_y, inboard, spot1_1, state, successor)
+    check_left(empty_coord1_x, empty_coord1_y, empty_coord2_x, empty_coord2_y, inboard, spot2_1, state, successor)
+    check_right(empty_coord1_x, empty_coord1_y, empty_coord2_x, empty_coord2_y, inboard, spot1_2, state, successor)
+    check_right(empty_coord1_x, empty_coord1_y, empty_coord2_x, empty_coord2_y, inboard, spot2_2, state, successor)
+    check_bottom(empty_coord1_x, empty_coord1_y, empty_coord2_x, empty_coord2_y, inboard, spot1_3, state, successor)
+    check_bottom(empty_coord1_x, empty_coord1_y, empty_coord2_x, empty_coord2_y, inboard, spot2_3, state, successor)
 
-
-def generate_successors(state: State):
-    """ Return list of its possible successors of the given states.
-
-    """
+    return successor
 
 
 def get_solution():
@@ -256,12 +425,9 @@ def get_solution():
 
 
 def dfs_search(init_board):
-    # init_state = State(init_board, f)
-    # list of frontier states
-    frontier = [board]
-    # while(len(frontier) != 0):
+    """
 
-    # with open('hrd5sol_dfs.txt', 'w') as f:
+    """
 
 
 if __name__ == "__main__":
@@ -289,18 +455,27 @@ if __name__ == "__main__":
 
     # read the board from the file
     # board = read_from_file(args.inputfile)
-    board1 = read_from_file('testhrd_easy1.txt')
+    #board1 = read_from_file('testhrd_easy1.txt')
+    board1 = read_from_file('test_succ_2.txt')
     board1.display()
-    pp = copy.deepcopy(board1.pieces)
-    for p in pp:
-        if p.is_goal:
-            p.coord_x = p.coord_x + 1
-    board2 = Board(pp)
+    # pp = copy.deepcopy(board1.pieces)
+    # for p in pp:
+    #     if p.is_goal:
+    #         p.coord_x = p.coord_x + 1
+    # board2 = Board(pp)
+    #
+    # print(board1 == board2)
+    # pp2 = copy.deepcopy(board2.pieces)
+    # for p in pp2:
+    #     if p.is_goal:
+    #         p.coord_x = p.coord_x - 1
+    # board3 = Board(pp2)
+    # print(board1 == board3)
 
-    print(board1 == board2)
-    pp2 = copy.deepcopy(board2.pieces)
-    for p in pp2:
-        if p.is_goal:
-            p.coord_x = p.coord_x - 1
-    board3 = Board(pp2)
-    print(board1 == board3)
+    state = State(board1, 0, 0)
+    successor = []
+    empty = find_empty_spot(state.board)
+    successor = generate_successors(state, empty)
+    print(len(successor))
+    for s in successor:
+        s.board.display()
