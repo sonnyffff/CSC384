@@ -4,6 +4,7 @@ import time
 import argparse
 import sys
 from typing import Optional
+import math
 
 # ====================================================================================
 
@@ -131,7 +132,10 @@ class State:
         self.f = f
         self.depth = depth
         self.parent = parent
-        #self.id = hash(board)  # The id for breaking ties.
+        # self.id = hash(board)  # The id for breaking ties.
+
+    def __lt__(self, other):
+        return self.f < other.f
 
 
 def read_from_file(filename):
@@ -171,6 +175,17 @@ def read_from_file(filename):
     board = Board(pieces)
 
     return board
+
+
+def write_solution(goal: State, filename: str):
+    f = open(filename, "w")
+    sol = get_solution(goal)
+    for s in sol:
+        for i, line in enumerate(s.board.grid):
+            for ch in line:
+                f.write(ch)
+            f.write('\n')
+        f.write("\n")
 
 
 ##########################################
@@ -225,10 +240,12 @@ def add_to_successor(new_pieces, state, successor):
         successor.append(new_state)
 
 
-def check_upper(empty_coord1_x, empty_coord1_y, empty_coord2_x, empty_coord2_y, inboard, spot, state, successor):
+
+def check_upper(empty_coord1_x, empty_coord1_y, empty_coord2_x, empty_coord2_y, inboard, spot, state, successor,
+                is_2: bool):
     if check_spot_valid(spot):
         # goal above empty
-        if inboard.grid[spot[1]][spot[0]] == char_goal:
+        if inboard.grid[spot[1]][spot[0]] == char_goal and not is_2:
             # not on right edge
             if check_spot_valid([spot[0] + 1, spot[1]]):
                 if inboard.grid[spot[1]][spot[0] + 1] == char_goal and empty_coord1_x + 1 == empty_coord2_x \
@@ -239,7 +256,7 @@ def check_upper(empty_coord1_x, empty_coord1_y, empty_coord2_x, empty_coord2_y, 
                             p.coord_y = p.coord_y + 1
                     add_to_successor(new_pieces, state, successor)
         # horizontal above empty
-        if inboard.grid[spot[1]][spot[0]] == '<':
+        if inboard.grid[spot[1]][spot[0]] == '<' and not is_2:
             # not on right edge
             if check_spot_valid([spot[0] + 1, spot[1]]):
                 if inboard.grid[spot[1]][spot[0] + 1] == '>' and empty_coord1_x + 1 == empty_coord2_x \
@@ -267,7 +284,8 @@ def check_upper(empty_coord1_x, empty_coord1_y, empty_coord2_x, empty_coord2_y, 
     return
 
 
-def check_left(empty_coord1_x, empty_coord1_y, empty_coord2_x, empty_coord2_y, inboard, spot, state, successor):
+def check_left(empty_coord1_x, empty_coord1_y, empty_coord2_x, empty_coord2_y, inboard, spot, state, successor,
+               is_2: bool):
     if check_spot_valid(spot):
         # goal left empty
         if inboard.grid[spot[1]][spot[0]] == char_goal:
@@ -287,7 +305,7 @@ def check_left(empty_coord1_x, empty_coord1_y, empty_coord2_x, empty_coord2_y, i
                     p.coord_x = p.coord_x + 1
             add_to_successor(new_pieces, state, successor)
         # vertical left empty
-        if inboard.grid[spot[1]][spot[0]] == '^':
+        if inboard.grid[spot[1]][spot[0]] == '^' and not is_2:
             if check_spot_valid([spot[0], spot[1] + 1]):
                 if inboard.grid[spot[1] + 1][spot[0]] == 'v' and empty_coord1_x == empty_coord2_x \
                         and empty_coord1_y + 1 == empty_coord2_y:
@@ -306,7 +324,8 @@ def check_left(empty_coord1_x, empty_coord1_y, empty_coord2_x, empty_coord2_y, i
     return
 
 
-def check_right(empty_coord1_x, empty_coord1_y, empty_coord2_x, empty_coord2_y, inboard, spot, state, successor):
+def check_right(empty_coord1_x, empty_coord1_y, empty_coord2_x, empty_coord2_y, inboard, spot, state, successor,
+                is_2: bool):
     if check_spot_valid(spot):
         # goal right empty
         if inboard.grid[spot[1]][spot[0]] == char_goal:
@@ -326,7 +345,7 @@ def check_right(empty_coord1_x, empty_coord1_y, empty_coord2_x, empty_coord2_y, 
                     p.coord_x = p.coord_x - 1
             add_to_successor(new_pieces, state, successor)
         # vertical right empty
-        if inboard.grid[spot[1]][spot[0]] == '^':
+        if inboard.grid[spot[1]][spot[0]] == '^' and not is_2:
             if check_spot_valid([spot[0], spot[1] + 1]):
                 if inboard.grid[spot[1] + 1][spot[0]] == 'v' and empty_coord1_x == empty_coord2_x \
                         and empty_coord1_y + 1 == empty_coord2_y:
@@ -345,10 +364,11 @@ def check_right(empty_coord1_x, empty_coord1_y, empty_coord2_x, empty_coord2_y, 
     return
 
 
-def check_bottom(empty_coord1_x, empty_coord1_y, empty_coord2_x, empty_coord2_y, inboard, spot, state, successor):
+def check_bottom(empty_coord1_x, empty_coord1_y, empty_coord2_x, empty_coord2_y, inboard, spot, state, successor,
+                 is_2: bool):
     if check_spot_valid(spot):
         # goal above empty
-        if inboard.grid[spot[1]][spot[0]] == char_goal:
+        if inboard.grid[spot[1]][spot[0]] == char_goal and not is_2:
             # not on right edge
             if check_spot_valid([spot[0] + 1, spot[1]]):
                 if inboard.grid[spot[1]][spot[0] + 1] == char_goal and empty_coord1_x + 1 == empty_coord2_x \
@@ -359,7 +379,7 @@ def check_bottom(empty_coord1_x, empty_coord1_y, empty_coord2_x, empty_coord2_y,
                             p.coord_y = p.coord_y - 1
                     add_to_successor(new_pieces, state, successor)
         # horizontal above empty
-        if inboard.grid[spot[1]][spot[0]] == '<':
+        if inboard.grid[spot[1]][spot[0]] == '<' and not is_2:
             # not on right edge
             if check_spot_valid([spot[0] + 1, spot[1]]):
                 if inboard.grid[spot[1]][spot[0] + 1] == '>' and empty_coord1_x + 1 == empty_coord2_x \
@@ -369,14 +389,14 @@ def check_bottom(empty_coord1_x, empty_coord1_y, empty_coord2_x, empty_coord2_y,
                         if p.coord_x == spot[0] and p.coord_y == spot[1]:
                             p.coord_y = p.coord_y - 1
                     add_to_successor(new_pieces, state, successor)
-        # vertical above empty
+        # vertical under empty
         if inboard.grid[spot[1]][spot[0]] == '^':
             new_pieces = copy.deepcopy(inboard.pieces)
             for p in new_pieces:
                 if p.coord_x == spot[0] and p.coord_y == spot[1]:
-                    p.coord_y = p.coord_y + 1
+                    p.coord_y = p.coord_y - 1
             add_to_successor(new_pieces, state, successor)
-        # single above empty
+        # single under empty
         if inboard.grid[spot[1]][spot[0]] == char_single:
             new_pieces = copy.deepcopy(inboard.pieces)
             for p in new_pieces:
@@ -387,7 +407,7 @@ def check_bottom(empty_coord1_x, empty_coord1_y, empty_coord2_x, empty_coord2_y,
     return
 
 
-def generate_successors(state: State, empty: list[list]):
+def generate_successors(state: State, empty: list[list]) -> list[State]:
     """ Return a mapping of movable pieces to its movable directions.
 
     """
@@ -406,29 +426,101 @@ def generate_successors(state: State, empty: list[list]):
     spot2_2 = [empty_coord2_x + 1, empty_coord2_y]
     spot2_3 = [empty_coord2_x, empty_coord2_y + 1]
 
-    check_upper(empty_coord1_x, empty_coord1_y, empty_coord2_x, empty_coord2_y, inboard, spot1_0, state, successor)
-    check_upper(empty_coord1_x, empty_coord1_y, empty_coord2_x, empty_coord2_y, inboard, spot2_0, state, successor)
-    check_left(empty_coord1_x, empty_coord1_y, empty_coord2_x, empty_coord2_y, inboard, spot1_1, state, successor)
-    check_left(empty_coord1_x, empty_coord1_y, empty_coord2_x, empty_coord2_y, inboard, spot2_1, state, successor)
-    check_right(empty_coord1_x, empty_coord1_y, empty_coord2_x, empty_coord2_y, inboard, spot1_2, state, successor)
-    check_right(empty_coord1_x, empty_coord1_y, empty_coord2_x, empty_coord2_y, inboard, spot2_2, state, successor)
-    check_bottom(empty_coord1_x, empty_coord1_y, empty_coord2_x, empty_coord2_y, inboard, spot1_3, state, successor)
-    check_bottom(empty_coord1_x, empty_coord1_y, empty_coord2_x, empty_coord2_y, inboard, spot2_3, state, successor)
+    check_upper(empty_coord1_x, empty_coord1_y, empty_coord2_x, empty_coord2_y,
+                inboard, spot1_0, state, successor, False)
+    check_upper(empty_coord1_x, empty_coord1_y, empty_coord2_x, empty_coord2_y,
+                inboard, spot2_0, state, successor, True)
+    check_left(empty_coord1_x, empty_coord1_y, empty_coord2_x, empty_coord2_y,
+               inboard, spot1_1, state, successor, False)
+    check_left(empty_coord1_x, empty_coord1_y, empty_coord2_x, empty_coord2_y,
+               inboard, spot2_1, state, successor, True)
+    check_right(empty_coord1_x, empty_coord1_y, empty_coord2_x, empty_coord2_y,
+                inboard, spot1_2, state, successor, False)
+    check_right(empty_coord1_x, empty_coord1_y, empty_coord2_x, empty_coord2_y,
+                inboard, spot2_2, state, successor, True)
+    check_bottom(empty_coord1_x, empty_coord1_y, empty_coord2_x, empty_coord2_y,
+                 inboard, spot1_3, state, successor, False)
+    check_bottom(empty_coord1_x, empty_coord1_y, empty_coord2_x, empty_coord2_y,
+                 inboard, spot2_3, state, successor, True)
 
     return successor
 
 
-def get_solution():
-    """
+def get_solution(goal: State) -> list[State]:
+    """ Given the goal state and back track to solution
 
     """
+    sol = [goal]
+    while goal.parent is not None:
+        sol.append(goal.parent)
+        goal = goal.parent
+    sol.reverse()
+    return sol
 
 
-def dfs_search(init_board):
+def dfs_search(init_state: State) -> Optional[State]:
+    """ Dfs search to find the goal state
+
     """
+    frontier = [init_state]
+    explored = []
+    while len(frontier) != 0:
+        curr = frontier.pop()
+        if all(curr.board != e.board for e in explored):
+            explored.append(curr)
+            if goal_test(curr):
+                return curr
+            empty_spots = find_empty_spot(curr.board)
+            successors = generate_successors(curr, empty_spots)
+            for s in successors:
+                frontier.append(s)
+    print("Should not reach here")
+    return None
+
+
+def manhattan_distance(curr_state: State) -> int:
+    goal_x = 1
+    goal_y = 3
+    if goal_test(curr_state):
+        return 0
+    for p in curr_state.board.pieces:
+        if p.is_goal:
+            return abs(p.coord_x - goal_x) + abs(p.coord_y - goal_y)
+
+
+def euclidean_distance(curr_state: State) -> float:
+    goal_x = 1
+    goal_y = 3
+    if goal_test(curr_state):
+        return 0
+    for p in curr_state.board.pieces:
+        if p.is_goal:
+            return math.sqrt(abs(p.coord_x - goal_x)**2 + abs(p.coord_y - goal_y)**2)
+
+
+def a_star_search(init_state: State) -> Optional[State]:
+    """ A* search to find the goal state
 
     """
-
+    frontier = []
+    init_state.f = manhattan_distance(init_state)
+    heappush(frontier, init_state)
+    explored = []
+    while len(frontier) != 0:
+        curr = heappop(frontier)
+        if all(curr.board != e.board for e in explored):
+            explored.append(curr)
+            if goal_test(curr):
+                return curr
+            empty_spots = find_empty_spot(curr.board)
+            successors = generate_successors(curr, empty_spots)
+            m_curr = manhattan_distance(curr)
+            print(curr.f)
+            for s in successors:
+                s.f = 1 + curr.f - m_curr + manhattan_distance(s)
+                heappush(frontier, s)
+    print("Should not reach here")
+    return None
 
 if __name__ == "__main__":
     # parser = argparse.ArgumentParser()
@@ -455,9 +547,9 @@ if __name__ == "__main__":
 
     # read the board from the file
     # board = read_from_file(args.inputfile)
-    #board1 = read_from_file('testhrd_easy1.txt')
-    board1 = read_from_file('test_succ_2.txt')
-    board1.display()
+    # board1 = read_from_file('testhrd_easy1.txt')
+    board1 = read_from_file('testhrd_hard4.txt')
+    # board1.display()
     # pp = copy.deepcopy(board1.pieces)
     # for p in pp:
     #     if p.is_goal:
@@ -473,9 +565,14 @@ if __name__ == "__main__":
     # print(board1 == board3)
 
     state = State(board1, 0, 0)
-    successor = []
-    empty = find_empty_spot(state.board)
-    successor = generate_successors(state, empty)
-    print(len(successor))
-    for s in successor:
-        s.board.display()
+    # successor = []
+    # empty = find_empty_spot(state.board)
+    # successor = generate_successors(state, empty)
+    # print(len(successor))
+    # for s in successor:
+    #     s.board.display()
+
+    #goal = dfs_search(state)
+    goal = a_star_search(state)
+    goal.board.display()
+    write_solution(goal, 'hrd5sol_dfs.txt')
