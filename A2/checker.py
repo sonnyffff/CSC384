@@ -5,41 +5,39 @@ from typing import Optional
 
 # ====================================================================================
 
-char_goal = '1'
-char_single = '2'
+char_red_king = 'R'
+char_red_normal = 'r'
+char_black_king = 'B'
+char_black_normal = 'b'
 
 
 class Piece:
     """
-    This represents a piece on the Hua Rong Dao puzzle.
+    This represents a piece on the checker.
     """
 
-    def __init__(self, is_goal, is_single, coord_x, coord_y, orientation: Optional[str]):
+    def __init__(self, is_king, is_red, coord_x, coord_y):
         """
-        :param is_goal: True if the piece is the goal piece and False otherwise.
+        :param is_king: True if the piece is the king piece and False otherwise.
         :type is_goal: bool
-        :param is_single: True if this piece is a 1x1 piece and False otherwise.
+        :param is_red: True if this piece is a red piece and False if it is black.
         :type is_single: bool
         :param coord_x: The x coordinate of the top left corner of the piece.
         :type coord_x: int
         :param coord_y: The y coordinate of the top left corner of the piece.
         :type coord_y: int
-        :param orientation: The orientation of the piece (one of 'h' or 'v') 
-            if the piece is a 1x2 piece. Otherwise, this is None
-        :type orientation: str
         """
 
-        self.is_goal = is_goal
-        self.is_single = is_single
+        self.is_king = is_king
+        self.is_red = is_red
         self.coord_x = coord_x
         self.coord_y = coord_y
-        self.orientation = orientation
 
     def __repr__(self):
-        return '{} {} {} {} {}'.format(self.is_goal, self.is_single, self.coord_x, self.coord_y, self.orientation)
+        return '{} {} {} {}'.format(self.is_king, self.is_red, self.coord_x, self.coord_y)
 
     def __hash__(self):
-        return hash((self.is_goal, self.is_single, self.coord_x, self.coord_y, self.orientation))
+        return hash((self.is_king, self.is_red, self.coord_x, self.coord_y))
 
 
 class Board:
@@ -53,8 +51,8 @@ class Board:
         :type pieces: List[Piece]
         """
 
-        self.width = 4
-        self.height = 5
+        self.width = 8
+        self.height = 8
 
         self.pieces = pieces
         # self.grid is a 2-d (size * size) array automatically generated
@@ -79,20 +77,16 @@ class Board:
             self.grid.append(line)
 
         for piece in self.pieces:
-            if piece.is_goal:
-                self.grid[piece.coord_y][piece.coord_x] = char_goal
-                self.grid[piece.coord_y][piece.coord_x + 1] = char_goal
-                self.grid[piece.coord_y + 1][piece.coord_x] = char_goal
-                self.grid[piece.coord_y + 1][piece.coord_x + 1] = char_goal
-            elif piece.is_single:
-                self.grid[piece.coord_y][piece.coord_x] = char_single
+            if piece.is_king and piece.is_red:
+                self.grid[piece.coord_y][piece.coord_x] = char_red_king
+            elif piece.is_king and not piece.is_red:
+                self.grid[piece.coord_y][piece.coord_x] = char_black_king
+            elif not piece.is_king and piece.is_red:
+                self.grid[piece.coord_y][piece.coord_x] = char_red_normal
+            elif not piece.is_king and not piece.is_red:
+                self.grid[piece.coord_y][piece.coord_x] = char_black_normal
             else:
-                if piece.orientation == 'h':
-                    self.grid[piece.coord_y][piece.coord_x] = '<'
-                    self.grid[piece.coord_y][piece.coord_x + 1] = '>'
-                elif piece.orientation == 'v':
-                    self.grid[piece.coord_y][piece.coord_x] = '^'
-                    self.grid[piece.coord_y + 1][piece.coord_x] = 'v'
+                print("Can't reach here")
 
     def display(self):
         """
@@ -113,25 +107,35 @@ class State:
     heuristic function, f value, current depth and parent.
     """
 
-    def __init__(self, board, f, depth, parent=None):
+    def __init__(self, board, utility, depth, alpha, beta, turn, parent=None):
         """
         :param board: The board of the state.
         :type board: Board
-        :param f: The f value of current state.
-        :type f: int
+        :param utility: The estimated utility value of current state or utility if the state is terminal.
+        :type utility: int
         :param depth: The depth of current state in the search tree.
         :type depth: int
+        :param alpha: The best of choice so far for red.
+        :type alpha: int
+        :param beta: The best of choice so far for black.
+        :type beta: int
+        :param turn: True if it's red turn
+        :type turn: bool
         :param parent: The parent of current state.
         :type parent: Optional[State]
         """
         self.board = board
-        self.f = f
+        self.utility = utility
         self.depth = depth
         self.parent = parent
+        self.alpha = alpha
+        self.beta = beta
+        self.red_turn = turn
         self.id = hash(board)  # The id for breaking ties.
+        assert(alpha <= beta)
 
-    def __lt__(self, other):
-        return self.f < other.f
+    def __gt__(self, other):
+        return self.utility > other.utility
 
     def __eq__(self, other):
         if self.id == other.id:
@@ -158,16 +162,14 @@ def read_from_file(filename):
 
         for x, ch in enumerate(line):
 
-            if ch == '^':  # found vertical piece
-                pieces.append(Piece(False, False, x, line_index, 'v'))
-            elif ch == '<':  # found horizontal piece
-                pieces.append(Piece(False, False, x, line_index, 'h'))
-            elif ch == char_single:
-                pieces.append(Piece(False, True, x, line_index, None))
-            elif ch == char_goal:
-                if g_found is False:
-                    pieces.append(Piece(True, False, x, line_index, None))
-                    g_found = True
+            if ch == char_red_normal:
+                pieces.append(Piece(False, True, x, line_index))
+            elif ch == char_red_king:
+                pieces.append(Piece(True, True, x, line_index))
+            elif ch == char_black_normal:
+                pieces.append(Piece(False, False, x, line_index))
+            elif ch == char_black_king:
+                pieces.append(Piece(True, False, x, line_index))
         line_index += 1
 
     puzzle_file.close()
@@ -195,11 +197,11 @@ def write_solution(goal_state: State, filename: str):
 # Helper Functions
 ##########################################
 
-def goal_test(curr_state: State):
-    """ Test whether the given state is a goal state.
+def terminal_test(curr_state: State):
+    """ Test whether the given state is a terminal state.
 
     """
-    if curr_state.board.grid[3][1] == char_goal and curr_state.board.grid[4][2] == char_goal:
+    if all(p.is_red for p in curr_state.board.pieces):
         return True
     return False
 
@@ -209,8 +211,8 @@ def find_empty_spot(curr_board: Board):
 
     """
     empty_spots = []
-    for y in range(0, 5):
-        for x in range(0, 4):
+    for y in range(0, 8):
+        for x in range(0, 8):
             if curr_board.grid[y][x] == '.':
                 empty_spots.append([x, y])
     return empty_spots
@@ -220,8 +222,8 @@ def check_spot_valid(spot: list):
     """ Check if given coordinate a valid spot on the chess board.
 
     """
-    if 3 >= spot[0] >= 0:
-        if 4 >= spot[1] >= 0:
+    if 8 >= spot[0] >= 0:
+        if 8 >= spot[1] >= 0:
             return True
     return False
 
