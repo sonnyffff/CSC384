@@ -39,6 +39,9 @@ class Piece:
     def __hash__(self):
         return hash((self.is_king, self.is_red, self.coord_x, self.coord_y))
 
+    def __eq__(self, other):
+        return hash(self) == hash(other)
+
 
 class Board:
     """
@@ -228,19 +231,19 @@ def check_spot_valid(spot: list):
     return False
 
 
-def check_neighbor_color(curr: State, is_red: bool, spot: list) -> bool:
+def check_neighbor_color(curr: State, is_red: bool, spot: list) -> list:
     if is_red:
         for p in curr.board.pieces:
             if not p.is_red:
                 if p.coord_x == spot[0] and p.coord_y == spot[1]:
-                    return True
-        return False
+                    return [True, p]
+        return [False]
     else:
         for p in curr.board.pieces:
             if p.is_red:
                 if p.coord_x == spot[0] and p.coord_y == spot[1]:
-                    return True
-        return False
+                    return [True, p]
+        return [False]
 
 
 def generate_possible_spots(p: Piece) -> list[list]:
@@ -270,94 +273,93 @@ def check_jump(curr: State, prev_jump=None) -> dict[Piece: list[list]]:
             for s in spots:
                 if check_spot_valid(s):
                     # black neighbor
-                    if check_neighbor_color(curr, True, s):
+                    n_list = check_neighbor_color(curr, True, s)
+                    if n_list[0]:
                         if p.is_king:
                             # top left
                             if count == 1:
                                 if [p.coord_x - 2, p.coord_y - 2] in empty_spots:
                                     if jump_map.setdefault(p) is None:
                                         jump_map[p] = []
-                                    jump_map[p].append([p.coord_x - 2, p.coord_y - 2])
+                                    jump_map[p].append(n_list[1])
                             # top right
                             elif count == 2:
                                 if [p.coord_x + 2, p.coord_y - 2] in empty_spots:
                                     if jump_map.setdefault(p) is None:
                                         jump_map[p] = []
-                                    jump_map[p].append([p.coord_x + 2, p.coord_y - 2])
+                                    jump_map[p].append(n_list[1])
                             # bottom left
                             elif count == 3:
                                 if [p.coord_x - 2, p.coord_y + 2] in empty_spots:
                                     if jump_map.setdefault(p) is None:
                                         jump_map[p] = []
-                                    jump_map[p].append([p.coord_x - 2, p.coord_y + 2])
+                                    jump_map[p].append(n_list[1])
                             # bottom right
                             elif count == 4:
                                 if [p.coord_x + 2, p.coord_y + 2] in empty_spots:
                                     if jump_map.setdefault(p) is None:
                                         jump_map[p] = []
-                                    jump_map[p].append([p.coord_x + 2, p.coord_y + 2])
+                                    jump_map[p].append(n_list[1])
                         else:
                             # top left
                             if count == 1:
                                 if [p.coord_x - 2, p.coord_y - 2] in empty_spots:
                                     if jump_map.setdefault(p) is None:
                                         jump_map[p] = []
-                                    jump_map[p].append([p.coord_x - 2, p.coord_y - 2])
+                                    jump_map[p].append(n_list[1])
                             # top right
                             elif count == 2:
                                 if [p.coord_x + 2, p.coord_y - 2] in empty_spots:
                                     if jump_map.setdefault(p) is None:
                                         jump_map[p] = []
-                                    jump_map[p].append([p.coord_x + 2, p.coord_y - 2])
+                                    jump_map[p].append(n_list[1])
         else:
-            for p in curr.board.pieces:
-                # black pieces
-                if not p.is_red:
-                    spots = generate_possible_spots(p)
-                    count = 1
-                    for s in spots:
-                        if check_spot_valid(s):
-                            # black neighbor
-                            if check_neighbor_color(curr, False, s):
-                                if p.is_king:
-                                    # top left
-                                    if count == 1:
-                                        if [p.coord_x - 2, p.coord_y - 2] in empty_spots:
-                                            if jump_map.setdefault(p) is None:
-                                                jump_map[p] = []
-                                            jump_map[p].append([p.coord_x - 2, p.coord_y - 2])
-                                    # top right
-                                    elif count == 2:
-                                        if [p.coord_x + 2, p.coord_y - 2] in empty_spots:
-                                            if jump_map.setdefault(p) is None:
-                                                jump_map[p] = []
-                                            jump_map[p].append([p.coord_x + 2, p.coord_y - 2])
-                                    # bottom left
-                                    elif count == 3:
-                                        if [p.coord_x - 2, p.coord_y + 2] in empty_spots:
-                                            if jump_map.setdefault(p) is None:
-                                                jump_map[p] = []
-                                            jump_map[p].append([p.coord_x - 2, p.coord_y + 2])
-                                    # bottom right
-                                    elif count == 4:
-                                        if [p.coord_x + 2, p.coord_y + 2] in empty_spots:
-                                            if jump_map.setdefault(p) is None:
-                                                jump_map[p] = []
-                                            jump_map[p].append([p.coord_x + 2, p.coord_y + 2])
-                                else:
-                                    # bottom left
-                                    if count == 3:
-                                        if [p.coord_x - 2, p.coord_y + 2] in empty_spots:
-                                            if jump_map.setdefault(p) is None:
-                                                jump_map[p] = []
-                                            jump_map[p].append([p.coord_x - 2, p.coord_y + 2])
-                                        # bottom right
-                                    elif count == 4:
-                                        if [p.coord_x + 2, p.coord_y + 2] in empty_spots:
-                                            if jump_map.setdefault(p) is None:
-                                                jump_map[p] = []
-                                            jump_map[p].append([p.coord_x + 2, p.coord_y + 2])
-                        count += 1
+            spots = generate_possible_spots(p)
+            count = 1
+            for s in spots:
+                if check_spot_valid(s):
+                    # red neighbor
+                    n_list = check_neighbor_color(curr, False, s)
+                    if n_list[0]:
+                        if p.is_king:
+                            # top left
+                            if count == 1:
+                                if [p.coord_x - 2, p.coord_y - 2] in empty_spots:
+                                    if jump_map.setdefault(p) is None:
+                                        jump_map[p] = []
+                                    jump_map[p].append(n_list[1])
+                            # top right
+                            elif count == 2:
+                                if [p.coord_x + 2, p.coord_y - 2] in empty_spots:
+                                    if jump_map.setdefault(p) is None:
+                                        jump_map[p] = []
+                                    jump_map[p].append(n_list[1])
+                            # bottom left
+                            elif count == 3:
+                                if [p.coord_x - 2, p.coord_y + 2] in empty_spots:
+                                    if jump_map.setdefault(p) is None:
+                                        jump_map[p] = []
+                                    jump_map[p].append(n_list[1])
+                            # bottom right
+                            elif count == 4:
+                                if [p.coord_x + 2, p.coord_y + 2] in empty_spots:
+                                    if jump_map.setdefault(p) is None:
+                                        jump_map[p] = []
+                                    jump_map[p].append(n_list[1])
+                        else:
+                            # bottom left
+                            if count == 3:
+                                if [p.coord_x - 2, p.coord_y + 2] in empty_spots:
+                                    if jump_map.setdefault(p) is None:
+                                        jump_map[p] = []
+                                    jump_map[p].append(n_list[1])
+                                # bottom right
+                            elif count == 4:
+                                if [p.coord_x + 2, p.coord_y + 2] in empty_spots:
+                                    if jump_map.setdefault(p) is None:
+                                        jump_map[p] = []
+                                    jump_map[p].append(n_list[1])
+                count += 1
         return jump_map
     if curr.red_turn:
         for p in curr.board.pieces:
@@ -368,45 +370,46 @@ def check_jump(curr: State, prev_jump=None) -> dict[Piece: list[list]]:
                 for s in spots:
                     if check_spot_valid(s):
                         # black neighbor
-                        if check_neighbor_color(curr, True, s):
+                        n_list = check_neighbor_color(curr, True, s)
+                        if n_list[0]:
                             if p.is_king:
                                 # top left
                                 if count == 1:
                                     if [p.coord_x - 2, p.coord_y - 2] in empty_spots:
                                         if jump_map.setdefault(p) is None:
                                             jump_map[p] = []
-                                        jump_map[p].append([p.coord_x - 2, p.coord_y - 2])
+                                        jump_map[p].append(n_list[1])
                                 # top right
                                 elif count == 2:
                                     if [p.coord_x + 2, p.coord_y - 2] in empty_spots:
                                         if jump_map.setdefault(p) is None:
                                             jump_map[p] = []
-                                        jump_map[p].append([p.coord_x + 2, p.coord_y - 2])
+                                        jump_map[p].append(n_list[1])
                                 # bottom left
                                 elif count == 3:
                                     if [p.coord_x - 2, p.coord_y + 2] in empty_spots:
                                         if jump_map.setdefault(p) is None:
                                             jump_map[p] = []
-                                        jump_map[p].append([p.coord_x - 2, p.coord_y + 2])
+                                        jump_map[p].append(n_list[1])
                                 # bottom right
                                 elif count == 4:
                                     if [p.coord_x + 2, p.coord_y + 2] in empty_spots:
                                         if jump_map.setdefault(p) is None:
                                             jump_map[p] = []
-                                        jump_map[p].append([p.coord_x + 2, p.coord_y + 2])
+                                        jump_map[p].append(n_list[1])
                             else:
                                 # top left
                                 if count == 1:
                                     if [p.coord_x - 2, p.coord_y - 2] in empty_spots:
                                         if jump_map.setdefault(p) is None:
                                             jump_map[p] = []
-                                        jump_map[p].append([p.coord_x - 2, p.coord_y - 2])
+                                        jump_map[p].append(n_list[1])
                                 # top right
                                 elif count == 2:
                                     if [p.coord_x + 2, p.coord_y - 2] in empty_spots:
                                         if jump_map.setdefault(p) is None:
                                             jump_map[p] = []
-                                        jump_map[p].append([p.coord_x + 2, p.coord_y - 2])
+                                        jump_map[p].append(n_list[1])
                     count += 1
     else:
         for p in curr.board.pieces:
@@ -416,56 +419,81 @@ def check_jump(curr: State, prev_jump=None) -> dict[Piece: list[list]]:
                 count = 1
                 for s in spots:
                     if check_spot_valid(s):
-                        # black neighbor
-                        if check_neighbor_color(curr, False, s):
+                        # red neighbor
+                        n_list = check_neighbor_color(curr, False, s)
+                        if n_list[0]:
                             if p.is_king:
                                 # top left
                                 if count == 1:
                                     if [p.coord_x - 2, p.coord_y - 2] in empty_spots:
                                         if jump_map.setdefault(p) is None:
                                             jump_map[p] = []
-                                        jump_map[p].append([p.coord_x - 2, p.coord_y - 2])
+                                        jump_map[p].append(n_list[1])
                                 # top right
                                 elif count == 2:
                                     if [p.coord_x + 2, p.coord_y - 2] in empty_spots:
                                         if jump_map.setdefault(p) is None:
                                             jump_map[p] = []
-                                        jump_map[p].append([p.coord_x + 2, p.coord_y - 2])
+                                        jump_map[p].append(n_list[1])
                                 # bottom left
                                 elif count == 3:
                                     if [p.coord_x - 2, p.coord_y + 2] in empty_spots:
                                         if jump_map.setdefault(p) is None:
                                             jump_map[p] = []
-                                        jump_map[p].append([p.coord_x - 2, p.coord_y + 2])
+                                        jump_map[p].append(n_list[1])
                                 # bottom right
                                 elif count == 4:
                                     if [p.coord_x + 2, p.coord_y + 2] in empty_spots:
                                         if jump_map.setdefault(p) is None:
                                             jump_map[p] = []
-                                        jump_map[p].append([p.coord_x + 2, p.coord_y + 2])
+                                        jump_map[p].append(n_list[1])
                             else:
                                 # bottom left
                                 if count == 3:
                                     if [p.coord_x - 2, p.coord_y + 2] in empty_spots:
                                         if jump_map.setdefault(p) is None:
                                             jump_map[p] = []
-                                        jump_map[p].append([p.coord_x - 2, p.coord_y + 2])
+                                        jump_map[p].append(n_list[1])
                                     # bottom right
                                 elif count == 4:
                                     if [p.coord_x + 2, p.coord_y + 2] in empty_spots:
                                         if jump_map.setdefault(p) is None:
                                             jump_map[p] = []
-                                        jump_map[p].append([p.coord_x + 2, p.coord_y + 2])
+                                        jump_map[p].append(n_list[1])
                     count += 1
     return jump_map
 
 
-def piece_jump(curr: State):
+def jump(curr, piece: Piece) -> list[State]:
     """
+    Perform jump
 
+    :param piece:
     :param curr:
     :return:
     """
+    flag_state = curr
+    jump_map = check_jump(flag_state, piece)
+    if len(jump_map) == 0:
+        return [flag_state]
+    else:
+        ret = []
+        for capture in jump_map[piece]:
+            new_pieces = copy.deepcopy(flag_state.board.pieces)
+            for p in new_pieces:
+                if p == piece:
+                    p.coord_x = 2 * capture.coord_x - p.coord_x
+                    p.coord_y = 2 * capture.coord_y - p.coord_y
+
+                    new_pieces.remove(capture)
+                    new_state = State(Board(new_pieces), 0, 0, 0, 0, curr.red_turn, flag_state)
+                    flag_state = new_state
+                    j_states = jump(flag_state, p)
+                    for js in j_states:
+                        ret.append(js)
+                    flag_state = curr
+                    break
+        return ret
 
 
 def generate_successors(curr: State, empty: list[list], successor: list):
@@ -473,6 +501,12 @@ def generate_successors(curr: State, empty: list[list], successor: list):
 
     with given list of empty spots
     """
+    jump_map = check_jump(curr)
+    if len(jump_map) != 0:
+        # must jump
+        for piece in jump_map:
+            for capture in jump_map[piece]:
+                return
 
 
 def get_solution(goal_state: State) -> list[State]:
@@ -514,8 +548,13 @@ if __name__ == "__main__":
     inboard = read_from_file("checkers2.txt")
     # generate state base on the board
     state = State(inboard, 0, 0, 0, 0, False)
-    jump = check_jump(state)
-    print(jump)
+    for p in state.board.pieces:
+        if p.coord_x == 3 and p.coord_y == 4:
+            states = jump(state, p)
+            for state in states:
+                state.board.display()
+                print('\n')
+
     # write solution base on algo choice
     # if args.algo == 'dfs':
     #     goal = dfs_search(state)
