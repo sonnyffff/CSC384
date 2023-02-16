@@ -1,7 +1,6 @@
 import copy
 from heapq import heappush, heappop
 import argparse
-from typing import Optional
 
 # ====================================================================================
 
@@ -19,9 +18,7 @@ class Piece:
     def __init__(self, is_king, is_red, coord_x, coord_y):
         """
         :param is_king: True if the piece is the king piece and False otherwise.
-        :type is_goal: bool
         :param is_red: True if this piece is a red piece and False if it is black.
-        :type is_single: bool
         :param coord_x: The x coordinate of the top left corner of the piece.
         :type coord_x: int
         :param coord_y: The y coordinate of the top left corner of the piece.
@@ -122,10 +119,10 @@ class State:
         :type alpha: int
         :param beta: The best of choice so far for black.
         :type beta: int
-        :param turn: True if it's red turn
-        :type turn: bool
+        :param is_red_turn: True if it's red turn
+        :type is_red_turn: bool
         :param parent: The parent of current state.
-        :type parent: Optional[State]
+        :type parent: State
         """
         self.board = board
         self.utility = utility
@@ -160,7 +157,6 @@ def read_from_file(filename):
 
     line_index = 0
     pieces = []
-    g_found = False
     for line in puzzle_file:
 
         for x, ch in enumerate(line):
@@ -269,7 +265,6 @@ def check_jump(curr: State, prev_jump=None) -> dict[Piece: list[list]]:
         p = prev_jump
         if p.is_red:
             spots = generate_possible_spots(p)
-            count = 1
             for s in spots:
                 if check_spot_valid(s):
                     # black neighbor
@@ -277,45 +272,19 @@ def check_jump(curr: State, prev_jump=None) -> dict[Piece: list[list]]:
                     if n_list[0]:
                         if p.is_king:
                             # top left
-                            if count == 1:
-                                if [p.coord_x - 2, p.coord_y - 2] in empty_spots:
-                                    if jump_map.setdefault(p) is None:
-                                        jump_map[p] = []
-                                    jump_map[p].append(n_list[1])
-                            # top right
-                            elif count == 2:
-                                if [p.coord_x + 2, p.coord_y - 2] in empty_spots:
-                                    if jump_map.setdefault(p) is None:
-                                        jump_map[p] = []
-                                    jump_map[p].append(n_list[1])
-                            # bottom left
-                            elif count == 3:
-                                if [p.coord_x - 2, p.coord_y + 2] in empty_spots:
-                                    if jump_map.setdefault(p) is None:
-                                        jump_map[p] = []
-                                    jump_map[p].append(n_list[1])
-                            # bottom right
-                            elif count == 4:
-                                if [p.coord_x + 2, p.coord_y + 2] in empty_spots:
-                                    if jump_map.setdefault(p) is None:
-                                        jump_map[p] = []
-                                    jump_map[p].append(n_list[1])
+                            if [2 * s[0] - p.coord_x, 2 * s[1] - p.coord_y] in empty_spots:
+                                if jump_map.setdefault(p) is None:
+                                    jump_map[p] = []
+                                jump_map[p].append(n_list[1])
                         else:
                             # top left
-                            if count == 1:
-                                if [p.coord_x - 2, p.coord_y - 2] in empty_spots:
-                                    if jump_map.setdefault(p) is None:
-                                        jump_map[p] = []
-                                    jump_map[p].append(n_list[1])
-                            # top right
-                            elif count == 2:
-                                if [p.coord_x + 2, p.coord_y - 2] in empty_spots:
+                            if 2 * s[1] - p.coord_y < p.coord_y:
+                                if [2 * s[0] - p.coord_x, 2 * s[1] - p.coord_y] in empty_spots:
                                     if jump_map.setdefault(p) is None:
                                         jump_map[p] = []
                                     jump_map[p].append(n_list[1])
         else:
             spots = generate_possible_spots(p)
-            count = 1
             for s in spots:
                 if check_spot_valid(s):
                     # red neighbor
@@ -323,50 +292,23 @@ def check_jump(curr: State, prev_jump=None) -> dict[Piece: list[list]]:
                     if n_list[0]:
                         if p.is_king:
                             # top left
-                            if count == 1:
-                                if [p.coord_x - 2, p.coord_y - 2] in empty_spots:
-                                    if jump_map.setdefault(p) is None:
-                                        jump_map[p] = []
-                                    jump_map[p].append(n_list[1])
-                            # top right
-                            elif count == 2:
-                                if [p.coord_x + 2, p.coord_y - 2] in empty_spots:
-                                    if jump_map.setdefault(p) is None:
-                                        jump_map[p] = []
-                                    jump_map[p].append(n_list[1])
-                            # bottom left
-                            elif count == 3:
-                                if [p.coord_x - 2, p.coord_y + 2] in empty_spots:
-                                    if jump_map.setdefault(p) is None:
-                                        jump_map[p] = []
-                                    jump_map[p].append(n_list[1])
-                            # bottom right
-                            elif count == 4:
-                                if [p.coord_x + 2, p.coord_y + 2] in empty_spots:
-                                    if jump_map.setdefault(p) is None:
-                                        jump_map[p] = []
-                                    jump_map[p].append(n_list[1])
+                            if [2 * s[0] - p.coord_x, 2 * s[1] - p.coord_y] in empty_spots:
+                                if jump_map.setdefault(p) is None:
+                                    jump_map[p] = []
+                                jump_map[p].append(n_list[1])
                         else:
-                            # bottom left
-                            if count == 3:
-                                if [p.coord_x - 2, p.coord_y + 2] in empty_spots:
+                            # top left
+                            if 2 * s[1] - p.coord_y > p.coord_y:
+                                if [2 * s[0] - p.coord_x, 2 * s[1] - p.coord_y] in empty_spots:
                                     if jump_map.setdefault(p) is None:
                                         jump_map[p] = []
                                     jump_map[p].append(n_list[1])
-                                # bottom right
-                            elif count == 4:
-                                if [p.coord_x + 2, p.coord_y + 2] in empty_spots:
-                                    if jump_map.setdefault(p) is None:
-                                        jump_map[p] = []
-                                    jump_map[p].append(n_list[1])
-                count += 1
         return jump_map
     if curr.red_turn:
         for p in curr.board.pieces:
             # red pieces
             if p.is_red:
                 spots = generate_possible_spots(p)
-                count = 1
                 for s in spots:
                     if check_spot_valid(s):
                         # black neighbor
@@ -374,49 +316,22 @@ def check_jump(curr: State, prev_jump=None) -> dict[Piece: list[list]]:
                         if n_list[0]:
                             if p.is_king:
                                 # top left
-                                if count == 1:
-                                    if [p.coord_x - 2, p.coord_y - 2] in empty_spots:
-                                        if jump_map.setdefault(p) is None:
-                                            jump_map[p] = []
-                                        jump_map[p].append(n_list[1])
-                                # top right
-                                elif count == 2:
-                                    if [p.coord_x + 2, p.coord_y - 2] in empty_spots:
-                                        if jump_map.setdefault(p) is None:
-                                            jump_map[p] = []
-                                        jump_map[p].append(n_list[1])
-                                # bottom left
-                                elif count == 3:
-                                    if [p.coord_x - 2, p.coord_y + 2] in empty_spots:
-                                        if jump_map.setdefault(p) is None:
-                                            jump_map[p] = []
-                                        jump_map[p].append(n_list[1])
-                                # bottom right
-                                elif count == 4:
-                                    if [p.coord_x + 2, p.coord_y + 2] in empty_spots:
-                                        if jump_map.setdefault(p) is None:
-                                            jump_map[p] = []
-                                        jump_map[p].append(n_list[1])
+                                if [2 * s[0] - p.coord_x, 2 * s[1] - p.coord_y] in empty_spots:
+                                    if jump_map.setdefault(p) is None:
+                                        jump_map[p] = []
+                                    jump_map[p].append(n_list[1])
                             else:
                                 # top left
-                                if count == 1:
-                                    if [p.coord_x - 2, p.coord_y - 2] in empty_spots:
+                                if 2 * s[1] - p.coord_y < p.coord_y:
+                                    if [2 * s[0] - p.coord_x, 2 * s[1] - p.coord_y] in empty_spots:
                                         if jump_map.setdefault(p) is None:
                                             jump_map[p] = []
                                         jump_map[p].append(n_list[1])
-                                # top right
-                                elif count == 2:
-                                    if [p.coord_x + 2, p.coord_y - 2] in empty_spots:
-                                        if jump_map.setdefault(p) is None:
-                                            jump_map[p] = []
-                                        jump_map[p].append(n_list[1])
-                    count += 1
     else:
         for p in curr.board.pieces:
             # black pieces
             if not p.is_red:
                 spots = generate_possible_spots(p)
-                count = 1
                 for s in spots:
                     if check_spot_valid(s):
                         # red neighbor
@@ -424,43 +339,17 @@ def check_jump(curr: State, prev_jump=None) -> dict[Piece: list[list]]:
                         if n_list[0]:
                             if p.is_king:
                                 # top left
-                                if count == 1:
-                                    if [p.coord_x - 2, p.coord_y - 2] in empty_spots:
-                                        if jump_map.setdefault(p) is None:
-                                            jump_map[p] = []
-                                        jump_map[p].append(n_list[1])
-                                # top right
-                                elif count == 2:
-                                    if [p.coord_x + 2, p.coord_y - 2] in empty_spots:
-                                        if jump_map.setdefault(p) is None:
-                                            jump_map[p] = []
-                                        jump_map[p].append(n_list[1])
-                                # bottom left
-                                elif count == 3:
-                                    if [p.coord_x - 2, p.coord_y + 2] in empty_spots:
-                                        if jump_map.setdefault(p) is None:
-                                            jump_map[p] = []
-                                        jump_map[p].append(n_list[1])
-                                # bottom right
-                                elif count == 4:
-                                    if [p.coord_x + 2, p.coord_y + 2] in empty_spots:
-                                        if jump_map.setdefault(p) is None:
-                                            jump_map[p] = []
-                                        jump_map[p].append(n_list[1])
+                                if [2 * s[0] - p.coord_x, 2 * s[1] - p.coord_y] in empty_spots:
+                                    if jump_map.setdefault(p) is None:
+                                        jump_map[p] = []
+                                    jump_map[p].append(n_list[1])
                             else:
-                                # bottom left
-                                if count == 3:
-                                    if [p.coord_x - 2, p.coord_y + 2] in empty_spots:
+                                # top left
+                                if 2 * s[1] - p.coord_y > p.coord_y:
+                                    if [2 * s[0] - p.coord_x, 2 * s[1] - p.coord_y] in empty_spots:
                                         if jump_map.setdefault(p) is None:
                                             jump_map[p] = []
                                         jump_map[p].append(n_list[1])
-                                    # bottom right
-                                elif count == 4:
-                                    if [p.coord_x + 2, p.coord_y + 2] in empty_spots:
-                                        if jump_map.setdefault(p) is None:
-                                            jump_map[p] = []
-                                        jump_map[p].append(n_list[1])
-                    count += 1
     return jump_map
 
 
@@ -482,21 +371,66 @@ def jump(curr, piece: Piece) -> list[State]:
             new_pieces = copy.deepcopy(flag_state.board.pieces)
             for p in new_pieces:
                 if p == piece:
+                    # update new position
                     p.coord_x = 2 * capture.coord_x - p.coord_x
                     p.coord_y = 2 * capture.coord_y - p.coord_y
-
+                    # remove captured piece
                     new_pieces.remove(capture)
                     new_state = State(Board(new_pieces), 0, 0, 0, 0, curr.red_turn, flag_state)
+                    # update flag, for recursion
                     flag_state = new_state
                     j_states = jump(flag_state, p)
                     for js in j_states:
                         ret.append(js)
+                    # set back flag for next iteration
                     flag_state = curr
                     break
         return ret
 
 
-def generate_successors(curr: State, empty: list[list], successor: list):
+def move(curr: State) -> list[State]:
+    ret = []
+    new_piece = copy.deepcopy(curr.board.pieces)
+    if curr.red_turn:
+        for p in new_piece:
+            if p.is_red:
+                spots = generate_possible_spots(p)
+                count = 1
+                for s in spots:
+                    if check_spot_valid(s):
+                        if p.is_king:
+                            p.coord_x = s[0]
+                            p.coord_y = s[1]
+                            ret.append(State(Board(new_piece), 0, 0, 0, 0, True, curr))
+                        else:
+                            # top left
+                            if count == 1 or count == 2:
+                                p.coord_x = s[0]
+                                p.coord_y = s[1]
+                                ret.append(State(Board(new_piece), 0, 0, 0, 0, True, curr))
+                    count += 1
+    else:
+        for p in new_piece:
+            if not p.is_red:
+                spots = generate_possible_spots(p)
+                count = 1
+                for s in spots:
+                    if check_spot_valid(s):
+                        if p.is_king:
+                            p.coord_x = s[0]
+                            p.coord_y = s[1]
+                            ret.append(State(Board(new_piece), 0, 0, 0, 0, False, curr))
+                        else:
+                            # top left
+                            if count == 3 or count == 4:
+                                p.coord_x = s[0]
+                                p.coord_y = s[1]
+                                ret.append(State(Board(new_piece), 0, 0, 0, 0, False, curr))
+                    count += 1
+    return ret
+
+
+def generate_successors(curr: State, successor: list):
     """ Generate successors of the given state and put into successor list
 
     with given list of empty spots
@@ -505,8 +439,13 @@ def generate_successors(curr: State, empty: list[list], successor: list):
     if len(jump_map) != 0:
         # must jump
         for piece in jump_map:
-            for capture in jump_map[piece]:
-                return
+            jumps = jump(curr, piece)
+            for j in jumps:
+                successor.append(j)
+    else:
+        moves = move(curr)
+        for m in moves:
+            successor.append(m)
 
 
 def get_solution(goal_state: State) -> list[State]:
@@ -545,15 +484,19 @@ if __name__ == "__main__":
     # args = parser.parse_args()
 
     # read the board from the file
-    inboard = read_from_file("checkers2.txt")
+    inboard = read_from_file("test_successor_black.txt")
     # generate state base on the board
     state = State(inboard, 0, 0, 0, 0, False)
-    for p in state.board.pieces:
-        if p.coord_x == 3 and p.coord_y == 4:
-            states = jump(state, p)
-            for state in states:
-                state.board.display()
-                print('\n')
+    sucessor = []
+    generate_successors(state, sucessor)
+    for s in sucessor:
+        s.board.display()
+        print('\n')
+    # for p in state.board.pieces:
+    #     if p.coord_x == 2 and p.coord_y == 1:
+    #         dict = check_jump(state, p)
+    #         for k in dict:
+    #             print(k)
 
     # write solution base on algo choice
     # if args.algo == 'dfs':
