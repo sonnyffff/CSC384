@@ -1,4 +1,5 @@
 import copy
+import math
 from heapq import heappush, heappop
 import argparse
 
@@ -201,8 +202,39 @@ def terminal_test(curr_state: State):
     TODO
     """
     if all(p.is_red for p in curr_state.board.pieces):
-        return True
-    return False
+        return ['T', 'r']
+    elif all(not p.is_red for p in curr_state.board.pieces):
+        return ['T', 'b']
+    return ['F']
+
+
+def utility_function(curr_state: State):
+    flag = terminal_test(curr_state)
+    if flag[0] == 'T':
+        if flag[1] == 'r':
+            curr_state.utility = math.inf
+        elif flag[1] == 'b':
+            curr_state.utility = -math.inf
+    elif curr_state.depth == 10:
+        # estimate utility if not terminal TODO
+        curr_state.utility = calculate_estimate_utility(curr_state)
+    else:
+        curr_state.utility = None
+
+
+def calculate_estimate_utility(curr_state: State) -> int:
+    red_point = 0
+    black_point = 0
+    for p in curr_state.board.pieces:
+        if p.is_red and p.is_king:
+            red_point += 2
+        elif p.is_red and not p.is_king:
+            red_point += 1
+        elif not p.is_red and p.is_king:
+            black_point += 2
+        elif not p.is_red and not p.is_king:
+            black_point += 1
+    return red_point - black_point
 
 
 def find_empty_spot(curr_board: Board):
@@ -385,6 +417,9 @@ def jump(curr, piece: Piece) -> list[State]:
                     # set back flag for next iteration
                     flag_state = curr
                     break
+        for s in ret:
+            s.depth = curr.depth + 1
+            utility_function(s)
         return ret
 
 
@@ -401,13 +436,18 @@ def move(curr: State) -> list[State]:
                         if p.is_king:
                             p.coord_x = s[0]
                             p.coord_y = s[1]
-                            ret.append(State(Board(new_piece), 0, 0, 0, 0, True, curr))
+                            temp = State(Board(new_piece), 0, curr.depth + 1, 0, 0, True, curr)
+                            utility_function(temp)
+                            ret.append(temp)
+
                         else:
                             # top left
                             if count == 1 or count == 2:
                                 p.coord_x = s[0]
                                 p.coord_y = s[1]
-                                ret.append(State(Board(new_piece), 0, 0, 0, 0, True, curr))
+                                temp = State(Board(new_piece), 0, curr.depth + 1, 0, 0, True, curr)
+                                utility_function(temp)
+                                ret.append(temp)
                     count += 1
     else:
         for p in new_piece:
@@ -419,13 +459,17 @@ def move(curr: State) -> list[State]:
                         if p.is_king:
                             p.coord_x = s[0]
                             p.coord_y = s[1]
-                            ret.append(State(Board(new_piece), 0, 0, 0, 0, False, curr))
+                            temp = State(Board(new_piece), 0, curr.depth + 1, 0, 0, True, curr)
+                            utility_function(temp)
+                            ret.append(temp)
                         else:
                             # top left
                             if count == 3 or count == 4:
                                 p.coord_x = s[0]
                                 p.coord_y = s[1]
-                                ret.append(State(Board(new_piece), 0, 0, 0, 0, False, curr))
+                                temp = State(Board(new_piece), 0, curr.depth + 1, 0, 0, True, curr)
+                                utility_function(temp)
+                                ret.append(temp)
                     count += 1
     return ret
 
@@ -484,13 +528,14 @@ if __name__ == "__main__":
     # args = parser.parse_args()
 
     # read the board from the file
-    inboard = read_from_file("test_successor_black.txt")
+    inboard = read_from_file("test_successor_red.txt")
     # generate state base on the board
     state = State(inboard, 0, 0, 0, 0, False)
     sucessor = []
     generate_successors(state, sucessor)
     for s in sucessor:
         s.board.display()
+        print(s.utility)
         print('\n')
     # for p in state.board.pieces:
     #     if p.coord_x == 2 and p.coord_y == 1:
