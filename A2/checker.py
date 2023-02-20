@@ -444,7 +444,7 @@ def jump(curr, piece: Piece) -> list[State]:
                     break
         for s in ret:
             s.depth = curr.depth + 1
-            s.red_turn = not s.red_turn
+            s.red_turn = not curr.red_turn
             utility_function(s)
         return ret
 
@@ -467,6 +467,7 @@ def move(curr: State) -> list[State]:
                                     p2.coord_y = s[1]
                                     temp = State(Board(new_piece), 0, curr.depth + 1, 0, 0, False, [], 0, curr)
                                     ret.append(temp)
+                                    ret.append(temp)
                                 else:
                                     # top left
                                     if count == 1 or count == 2:
@@ -475,7 +476,7 @@ def move(curr: State) -> list[State]:
                                         upgrade(p2)
                                         temp = State(Board(new_piece), 0, curr.depth + 1, 0, 0, False, [], 0, curr)
                                         ret.append(temp)
-                count += 1
+                    count += 1
     else:
         for p in curr.board.pieces:
             temp = curr
@@ -500,7 +501,7 @@ def move(curr: State) -> list[State]:
                                         upgrade(p2)
                                         temp = State(Board(new_piece), 0, curr.depth + 1, 0, 0, True, [], 0, curr)
                                         ret.append(temp)
-                count += 1
+                    count += 1
     return ret
 
 
@@ -525,7 +526,7 @@ def generate_successors(curr: State, successor: list):
 
 
 def cut_off_test(curr_state: State) -> bool:
-    if curr_state.depth == 5:
+    if curr_state.depth == 8:
         return True
     else:
         return False
@@ -632,11 +633,12 @@ if __name__ == "__main__":
 
     inboard = read_from_file("test_successor_red.txt")
     state = State(inboard, 0, 0, -math.inf, math.inf, True, [], 0)
-    steps = get_solution(state)
-    for s in steps:
-        s.board.display()
-        print(s.v)
-        print('\n')
+    write_solution(state, 'test_successor_red_sol.txt')
+    # for s in steps:
+    #     s.board.display()
+    #     print(s.v)
+    #     print(s.red_turn)
+    #     print('\n')
 
 
     # inboard = read_from_file("test_successor_black.txt")
@@ -654,13 +656,6 @@ if __name__ == "__main__":
     #         s2.board.display()
     #     print('\n')
 
-
-
-    # for p in state.board.pieces:
-    #     if p.coord_x == 2 and p.coord_y == 1:
-    #         dict = check_jump(state, p)
-    #         for k in dict:
-    #             print(k)
 
     # write solution base on algo choice
     # if args.algo == 'dfs':
