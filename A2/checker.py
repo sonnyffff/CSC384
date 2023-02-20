@@ -108,23 +108,29 @@ class State:
     heuristic function, f value, current depth and parent.
     """
 
-    def __init__(self, board, utility, depth, alpha, beta, is_red_turn, parent=None):
+    def __init__(self, board, utility, depth, alpha, beta, is_red_turn, children, v, parent=None):
         """
         :param board: The board of the state.
         :type board: Board
         :param utility: The estimated utility value of current state or utility if the state is terminal.
-        :type utility: int
+        :type utility: float
         :param depth: The depth of current state in the search tree.
         :type depth: int
         :param alpha: The best of choice so far for red.
-        :type alpha: int
+        :type alpha: float
         :param beta: The best of choice so far for black.
-        :type beta: int
+        :type beta: float
         :param is_red_turn: True if it's red turn
         :type is_red_turn: bool
         :param parent: The parent of current state.
         :type parent: State
+        :param children: The children of current state.
+        :type children: list
+        :param v: The value of current state.
+        :type v: float
         """
+        self.children = children
+        self.v = v
         self.board = board
         self.utility = utility
         self.depth = depth
@@ -142,6 +148,9 @@ class State:
         if self.id == other.id:
             return True
         return False
+
+    def add_children(self, child):
+        self.children.append(child)
 
 
 def read_from_file(filename):
@@ -208,18 +217,17 @@ def terminal_test(curr_state: State):
     return ['F']
 
 
-def utility_function(curr_state: State):
+def utility_function(curr_state: State) -> bool:
     flag = terminal_test(curr_state)
     if flag[0] == 'T':
         if flag[1] == 'r':
             curr_state.utility = math.inf
+            curr_state.v = math.inf
         elif flag[1] == 'b':
             curr_state.utility = -math.inf
-    elif curr_state.depth == 10:
-        # estimate utility if not terminal TODO
-        curr_state.utility = calculate_estimate_utility(curr_state)
-    else:
-        curr_state.utility = None
+            curr_state.v = -math.inf
+        return True
+    return False
 
 
 def calculate_estimate_utility(curr_state: State) -> int:
@@ -249,7 +257,7 @@ def find_empty_spot(curr_board: Board):
     return empty_spots
 
 
-def check_spot_valid(spot: list):
+def check_boundaries(spot: list):
     """ Check if given coordinate a valid spot on the chess board.
 
     """
@@ -257,6 +265,13 @@ def check_spot_valid(spot: list):
         if 7 >= spot[1] >= 0:
             return True
     return False
+
+
+def check_spot_valid(curr: State, spot: list):
+    for p in curr.board.pieces:
+        if p.coord_x == spot[0] and p.coord_y == spot[1]:
+            return False
+    return True
 
 
 def check_neighbor_color(curr: State, is_red: bool, spot: list) -> list:
@@ -283,6 +298,15 @@ def generate_possible_spots(p: Piece) -> list[list]:
     return spots
 
 
+def upgrade(piece: Piece):
+    if piece.is_red:
+        if piece.coord_y == 0:
+            piece.is_king = True
+    else:
+        if piece.coord_y == 7:
+            piece.is_king = True
+
+
 def check_jump(curr: State, prev_jump=None) -> dict[Piece: list[list]]:
     """
 
@@ -298,7 +322,7 @@ def check_jump(curr: State, prev_jump=None) -> dict[Piece: list[list]]:
         if p.is_red:
             spots = generate_possible_spots(p)
             for s in spots:
-                if check_spot_valid(s):
+                if check_boundaries(s):
                     # black neighbor
                     n_list = check_neighbor_color(curr, True, s)
                     if n_list[0]:
@@ -318,7 +342,7 @@ def check_jump(curr: State, prev_jump=None) -> dict[Piece: list[list]]:
         else:
             spots = generate_possible_spots(p)
             for s in spots:
-                if check_spot_valid(s):
+                if check_boundaries(s):
                     # red neighbor
                     n_list = check_neighbor_color(curr, False, s)
                     if n_list[0]:
@@ -342,7 +366,7 @@ def check_jump(curr: State, prev_jump=None) -> dict[Piece: list[list]]:
             if p.is_red:
                 spots = generate_possible_spots(p)
                 for s in spots:
-                    if check_spot_valid(s):
+                    if check_boundaries(s):
                         # black neighbor
                         n_list = check_neighbor_color(curr, True, s)
                         if n_list[0]:
@@ -365,7 +389,7 @@ def check_jump(curr: State, prev_jump=None) -> dict[Piece: list[list]]:
             if not p.is_red:
                 spots = generate_possible_spots(p)
                 for s in spots:
-                    if check_spot_valid(s):
+                    if check_boundaries(s):
                         # red neighbor
                         n_list = check_neighbor_color(curr, False, s)
                         if n_list[0]:
@@ -406,9 +430,10 @@ def jump(curr, piece: Piece) -> list[State]:
                     # update new position
                     p.coord_x = 2 * capture.coord_x - p.coord_x
                     p.coord_y = 2 * capture.coord_y - p.coord_y
+                    upgrade(p)
                     # remove captured piece
                     new_pieces.remove(capture)
-                    new_state = State(Board(new_pieces), 0, 0, 0, 0, curr.red_turn, flag_state)
+                    new_state = State(Board(new_pieces), 0, 0, 0, 0, curr.red_turn, [], 0, flag_state)
                     # update flag, for recursion
                     flag_state = new_state
                     j_states = jump(flag_state, p)
@@ -419,58 +444,63 @@ def jump(curr, piece: Piece) -> list[State]:
                     break
         for s in ret:
             s.depth = curr.depth + 1
+            s.red_turn = not s.red_turn
             utility_function(s)
         return ret
 
 
 def move(curr: State) -> list[State]:
     ret = []
-    new_piece = copy.deepcopy(curr.board.pieces)
     if curr.red_turn:
-        for p in new_piece:
+        for p in curr.board.pieces:
+            temp = curr
             if p.is_red:
                 spots = generate_possible_spots(p)
                 count = 1
                 for s in spots:
-                    if check_spot_valid(s):
-                        if p.is_king:
-                            p.coord_x = s[0]
-                            p.coord_y = s[1]
-                            temp = State(Board(new_piece), 0, curr.depth + 1, 0, 0, True, curr)
-                            utility_function(temp)
-                            ret.append(temp)
-
-                        else:
-                            # top left
-                            if count == 1 or count == 2:
-                                p.coord_x = s[0]
-                                p.coord_y = s[1]
-                                temp = State(Board(new_piece), 0, curr.depth + 1, 0, 0, True, curr)
-                                utility_function(temp)
-                                ret.append(temp)
-                    count += 1
+                    if check_boundaries(s) and check_spot_valid(temp, s):
+                        new_piece = copy.deepcopy(curr.board.pieces)
+                        for p2 in new_piece:
+                            if p2.coord_x == p.coord_x and p.coord_y == p2.coord_y:
+                                if p2.is_king:
+                                    p2.coord_x = s[0]
+                                    p2.coord_y = s[1]
+                                    temp = State(Board(new_piece), 0, curr.depth + 1, 0, 0, False, [], 0, curr)
+                                    ret.append(temp)
+                                else:
+                                    # top left
+                                    if count == 1 or count == 2:
+                                        p2.coord_x = s[0]
+                                        p2.coord_y = s[1]
+                                        upgrade(p2)
+                                        temp = State(Board(new_piece), 0, curr.depth + 1, 0, 0, False, [], 0, curr)
+                                        ret.append(temp)
+                count += 1
     else:
-        for p in new_piece:
+        for p in curr.board.pieces:
+            temp = curr
             if not p.is_red:
                 spots = generate_possible_spots(p)
                 count = 1
                 for s in spots:
-                    if check_spot_valid(s):
-                        if p.is_king:
-                            p.coord_x = s[0]
-                            p.coord_y = s[1]
-                            temp = State(Board(new_piece), 0, curr.depth + 1, 0, 0, True, curr)
-                            utility_function(temp)
-                            ret.append(temp)
-                        else:
-                            # top left
-                            if count == 3 or count == 4:
-                                p.coord_x = s[0]
-                                p.coord_y = s[1]
-                                temp = State(Board(new_piece), 0, curr.depth + 1, 0, 0, True, curr)
-                                utility_function(temp)
-                                ret.append(temp)
-                    count += 1
+                    if check_boundaries(s) and check_spot_valid(temp, s):
+                        new_piece = copy.deepcopy(curr.board.pieces)
+                        for p2 in new_piece:
+                            if p2.coord_x == p.coord_x and p.coord_y == p2.coord_y:
+                                if p2.is_king:
+                                    p2.coord_x = s[0]
+                                    p2.coord_y = s[1]
+                                    temp = State(Board(new_piece), 0, curr.depth + 1, 0, 0, True, [], 0, curr)
+                                    ret.append(temp)
+                                else:
+                                    # top left
+                                    if count == 3 or count == 4:
+                                        p2.coord_x = s[0]
+                                        p2.coord_y = s[1]
+                                        upgrade(p2)
+                                        temp = State(Board(new_piece), 0, curr.depth + 1, 0, 0, True, [], 0, curr)
+                                        ret.append(temp)
+                count += 1
     return ret
 
 
@@ -485,22 +515,90 @@ def generate_successors(curr: State, successor: list):
         for piece in jump_map:
             jumps = jump(curr, piece)
             for j in jumps:
+                curr.add_children(j)
                 successor.append(j)
     else:
         moves = move(curr)
         for m in moves:
+            curr.add_children(m)
             successor.append(m)
 
 
-def get_solution(goal_state: State) -> list[State]:
+def cut_off_test(curr_state: State) -> bool:
+    if curr_state.depth == 5:
+        return True
+    else:
+        return False
+
+
+def alpha_beta_search(curr_state: State):
+    # explored = set()
+    # explored.add(curr_state.id)
+    curr_state.v = max_value(curr_state, -math.inf, math.inf)
+    # print("Childrens of ")
+    # curr_state.board.display()
+    # print("\n")
+    for act in curr_state.children:
+        # act.board.display()
+        if act.v == curr_state.v:
+            return act
+
+
+def max_value(curr_state: State, alpha, beta) -> float:
+    if terminal_test(curr_state)[0] == 'T':
+        utility_function(curr_state)
+        return curr_state.utility
+    elif cut_off_test(curr_state):
+        # estimate utility if not terminal TODO
+        curr_state.v = calculate_estimate_utility(curr_state)
+        return curr_state.v
+    curr_state.v = -math.inf
+    actions = []
+    generate_successors(curr_state, actions)
+    for act in curr_state.children:
+        # if act.id not in explored:
+        # explored.add(act.id)
+        curr_state.v = max(curr_state.v, min_value(act, alpha, beta))
+        if curr_state.v >= beta:
+            return curr_state.v
+        alpha = max(alpha, curr_state.v)
+    return curr_state.v
+
+
+def min_value(curr_state: State, alpha, beta) -> float:
+    if terminal_test(curr_state)[0] == 'T':
+        utility_function(curr_state)
+        return curr_state.utility
+    elif cut_off_test(curr_state):
+        # estimate utility if not terminal TODO
+        curr_state.v = calculate_estimate_utility(curr_state)
+        return curr_state.v
+    curr_state.v = math.inf
+    actions = []
+    generate_successors(curr_state, actions)
+    for act in curr_state.children:
+        # if act.id not in explored:
+        # explored.add(act.id)
+        curr_state.v = min(curr_state.v, max_value(act, alpha, beta))
+        if curr_state.v <= alpha:
+            return curr_state.v
+        beta = min(beta, curr_state.v)
+    return curr_state.v
+
+
+def get_solution(init_state: State) -> list[State]:
     """ Given the goal state and back track to solution
 
     """
-    sol = [goal_state]
-    while goal_state.parent is not None:
-        sol.append(goal_state.parent)
-        goal_state = goal_state.parent
-    sol.reverse()
+    iter_s = init_state
+    sol = [init_state]
+
+    count = 0
+    while len(iter_s.children) != 0 or count == 0:
+        next_action = alpha_beta_search(iter_s)
+        sol.append(next_action)
+        iter_s = next_action
+        count += 1
     return sol
 
 
@@ -528,15 +626,36 @@ if __name__ == "__main__":
     # args = parser.parse_args()
 
     # read the board from the file
-    inboard = read_from_file("test_successor_red.txt")
+    # inboard = read_from_file("test_successor_black.txt")
     # generate state base on the board
-    state = State(inboard, 0, 0, 0, 0, False)
-    sucessor = []
-    generate_successors(state, sucessor)
-    for s in sucessor:
+    # state = State(inboard, 0, 0, -math.inf, math.inf, False, [], 0)
+
+    inboard = read_from_file("test_successor_red.txt")
+    state = State(inboard, 0, 0, -math.inf, math.inf, True, [], 0)
+    steps = get_solution(state)
+    for s in steps:
         s.board.display()
-        print(s.utility)
+        print(s.v)
         print('\n')
+
+
+    # inboard = read_from_file("test_successor_black.txt")
+    # state = State(inboard, 0, 0, -math.inf, math.inf, False, [], 0)
+    # sucessor = []
+    # generate_successors(state, sucessor)
+    # for s in state.children:
+    #     tmmm = []
+    #     print('parent')
+    #     generate_successors(s, tmmm)
+    #     s.board.display()
+    #     print('\n')
+    #     for s2 in tmmm:
+    #         print('child')
+    #         s2.board.display()
+    #     print('\n')
+
+
+
     # for p in state.board.pieces:
     #     if p.coord_x == 2 and p.coord_y == 1:
     #         dict = check_jump(state, p)
