@@ -2,6 +2,7 @@ import copy
 import math
 from heapq import heappush, heappop
 import argparse
+import time
 
 # ====================================================================================
 
@@ -9,7 +10,7 @@ char_red_king = 'R'
 char_red_normal = 'r'
 char_black_king = 'B'
 char_black_normal = 'b'
-
+explored_set = set()
 
 class Piece:
     """
@@ -516,13 +517,17 @@ def generate_successors(curr: State, successor: list):
         for piece in jump_map:
             jumps = jump(curr, piece)
             for j in jumps:
-                curr.add_children(j)
-                successor.append(j)
+                if j.id not in explored_set:
+                    explored_set.add(j.id)
+                    curr.add_children(j)
+                    successor.append(j)
     else:
         moves = move(curr)
         for m in moves:
-            curr.add_children(m)
-            successor.append(m)
+            if m.id not in explored_set:
+                explored_set.add(m.id)
+                curr.add_children(m)
+                successor.append(m)
 
 
 def cut_off_test(curr_state: State) -> bool:
@@ -533,8 +538,6 @@ def cut_off_test(curr_state: State) -> bool:
 
 
 def alpha_beta_search(curr_state: State):
-    # explored = set()
-    # explored.add(curr_state.id)
     curr_state.v = max_value(curr_state, -math.inf, math.inf)
     # print("Childrens of ")
     # curr_state.board.display()
@@ -617,30 +620,18 @@ if __name__ == "__main__":
     #     required=True,
     #     help="The output file that contains the solution."
     # )
-    # parser.add_argument(
-    #     "--algo",
-    #     type=str,
-    #     required=True,
-    #     choices=['astar', 'dfs'],
-    #     help="The searching algorithm."
-    # )
     # args = parser.parse_args()
 
     # read the board from the file
     # inboard = read_from_file("test_successor_black.txt")
     # generate state base on the board
     # state = State(inboard, 0, 0, -math.inf, math.inf, False, [], 0)
-
+    start = time.time()
     inboard = read_from_file("test_successor_red.txt")
     state = State(inboard, 0, 0, -math.inf, math.inf, True, [], 0)
     write_solution(state, 'test_successor_red_sol.txt')
-    # for s in steps:
-    #     s.board.display()
-    #     print(s.v)
-    #     print(s.red_turn)
-    #     print('\n')
-
-
+    end = time.time()
+    print(end - start)
     # inboard = read_from_file("test_successor_black.txt")
     # state = State(inboard, 0, 0, -math.inf, math.inf, False, [], 0)
     # sucessor = []
@@ -658,9 +649,5 @@ if __name__ == "__main__":
 
 
     # write solution base on algo choice
-    # if args.algo == 'dfs':
-    #     goal = dfs_search(state)
-    #     write_solution(goal, args.outputfile)
-    # elif args.algo == 'astar':
-    #     goal = a_star_search(state)
-    #     write_solution(goal, args.outputfile)
+    #write_solution(state, args.outputfile)
+
