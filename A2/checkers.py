@@ -11,7 +11,9 @@ char_red_normal = 'r'
 char_black_king = 'B'
 char_black_normal = 'b'
 explored_dict = dict()
-DEPTH_LIMIT = 4
+DEPTH_LIMIT = 3
+
+
 class Piece:
     """
     This represents a piece on the checker.
@@ -142,7 +144,7 @@ class State:
         self.id = hash(board)  # The id for breaking ties.
         assert (alpha <= beta)
 
-    def __gt__(self, other):
+    def __lt__(self, other):
         return self.utility > other.utility
 
     def __eq__(self, other):
@@ -239,19 +241,56 @@ def utility_function(curr_state: State) -> bool:
     return False
 
 
-def calculate_estimate_utility(curr_state: State) -> int:
-    red_point = 0
-    black_point = 0
+def calculate_piece_value(piece: Piece) -> float:
+    """
+    Calculate utility for a piece
+    """
+    ret = 0
+    if piece.is_red:
+        # type
+        if piece.is_king:
+            ret += 2
+        else:
+            ret += 1
+        # forward
+        ret += piece.coord_y * 0.1
+        # center
+        ret += (3.5 - abs(piece.coord_x - 3.5)) * 0.1
+        # stable
+        if piece.coord_y == 7 or piece.coord_y == 0 or piece.coord_x == 7 or piece.coord_x == 0:
+            ret += 0.5
+    else:
+        # type
+        if piece.is_king:
+            ret -= 2
+        else:
+            ret -= 1
+        # forward
+        ret -= piece.coord_y * 0.1
+        # center
+        ret -= (3.5 - abs(piece.coord_x - 3.5)) * 0.1
+        # stable
+        if piece.coord_y == 7 or piece.coord_y == 0 or piece.coord_x == 7 or piece.coord_x == 0:
+            ret -= 0.5
+    return ret
+
+
+def calculate_estimate_utility(curr_state: State) -> float:
+    point = 0
+    temp1 = []
+    temp2 = []
     for p in curr_state.board.pieces:
-        if p.is_red and p.is_king:
-            red_point += 2
-        elif p.is_red and not p.is_king:
-            red_point += 1
-        elif not p.is_red and p.is_king:
-            black_point += 2
-        elif not p.is_red and not p.is_king:
-            black_point += 1
-    return red_point - black_point
+        point += calculate_piece_value(p)
+    # generate_successors(curr_state, temp1)
+    # oppo_state = copy.deepcopy(curr_state)
+    # oppo_state.red_turn = not curr_state.red_turn
+    # generate_successors(curr_state, temp2)
+    # if len(temp1) > len(temp2):
+    #     point = point * 1.2
+    # else:
+    #     point = point * 0.8
+
+    return point
 
 
 def find_empty_spot(curr_board: Board):
@@ -442,7 +481,8 @@ def jump(curr, piece: Piece) -> list[State]:
                     upgrade(p)
                     # remove captured piece
                     new_pieces.remove(capture)
-                    new_state = State(Board(new_pieces), 0, 0, 0, 0, curr.red_turn, [], 0, flag_state)
+                    new_state = State(Board(new_pieces), 0, 0, 0, 0, curr.red_turn, [], 0,
+                                      flag_state)
                     # update flag, for recursion
                     flag_state = new_state
                     j_states = jump(flag_state, p)
@@ -474,7 +514,8 @@ def move(curr: State) -> list[State]:
                                 if p2.is_king:
                                     p2.coord_x = s[0]
                                     p2.coord_y = s[1]
-                                    temp = State(Board(new_piece), 0, curr.depth + 1, 0, 0, False, [], 0, curr)
+                                    temp = State(Board(new_piece), 0, curr.depth + 1, 0, 0, False,
+                                                 [], 0, curr)
                                     ret.append(temp)
                                     ret.append(temp)
                                 else:
@@ -483,7 +524,8 @@ def move(curr: State) -> list[State]:
                                         p2.coord_x = s[0]
                                         p2.coord_y = s[1]
                                         upgrade(p2)
-                                        temp = State(Board(new_piece), 0, curr.depth + 1, 0, 0, False, [], 0, curr)
+                                        temp = State(Board(new_piece), 0, curr.depth + 1, 0, 0,
+                                                     False, [], 0, curr)
                                         ret.append(temp)
                     count += 1
     else:
@@ -500,7 +542,8 @@ def move(curr: State) -> list[State]:
                                 if p2.is_king:
                                     p2.coord_x = s[0]
                                     p2.coord_y = s[1]
-                                    temp = State(Board(new_piece), 0, curr.depth + 1, 0, 0, True, [], 0, curr)
+                                    temp = State(Board(new_piece), 0, curr.depth + 1, 0, 0, True,
+                                                 [], 0, curr)
                                     ret.append(temp)
                                 else:
                                     # top left
@@ -508,7 +551,8 @@ def move(curr: State) -> list[State]:
                                         p2.coord_x = s[0]
                                         p2.coord_y = s[1]
                                         upgrade(p2)
-                                        temp = State(Board(new_piece), 0, curr.depth + 1, 0, 0, True, [], 0, curr)
+                                        temp = State(Board(new_piece), 0, curr.depth + 1, 0, 0,
+                                                     True, [], 0, curr)
                                         ret.append(temp)
                     count += 1
     return ret
@@ -525,13 +569,15 @@ def generate_successors(curr: State, successor: list):
         for piece in jump_map:
             jumps = jump(curr, piece)
             for j in jumps:
+                j.utility = calculate_estimate_utility(j)
                 curr.add_children(j)
-                successor.append(j)
+                heappush(successor, j)
     else:
         moves = move(curr)
         for m in moves:
+            m.utility = calculate_estimate_utility(m)
             curr.add_children(m)
-            successor.append(m)
+            heappush(successor, m)
 
 
 def cut_off_test(curr_state: State) -> bool:
@@ -568,9 +614,19 @@ def max_value(curr_state: State, alpha, beta) -> float:
     curr_state.v = -math.inf
     actions = []
     generate_successors(curr_state, actions)
-    for act in curr_state.children:
+    # for act in curr_state.children:
+    #     # if act.id not in explored:
+    #     # explored.add(act.id)
+    #     curr_state.v = max(curr_state.v, min_value(act, alpha, beta))
+    #     explored_dict[curr_state.id] = curr_state.v
+    #     if curr_state.v >= beta:
+    #         return curr_state.v
+    #     alpha = max(alpha, curr_state.v)
+    # return curr_state.v
+    while len(actions) != 0:
         # if act.id not in explored:
         # explored.add(act.id)
+        act = heappop(actions)
         curr_state.v = max(curr_state.v, min_value(act, alpha, beta))
         explored_dict[curr_state.id] = curr_state.v
         if curr_state.v >= beta:
@@ -592,13 +648,20 @@ def min_value(curr_state: State, alpha, beta) -> float:
     curr_state.v = math.inf
     actions = []
     generate_successors(curr_state, actions)
-    if len(actions) == 0:
-        print('cant reach here')
+    # for act in curr_state.children:
+    #     # if act.id not in explored:
+    #     # explored.add(act.id)
+    #     curr_state.v = min(curr_state.v, max_value(act, alpha, beta))
+    #     explored_dict[curr_state.id] = curr_state.v
+    #     if curr_state.v <= alpha:
+    #         return curr_state.v
+    #     beta = min(beta, curr_state.v)
+    # return curr_state.v
 
-        generate_successors(curr_state, actions)
-    for act in curr_state.children:
+    while len(actions) != 0:
         # if act.id not in explored:
         # explored.add(act.id)
+        act = heappop(actions)
         curr_state.v = min(curr_state.v, max_value(act, alpha, beta))
         explored_dict[curr_state.id] = curr_state.v
         if curr_state.v <= alpha:
@@ -673,7 +736,5 @@ if __name__ == "__main__":
     #         s2.board.display()
     #     print('\n')
 
-
     # write solution base on algo choice
-    #write_solution(state, args.outputfile)
-
+    # write_solution(state, args.outputfile)
