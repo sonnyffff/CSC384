@@ -10,8 +10,8 @@ char_red_king = 'R'
 char_red_normal = 'r'
 char_black_king = 'B'
 char_black_normal = 'b'
-explored_set = set()
-
+explored_dict = dict()
+DEPTH_LIMIT = 4
 class Piece:
     """
     This represents a piece on the checker.
@@ -104,8 +104,8 @@ class Board:
 class State:
     """
     State class wrapping a Board with some extra current state information.
-    Note that State and Board are different. Board has the locations of the pieces. 
-    State has a Board and some extra information that is relevant to the search: 
+    Note that State and Board are different. Board has the locations of the pieces.
+    State has a Board and some extra information that is relevant to the search:
     heuristic function, f value, current depth and parent.
     """
 
@@ -211,10 +211,18 @@ def terminal_test(curr_state: State):
     """ Test whether the given state is a terminal state.
     TODO
     """
-    if all(p.is_red for p in curr_state.board.pieces):
-        return ['T', 'r']
-    elif all(not p.is_red for p in curr_state.board.pieces):
-        return ['T', 'b']
+    s_list = []
+    generate_successors(curr_state, s_list)
+    if curr_state.red_turn:
+        if all(p.is_red for p in curr_state.board.pieces):
+            return ['T', 'r']
+        elif len(s_list) == 0:
+            return ['T', 'b']
+    else:
+        if all(not p.is_red for p in curr_state.board.pieces):
+            return ['T', 'b']
+        elif len(s_list) == 0:
+            return ['T', 'r']
     return ['F']
 
 
@@ -222,11 +230,11 @@ def utility_function(curr_state: State) -> bool:
     flag = terminal_test(curr_state)
     if flag[0] == 'T':
         if flag[1] == 'r':
-            curr_state.utility = math.inf
-            curr_state.v = math.inf
+            curr_state.utility = 10000 * (DEPTH_LIMIT - curr_state.depth + 1)
+            curr_state.v = 10000 * (DEPTH_LIMIT - curr_state.depth + 1)
         elif flag[1] == 'b':
-            curr_state.utility = -math.inf
-            curr_state.v = -math.inf
+            curr_state.utility = -10000 * (curr_state.depth + 1)
+            curr_state.v = -10000 * (curr_state.depth + 1)
         return True
     return False
 
@@ -517,28 +525,27 @@ def generate_successors(curr: State, successor: list):
         for piece in jump_map:
             jumps = jump(curr, piece)
             for j in jumps:
-                if j.id not in explored_set:
-                    explored_set.add(j.id)
-                    curr.add_children(j)
-                    successor.append(j)
+                curr.add_children(j)
+                successor.append(j)
     else:
         moves = move(curr)
         for m in moves:
-            if m.id not in explored_set:
-                explored_set.add(m.id)
-                curr.add_children(m)
-                successor.append(m)
+            curr.add_children(m)
+            successor.append(m)
 
 
 def cut_off_test(curr_state: State) -> bool:
-    if curr_state.depth == 8:
+    if curr_state.depth == DEPTH_LIMIT:
         return True
     else:
         return False
 
 
-def alpha_beta_search(curr_state: State):
-    curr_state.v = max_value(curr_state, -math.inf, math.inf)
+def alpha_beta_search(curr_state: State) -> State:
+    if curr_state.red_turn:
+        curr_state.v = max_value(curr_state, -math.inf, math.inf)
+    else:
+        curr_state.v = min_value(curr_state, -math.inf, math.inf)
     # print("Childrens of ")
     # curr_state.board.display()
     # print("\n")
@@ -556,6 +563,8 @@ def max_value(curr_state: State, alpha, beta) -> float:
         # estimate utility if not terminal TODO
         curr_state.v = calculate_estimate_utility(curr_state)
         return curr_state.v
+    elif curr_state.id in explored_dict:
+        return explored_dict[curr_state.id]
     curr_state.v = -math.inf
     actions = []
     generate_successors(curr_state, actions)
@@ -563,6 +572,7 @@ def max_value(curr_state: State, alpha, beta) -> float:
         # if act.id not in explored:
         # explored.add(act.id)
         curr_state.v = max(curr_state.v, min_value(act, alpha, beta))
+        explored_dict[curr_state.id] = curr_state.v
         if curr_state.v >= beta:
             return curr_state.v
         alpha = max(alpha, curr_state.v)
@@ -577,13 +587,20 @@ def min_value(curr_state: State, alpha, beta) -> float:
         # estimate utility if not terminal TODO
         curr_state.v = calculate_estimate_utility(curr_state)
         return curr_state.v
+    elif curr_state.id in explored_dict:
+        return explored_dict[curr_state.id]
     curr_state.v = math.inf
     actions = []
     generate_successors(curr_state, actions)
+    if len(actions) == 0:
+        print('cant reach here')
+
+        generate_successors(curr_state, actions)
     for act in curr_state.children:
         # if act.id not in explored:
         # explored.add(act.id)
         curr_state.v = min(curr_state.v, max_value(act, alpha, beta))
+        explored_dict[curr_state.id] = curr_state.v
         if curr_state.v <= alpha:
             return curr_state.v
         beta = min(beta, curr_state.v)
@@ -596,13 +613,20 @@ def get_solution(init_state: State) -> list[State]:
     """
     iter_s = init_state
     sol = [init_state]
-
-    count = 0
-    while len(iter_s.children) != 0 or count == 0:
+    while 1:
         next_action = alpha_beta_search(iter_s)
+        if terminal_test(next_action)[0] == 'T':
+            sol.append(next_action)
+            break
         sol.append(next_action)
+        global explored_dict
+        explored_dict = dict()
+        next_action.depth = 0
+        next_action.v = 0
+        next_action.alpha = -math.inf
+        next_action.beta = math.inf
+        next_action.children = []
         iter_s = next_action
-        count += 1
     return sol
 
 
@@ -628,6 +652,8 @@ if __name__ == "__main__":
     # state = State(inboard, 0, 0, -math.inf, math.inf, False, [], 0)
     start = time.time()
     inboard = read_from_file("test_successor_red.txt")
+
+    inboard.display()
     state = State(inboard, 0, 0, -math.inf, math.inf, True, [], 0)
     write_solution(state, 'test_successor_red_sol.txt')
     end = time.time()
