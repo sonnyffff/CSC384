@@ -11,7 +11,7 @@ char_red_normal = 'r'
 char_black_king = 'B'
 char_black_normal = 'b'
 explored_dict = dict()
-DEPTH_LIMIT = 3
+DEPTH_LIMIT = 5
 
 
 class Piece:
@@ -211,24 +211,31 @@ def write_solution(goal_state: State, filename: str):
 
 def terminal_test(curr_state: State):
     """ Test whether the given state is a terminal state.
-    TODO
+
     """
     s_list = []
     generate_successors(curr_state, s_list)
     if curr_state.red_turn:
+        # all red pieces
         if all(p.is_red for p in curr_state.board.pieces):
             return ['T', 'r']
+        # no more moves
         elif len(s_list) == 0:
             return ['T', 'b']
     else:
+        # all black pieces
         if all(not p.is_red for p in curr_state.board.pieces):
             return ['T', 'b']
+        # no more moves
         elif len(s_list) == 0:
             return ['T', 'r']
     return ['F']
 
 
 def utility_function(curr_state: State) -> bool:
+    """ Return the utility of the terminal state.
+
+    """
     flag = terminal_test(curr_state)
     if flag[0] == 'T':
         if flag[1] == 'r':
@@ -242,60 +249,53 @@ def utility_function(curr_state: State) -> bool:
 
 
 def calculate_piece_value(piece: Piece) -> float:
-    """
-    Calculate utility for a piece
+    """ Calculate estimated utility for a piece
+
     """
     ret = 0
     if piece.is_red:
         # type
         if piece.is_king:
-            ret += 2
+            ret += 3
         else:
             ret += 1
-        # forward
-        ret += piece.coord_y * 0.1
+            # forward
+            ret += piece.coord_y * 0.2
         # center
-        ret += (3.5 - abs(piece.coord_x - 3.5)) * 0.1
+        ret += (3.5 - abs(piece.coord_x - 3.5))
         # stable
         if piece.coord_y == 7 or piece.coord_y == 0 or piece.coord_x == 7 or piece.coord_x == 0:
-            ret += 0.5
+            ret += 0.3
     else:
         # type
         if piece.is_king:
-            ret -= 2
+            ret -= 3
         else:
             ret -= 1
-        # forward
-        ret -= piece.coord_y * 0.1
+            # forward
+            ret -= piece.coord_y * 0.2
         # center
-        ret -= (3.5 - abs(piece.coord_x - 3.5)) * 0.1
+        ret -= (3.5 - abs(piece.coord_x - 3.5))
         # stable
         if piece.coord_y == 7 or piece.coord_y == 0 or piece.coord_x == 7 or piece.coord_x == 0:
-            ret -= 0.5
+            ret -= 0.3
     return ret
 
 
 def calculate_estimate_utility(curr_state: State) -> float:
+    """ Calculate estimated utility for a non-terminal state
+
+    """
+
     point = 0
-    temp1 = []
-    temp2 = []
     for p in curr_state.board.pieces:
         point += calculate_piece_value(p)
-    # generate_successors(curr_state, temp1)
-    # oppo_state = copy.deepcopy(curr_state)
-    # oppo_state.red_turn = not curr_state.red_turn
-    # generate_successors(curr_state, temp2)
-    # if len(temp1) > len(temp2):
-    #     point = point * 1.2
-    # else:
-    #     point = point * 0.8
-
     return point
 
 
 def find_empty_spot(curr_board: Board):
-    """ Return the coordinates of the two empty spots on the board.
-    TODO
+    """ Return the coordinates of the empty spots on the board.
+
     """
     empty_spots = []
     for y in range(0, 8):
@@ -316,6 +316,9 @@ def check_boundaries(spot: list):
 
 
 def check_spot_valid(curr: State, spot: list):
+    """ Check if the given spot has a piece on it
+
+    """
     for p in curr.board.pieces:
         if p.coord_x == spot[0] and p.coord_y == spot[1]:
             return False
@@ -323,6 +326,9 @@ def check_spot_valid(curr: State, spot: list):
 
 
 def check_neighbor_color(curr: State, is_red: bool, spot: list) -> list:
+    """ Check if the neighboring spot has a different color
+
+    """
     if is_red:
         for p in curr.board.pieces:
             if not p.is_red:
@@ -338,6 +344,9 @@ def check_neighbor_color(curr: State, is_red: bool, spot: list) -> list:
 
 
 def generate_possible_spots(p: Piece) -> list[list]:
+    """ generate all possible spots of move around a piece
+
+    """
     spot_1 = [p.coord_x - 1, p.coord_y - 1]
     spot_2 = [p.coord_x + 1, p.coord_y - 1]
     spot_3 = [p.coord_x - 1, p.coord_y + 1]
@@ -347,6 +356,10 @@ def generate_possible_spots(p: Piece) -> list[list]:
 
 
 def upgrade(piece: Piece):
+    """ upgrade the given piece
+
+    """
+
     if piece.is_red:
         if piece.coord_y == 0:
             piece.is_king = True
@@ -458,12 +471,8 @@ def check_jump(curr: State, prev_jump=None) -> dict[Piece: list[list]]:
 
 
 def jump(curr, piece: Piece) -> list[State]:
-    """
-    Perform jump
+    """ Perform jump
 
-    :param piece:
-    :param curr:
-    :return:
     """
     flag_state = curr
     jump_map = check_jump(flag_state, piece)
@@ -499,6 +508,9 @@ def jump(curr, piece: Piece) -> list[State]:
 
 
 def move(curr: State) -> list[State]:
+    """ Perform a normal move
+
+    """
     ret = []
     if curr.red_turn:
         for p in curr.board.pieces:
@@ -581,6 +593,9 @@ def generate_successors(curr: State, successor: list):
 
 
 def cut_off_test(curr_state: State) -> bool:
+    """ Cut off at given depth limit
+
+    """
     if curr_state.depth == DEPTH_LIMIT:
         return True
     else:
@@ -592,12 +607,10 @@ def alpha_beta_search(curr_state: State) -> State:
         curr_state.v = max_value(curr_state, -math.inf, math.inf)
     else:
         curr_state.v = min_value(curr_state, -math.inf, math.inf)
-    # print("Childrens of ")
-    # curr_state.board.display()
-    # print("\n")
     for act in curr_state.children:
-        # act.board.display()
         if act.v == curr_state.v:
+            # caching states
+            explored_dict[act.id] = curr_state.v
             return act
 
 
@@ -606,32 +619,20 @@ def max_value(curr_state: State, alpha, beta) -> float:
         utility_function(curr_state)
         return curr_state.utility
     elif cut_off_test(curr_state):
-        # estimate utility if not terminal TODO
         curr_state.v = calculate_estimate_utility(curr_state)
         return curr_state.v
-    elif curr_state.id in explored_dict:
-        return explored_dict[curr_state.id]
     curr_state.v = -math.inf
     actions = []
     generate_successors(curr_state, actions)
-    # for act in curr_state.children:
-    #     # if act.id not in explored:
-    #     # explored.add(act.id)
-    #     curr_state.v = max(curr_state.v, min_value(act, alpha, beta))
-    #     explored_dict[curr_state.id] = curr_state.v
-    #     if curr_state.v >= beta:
-    #         return curr_state.v
-    #     alpha = max(alpha, curr_state.v)
-    # return curr_state.v
+
     while len(actions) != 0:
-        # if act.id not in explored:
-        # explored.add(act.id)
+        # node ordering
         act = heappop(actions)
-        curr_state.v = max(curr_state.v, min_value(act, alpha, beta))
-        explored_dict[curr_state.id] = curr_state.v
-        if curr_state.v >= beta:
-            return curr_state.v
-        alpha = max(alpha, curr_state.v)
+        if act.id not in explored_dict:
+            curr_state.v = max(curr_state.v, min_value(act, alpha, beta))
+            if curr_state.v >= beta:
+                return curr_state.v
+            alpha = max(alpha, curr_state.v)
     return curr_state.v
 
 
@@ -643,30 +644,17 @@ def min_value(curr_state: State, alpha, beta) -> float:
         # estimate utility if not terminal TODO
         curr_state.v = calculate_estimate_utility(curr_state)
         return curr_state.v
-    elif curr_state.id in explored_dict:
-        return explored_dict[curr_state.id]
     curr_state.v = math.inf
     actions = []
     generate_successors(curr_state, actions)
-    # for act in curr_state.children:
-    #     # if act.id not in explored:
-    #     # explored.add(act.id)
-    #     curr_state.v = min(curr_state.v, max_value(act, alpha, beta))
-    #     explored_dict[curr_state.id] = curr_state.v
-    #     if curr_state.v <= alpha:
-    #         return curr_state.v
-    #     beta = min(beta, curr_state.v)
-    # return curr_state.v
 
     while len(actions) != 0:
-        # if act.id not in explored:
-        # explored.add(act.id)
         act = heappop(actions)
-        curr_state.v = min(curr_state.v, max_value(act, alpha, beta))
-        explored_dict[curr_state.id] = curr_state.v
-        if curr_state.v <= alpha:
-            return curr_state.v
-        beta = min(beta, curr_state.v)
+        if act.id not in explored_dict:
+            curr_state.v = min(curr_state.v, max_value(act, alpha, beta))
+            if curr_state.v <= alpha:
+                return curr_state.v
+            beta = min(beta, curr_state.v)
     return curr_state.v
 
 
@@ -682,8 +670,7 @@ def get_solution(init_state: State) -> list[State]:
             sol.append(next_action)
             break
         sol.append(next_action)
-        global explored_dict
-        explored_dict = dict()
+        # reset after one search
         next_action.depth = 0
         next_action.v = 0
         next_action.alpha = -math.inf
@@ -710,31 +697,16 @@ if __name__ == "__main__":
     # args = parser.parse_args()
 
     # read the board from the file
-    # inboard = read_from_file("test_successor_black.txt")
+    inboard = read_from_file('test_successor_red.txt')
     # generate state base on the board
-    # state = State(inboard, 0, 0, -math.inf, math.inf, False, [], 0)
+    state = State(inboard, 0, 0, -math.inf, math.inf, False, [], 0)
     start = time.time()
-    inboard = read_from_file("test_successor_red.txt")
 
     inboard.display()
     state = State(inboard, 0, 0, -math.inf, math.inf, True, [], 0)
     write_solution(state, 'test_successor_red_sol.txt')
     end = time.time()
     print(end - start)
-    # inboard = read_from_file("test_successor_black.txt")
-    # state = State(inboard, 0, 0, -math.inf, math.inf, False, [], 0)
-    # sucessor = []
-    # generate_successors(state, sucessor)
-    # for s in state.children:
-    #     tmmm = []
-    #     print('parent')
-    #     generate_successors(s, tmmm)
-    #     s.board.display()
-    #     print('\n')
-    #     for s2 in tmmm:
-    #         print('child')
-    #         s2.board.display()
-    #     print('\n')
 
     # write solution base on algo choice
     # write_solution(state, args.outputfile)
