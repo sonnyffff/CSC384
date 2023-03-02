@@ -145,6 +145,9 @@ class State:
         assert (alpha <= beta)
 
     def __lt__(self, other):
+        return self.utility < other.utility
+
+    def __gt__(self, other):
         return self.utility > other.utility
 
     def __eq__(self, other):
@@ -219,14 +222,14 @@ def terminal_test(curr_state: State):
         # all red pieces
         if all(p.is_red for p in curr_state.board.pieces):
             return ['T', 'r']
-        # no more moves
+            # no more moves
         elif len(s_list) == 0:
             return ['T', 'b']
     else:
         # all black pieces
         if all(not p.is_red for p in curr_state.board.pieces):
             return ['T', 'b']
-        # no more moves
+            # no more moves
         elif len(s_list) == 0:
             return ['T', 'r']
     return ['F']
@@ -260,8 +263,8 @@ def calculate_piece_value(piece: Piece) -> float:
         else:
             ret += 1
             # forward
-            ret += piece.coord_y * 0.2
-        # center
+            ret += 1.4 + (0 - piece.coord_y) * 0.2
+            # center
         ret += (3.5 - abs(piece.coord_x - 3.5))
         # stable
         if piece.coord_y == 7 or piece.coord_y == 0 or piece.coord_x == 7 or piece.coord_x == 0:
@@ -274,7 +277,7 @@ def calculate_piece_value(piece: Piece) -> float:
             ret -= 1
             # forward
             ret -= piece.coord_y * 0.2
-        # center
+            # center
         ret -= (3.5 - abs(piece.coord_x - 3.5))
         # stable
         if piece.coord_y == 7 or piece.coord_y == 0 or piece.coord_x == 7 or piece.coord_x == 0:
@@ -497,7 +500,7 @@ def jump(curr, piece: Piece) -> list[State]:
                     j_states = jump(flag_state, p)
                     for js in j_states:
                         ret.append(js)
-                    # set back flag for next iteration
+                        # set back flag for next iteration
                     flag_state = curr
                     break
         for s in ret:
@@ -581,15 +584,13 @@ def generate_successors(curr: State, successor: list):
         for piece in jump_map:
             jumps = jump(curr, piece)
             for j in jumps:
-                j.utility = calculate_estimate_utility(j)
                 curr.add_children(j)
-                heappush(successor, j)
+                successor.append(j)
     else:
         moves = move(curr)
         for m in moves:
-            m.utility = calculate_estimate_utility(m)
             curr.add_children(m)
-            heappush(successor, m)
+            successor.append(m)
 
 
 def cut_off_test(curr_state: State) -> bool:
@@ -624,10 +625,11 @@ def max_value(curr_state: State, alpha, beta) -> float:
     curr_state.v = -math.inf
     actions = []
     generate_successors(curr_state, actions)
-
-    while len(actions) != 0:
-        # node ordering
-        act = heappop(actions)
+    for c in curr_state.children:
+        c.utility = calculate_estimate_utility(c)
+    curr_state.children.sort()
+    curr_state.children.reverse()
+    for act in curr_state.children:
         if act.id not in explored_dict:
             curr_state.v = max(curr_state.v, min_value(act, alpha, beta))
             if curr_state.v >= beta:
@@ -641,15 +643,16 @@ def min_value(curr_state: State, alpha, beta) -> float:
         utility_function(curr_state)
         return curr_state.utility
     elif cut_off_test(curr_state):
-        # estimate utility if not terminal TODO
+        # estimate utility if not terminal
         curr_state.v = calculate_estimate_utility(curr_state)
         return curr_state.v
     curr_state.v = math.inf
     actions = []
     generate_successors(curr_state, actions)
-
-    while len(actions) != 0:
-        act = heappop(actions)
+    for c in curr_state.children:
+        c.utility = calculate_estimate_utility(c)
+    curr_state.children.sort()
+    for act in curr_state.children:
         if act.id not in explored_dict:
             curr_state.v = min(curr_state.v, max_value(act, alpha, beta))
             if curr_state.v <= alpha:
@@ -697,9 +700,9 @@ if __name__ == "__main__":
     # args = parser.parse_args()
 
     # read the board from the file
-    inboard = read_from_file('test_successor_red.txt')
+    # inboard = read_from_file(args.inputfile)
     # generate state base on the board
-    state = State(inboard, 0, 0, -math.inf, math.inf, False, [], 0)
+    inboard = read_from_file('test_successor_red2.txt')
     start = time.time()
 
     inboard.display()
