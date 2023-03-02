@@ -11,7 +11,7 @@ char_red_normal = 'r'
 char_black_king = 'B'
 char_black_normal = 'b'
 explored_dict = dict()
-DEPTH_LIMIT = 5
+DEPTH_LIMIT = 9
 
 
 class Piece:
@@ -584,12 +584,14 @@ def generate_successors(curr: State, successor: list):
         for piece in jump_map:
             jumps = jump(curr, piece)
             for j in jumps:
-                curr.add_children(j)
+                if j not in curr.children:
+                    curr.add_children(j)
                 successor.append(j)
     else:
         moves = move(curr)
         for m in moves:
-            curr.add_children(m)
+            if m not in curr.children:
+                curr.add_children(m)
             successor.append(m)
 
 
@@ -610,8 +612,15 @@ def alpha_beta_search(curr_state: State) -> State:
         curr_state.v = min_value(curr_state, -math.inf, math.inf)
     for act in curr_state.children:
         if act.v == curr_state.v:
-            # caching states
-            explored_dict[act.id] = curr_state.v
+            return act
+    explored_dict.pop(curr_state.id)
+    curr_state.children = []
+    if curr_state.red_turn:
+        curr_state.v = max_value(curr_state, -math.inf, math.inf)
+    else:
+        curr_state.v = min_value(curr_state, -math.inf, math.inf)
+    for act in curr_state.children:
+        if act.v == curr_state.v:
             return act
 
 
@@ -622,19 +631,26 @@ def max_value(curr_state: State, alpha, beta) -> float:
     elif cut_off_test(curr_state):
         curr_state.v = calculate_estimate_utility(curr_state)
         return curr_state.v
+    elif curr_state.id in explored_dict:
+        curr_state.v = explored_dict[curr_state.id]
+        return explored_dict[curr_state.id]
     curr_state.v = -math.inf
     actions = []
     generate_successors(curr_state, actions)
     for c in curr_state.children:
         c.utility = calculate_estimate_utility(c)
+        c.depth = curr_state.depth + 1
     curr_state.children.sort()
     curr_state.children.reverse()
     for act in curr_state.children:
-        if act.id not in explored_dict:
-            curr_state.v = max(curr_state.v, min_value(act, alpha, beta))
-            if curr_state.v >= beta:
-                return curr_state.v
-            alpha = max(alpha, curr_state.v)
+        curr_state.v = max(curr_state.v, min_value(act, alpha, beta))
+        if curr_state.v >= beta:
+            # caching states
+            explored_dict[curr_state.id] = curr_state.v
+            return curr_state.v
+        alpha = max(alpha, curr_state.v)
+    # caching states
+    explored_dict[curr_state.id] = curr_state.v
     return curr_state.v
 
 
@@ -646,18 +662,25 @@ def min_value(curr_state: State, alpha, beta) -> float:
         # estimate utility if not terminal
         curr_state.v = calculate_estimate_utility(curr_state)
         return curr_state.v
+    elif curr_state.id in explored_dict:
+        curr_state.v = explored_dict[curr_state.id]
+        return explored_dict[curr_state.id]
     curr_state.v = math.inf
     actions = []
     generate_successors(curr_state, actions)
     for c in curr_state.children:
         c.utility = calculate_estimate_utility(c)
+        c.depth = curr_state.depth + 1
     curr_state.children.sort()
     for act in curr_state.children:
-        if act.id not in explored_dict:
-            curr_state.v = min(curr_state.v, max_value(act, alpha, beta))
-            if curr_state.v <= alpha:
-                return curr_state.v
-            beta = min(beta, curr_state.v)
+        curr_state.v = min(curr_state.v, max_value(act, alpha, beta))
+        if curr_state.v <= alpha:
+            # caching states
+            explored_dict[curr_state.id] = curr_state.v
+            return curr_state.v
+        beta = min(beta, curr_state.v)
+    # caching states
+    explored_dict[curr_state.id] = curr_state.v
     return curr_state.v
 
 
@@ -678,7 +701,6 @@ def get_solution(init_state: State) -> list[State]:
         next_action.v = 0
         next_action.alpha = -math.inf
         next_action.beta = math.inf
-        next_action.children = []
         iter_s = next_action
     return sol
 
@@ -702,7 +724,7 @@ if __name__ == "__main__":
     # read the board from the file
     # inboard = read_from_file(args.inputfile)
     # generate state base on the board
-    inboard = read_from_file('test_successor_red2.txt')
+    inboard = read_from_file('test_successor_red3.txt')
     start = time.time()
 
     inboard.display()
