@@ -13,6 +13,7 @@ char_top = '^'
 char_bottom = 'v'
 char_middle = 'M'
 
+
 class Variable:
     '''Class for defining CSP variables.
 
@@ -131,13 +132,15 @@ class Variable:
 
 
 class Cell(Variable):
-    def __init__(self, name, domain, x_coord, y_coord):
+    def __init__(self, name, domain, is_ship, x_coord, y_coord):
         Variable.__init__(self, name, domain)
+        self.is_ship = is_ship
         self.x_coord = x_coord
         self.y_coord = y_coord
 
     def __hash__(self):
-        return hash((self.name, self.domain, self.position))
+        return hash((self.name, self.domain, self.x_coord, self.y_coord))
+
 
 # implement various types of constraints
 class Constraint:
@@ -192,6 +195,85 @@ class Constraint:
     def printConstraint(self):
         print("Cons: {} Vars = {}".format(
             self.name(), [v.name() for v in self.scope()]))
+
+
+class RowConstraint(Constraint):
+    def __init__(self, name, scope, limit):
+        Constraint.__init__(self, name, scope)
+        self.limit = limit
+
+    def check(self):
+        count = 0
+        for cell in self._scope:
+            if cell.is_ship:
+                count += 1
+        if count == self.limit:
+            return 0
+        elif count < self.limit:
+            return 1
+        else:
+            # oversize
+            return 2
+
+
+class ColConstraint(Constraint):
+    def __init__(self, name, scope, limit):
+        Constraint.__init__(self, name, scope)
+        self.limit = limit
+
+    def check(self):
+        count = 0
+        for cell in self._scope:
+            if cell.is_ship:
+                count += 1
+        if count == self.limit:
+            return 0
+        elif count < self.limit:
+            return 1
+        else:
+            # oversize
+            return 2
+
+
+class ShipConstraint(Constraint):
+    def __init__(self, name, scope, state, submarine, destroyers, cruisers, battleships):
+        Constraint.__init__(self, name, scope)
+        self.state = state
+        self.submarine = submarine
+        self.destroyers = destroyers
+        self.cruisers = cruisers
+        self.battleships = battleships
+
+    def check(self):
+        submarine = 0
+        destroyers = 0
+        scruisers = 0
+        battleships = 0
+        for cell in self._scope:
+            if cell.getValue() == char_submarine:
+                submarine += 1
+            elif cell.getValue() == char_top:
+                return
+    # TODO
+
+
+class WaterConstraint(Constraint):
+    def __init__(self, name, scope, limit):
+        Constraint.__init__(self, name, scope)
+        self.limit = limit
+
+    def check(self):
+        count = 0
+        for cell in self._scope:
+            if cell.is_ship:
+                count += 1
+        if count == self.limit:
+            return 0
+        elif count < self.limit:
+            return 1
+        else:
+            # oversize
+            return 2
 
 
 # object for holding a constraint problem
@@ -394,7 +476,7 @@ def read_from_file(filename):
     :param filename: The name of the given file.
     :type filename: str
     :return: A loaded board
-    :rtype: Board
+    :rtype: State
     """
 
     puzzle_file = open(filename, "r")
@@ -402,69 +484,121 @@ def read_from_file(filename):
     line_index = 0
     word_index = 0
     cells = []
+    constraints = []
+    temp_lookup_rc = dict()
+    temp_lookup_cc = dict()
+    for line in puzzle_file:
+        if line_index == 0:
+            for x, ch in enumerate(line):
+                if ch != '\n':
+                    rc = RowConstraint("RowC", [], int(ch))
+                    constraints.append(rc)
+                    temp_lookup_rc[x] = rc
+        elif line_index == 1:
+            for x, ch in enumerate(line):
+                if ch != '\n':
+                    cc = ColConstraint("ColC", [], int(ch))
+                    constraints.append(cc)
+                    temp_lookup_cc[x] = cc
+        elif line_index == 2:
+            sc = ShipConstraint("ShipC", [], None, 0, 0, 0, 0)
+            for x, ch in enumerate(line):
+                if ch != '\n':
+                    if x == 0:
+                        sc.submarine = int(ch)
+                    elif x == 1:
+                        sc.destroyers = int(ch)
+                    elif x == 2:
+                        sc.cruisers = int(ch)
+                    elif x == 3:
+                        sc.battleships = int(ch)
+                    else:
+                        print("Can't get here! No ship")
+            constraints.append(sc)
+            break
+        line_index += 1
+
+    line_index = 0
+    line_index2 = 0
     for line in puzzle_file:
         word_index = len(line)
         for x, ch in enumerate(line):
-
             if ch == '0':
-                cells.append(Cell('Cell', [], x, line_index))
+                cell = Cell('Cell', [char_top, char_submarine, char_bottom, char_water, char_middle, char_left,
+                                     char_right], False, x, line_index)
+                cells.append(cell)
+                temp_lookup_cc[x]._scope.append(cell)
+                temp_lookup_rc[line_index]._scope.append(cell)
             elif ch == char_submarine:
-                cell = Cell('Cell', [char_submarine], x, line_index)
+                cell = Cell('Cell', [char_submarine], True, x, line_index)
                 cell.setValue(char_submarine)
-                cells.append(Cell('Cell', [], x, line_index))
+                cells.append(cell)
+                temp_lookup_cc[x]._scope.append(cell)
+                temp_lookup_rc[line_index]._scope.append(cell)
             elif ch == char_water:
-                cell = Cell('Cell', [char_water], x, line_index)
+                cell = Cell('Cell', [char_water], False, x, line_index)
                 cell.setValue(char_water)
-                cells.append(Cell('Cell', [], x, line_index))
+                cells.append(cell)
+                temp_lookup_cc[x]._scope.append(cell)
+                temp_lookup_rc[line_index]._scope.append(cell)
             elif ch == char_top:
-                cell = Cell('Cell', [char_top], x, line_index)
+                cell = Cell('Cell', [char_top], True, x, line_index)
                 cell.setValue(char_top)
-                cells.append(Cell('Cell', [], x, line_index))
+                cells.append(cell)
+                temp_lookup_cc[x]._scope.append(cell)
+                temp_lookup_rc[line_index]._scope.append(cell)
             elif ch == char_bottom:
-                cell = Cell('Cell', [char_bottom], x, line_index)
+                cell = Cell('Cell', [char_bottom], True, x, line_index)
                 cell.setValue(char_bottom)
-                cells.append(Cell('Cell', [], x, line_index))
+                cells.append(cell)
+                temp_lookup_cc[x]._scope.append(cell)
+                temp_lookup_rc[line_index]._scope.append(cell)
             elif ch == char_left:
-                cell = Cell('Cell', [char_left], x, line_index)
+                cell = Cell('Cell', [char_left], True, x, line_index)
                 cell.setValue(char_left)
-                cells.append(Cell('Cell', [], x, line_index))
+                cells.append(cell)
+                temp_lookup_cc[x]._scope.append(cell)
+                temp_lookup_rc[line_index]._scope.append(cell)
             elif ch == char_right:
-                cell = Cell('Cell', [char_right], x, line_index)
+                cell = Cell('Cell', [char_right], True, x, line_index)
                 cell.setValue(char_right)
-                cells.append(Cell('Cell', [], x, line_index))
+                cells.append(cell)
+                temp_lookup_cc[x]._scope.append(cell)
+                temp_lookup_rc[line_index]._scope.append(cell)
             elif ch == char_middle:
-                cell = Cell('Cell', [char_middle], x, line_index)
+                cell = Cell('Cell', [char_middle], True, x, line_index)
                 cell.setValue(char_middle)
-                cells.append(Cell('Cell', [], x, line_index))
-            else:
-                print("Can't reach here")
+                cells.append(cell)
+                temp_lookup_cc[x]._scope.append(cell)
+                temp_lookup_rc[line_index]._scope.append(cell)
         line_index += 1
-
-    puzzle_file.close()
-
     board = Board(word_index, line_index, cells)
 
-    return board
+    state = State(board, 0, constraints)
+    puzzle_file.close()
+
+    return state
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument(
-        "--inputfile",
-        type=str,
-        required=True,
-        help="The input file that contains the puzzle."
-    )
-    parser.add_argument(
-        "--outputfile",
-        type=str,
-        required=True,
-        help="The output file that contains the solution."
-    )
-    args = parser.parse_args()
+    # parser = argparse.ArgumentParser()
+    # parser.add_argument(
+    #     "--inputfile",
+    #     type=str,
+    #     required=True,
+    #     help="The input file that contains the puzzle."
+    # )
+    # parser.add_argument(
+    #     "--outputfile",
+    #     type=str,
+    #     required=True,
+    #     help="The output file that contains the solution."
+    # )
+    # args = parser.parse_args()
 
     # read the board from the file
-    # inboard = read_from_file(args.inputfile)
+    instate = read_from_file('test_input.txt')
+    instate.board.display()
     # generate state base on the board
     # inboard = read_from_file('test_successor_red.txt')
     # start = time.time()
