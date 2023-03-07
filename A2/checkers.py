@@ -266,9 +266,6 @@ def calculate_piece_value(piece: Piece) -> float:
             ret += 1.4 + (0 - piece.coord_y) * 0.2
             # center
         ret += (3.5 - abs(piece.coord_x - 3.5))
-        # stable
-        if piece.coord_y == 7 or piece.coord_y == 0 or piece.coord_x == 7 or piece.coord_x == 0:
-            ret += 0.3
     else:
         # type
         if piece.is_king:
@@ -279,9 +276,6 @@ def calculate_piece_value(piece: Piece) -> float:
             ret -= piece.coord_y * 0.2
             # center
         ret -= (3.5 - abs(piece.coord_x - 3.5))
-        # stable
-        if piece.coord_y == 7 or piece.coord_y == 0 or piece.coord_x == 7 or piece.coord_x == 0:
-            ret -= 0.3
     return ret
 
 
@@ -724,14 +718,14 @@ if __name__ == "__main__":
     # read the board from the file
     # inboard = read_from_file(args.inputfile)
     # generate state base on the board
-    inboard = read_from_file('test_successor_red3.txt')
-    start = time.time()
-
-    inboard.display()
+    inboard = read_from_file('test_successor_red.txt')
+    # start = time.time()
+    #
+    # inboard.display()
     state = State(inboard, 0, 0, -math.inf, math.inf, True, [], 0)
     write_solution(state, 'test_successor_red_sol.txt')
-    end = time.time()
-    print(end - start)
+    # end = time.time()
+    # print(end - start)
 
     # write solution base on algo choice
     # write_solution(state, args.outputfile)

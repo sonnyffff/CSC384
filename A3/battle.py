@@ -93,17 +93,17 @@ class Variable:
             return (value == self.getValue())
         return (value in self._curdom)
 
-    def pruneValue(self, value, reasonVar, reasonVal):
+    def pruneValue(self, value):
         '''Remove value from current domain'''
         try:
             self._curdom.remove(value)
         except:
             print("Error: tried to prune value {} from variable {}'s domain, but value not present!".format(value,
                                                                                                             self._name))
-        dkey = (reasonVar, reasonVal)
-        if not dkey in Variable.undoDict:
-            Variable.undoDict[dkey] = []
-        Variable.undoDict[dkey].append((self, value))
+        # dkey = (reasonVar, reasonVal)
+        # if not dkey in Variable.undoDict:
+        #     Variable.undoDict[dkey] = []
+        # Variable.undoDict[dkey].append((self, value))
 
     def restoreVal(self, value):
         self._curdom.append(value)
@@ -140,6 +140,9 @@ class Cell(Variable):
 
     def __hash__(self):
         return hash((self.name, self.domain, self.x_coord, self.y_coord))
+
+    def __str__(self):
+        return "Variable {}{}".format(self.x_coord, self.y_coord)
 
 
 # implement various types of constraints
@@ -331,42 +334,42 @@ class CSP:
         for v in self.variables():
             v.unAssign()
 
-    def check(self, solutions):
-        '''each solution is a list of (var, value) pairs. Check to see
-           if these satisfy all the constraints. Return list of
-           erroneous solutions'''
-
-        # save values to restore later
-        current_values = [(var, var.getValue()) for var in self.variables()]
-        errs = []
-
-        for s in solutions:
-            s_vars = [var for (var, val) in s]
-
-            if len(s_vars) != len(self.variables()):
-                errs.append([s, "Solution has incorrect number of variables in it"])
-                continue
-
-            if len(set(s_vars)) != len(self.variables()):
-                errs.append([s, "Solution has duplicate variable assignments"])
-                continue
-
-            if set(s_vars) != set(self.variables()):
-                errs.append([s, "Solution has incorrect variable in it"])
-                continue
-
-            for (var, val) in s:
-                var.setValue(val)
-
-            for c in self.constraints():
-                if not c.check():
-                    errs.append([s, "Solution does not satisfy constraint {}".format(c.name())])
-                    break
-
-        for (var, val) in current_values:
-            var.setValue(val)
-
-        return errs
+    # def check(self, solutions):
+    #     '''each solution is a list of (var, value) pairs. Check to see
+    #        if these satisfy all the constraints. Return list of
+    #        erroneous solutions'''
+    #
+    #     # save values to restore later
+    #     current_values = [(var, var.getValue()) for var in self.variables()]
+    #     errs = []
+    #
+    #     for s in solutions:
+    #         s_vars = [var for (var, val) in s]
+    #
+    #         if len(s_vars) != len(self.variables()):
+    #             errs.append([s, "Solution has incorrect number of variables in it"])
+    #             continue
+    #
+    #         if len(set(s_vars)) != len(self.variables()):
+    #             errs.append([s, "Solution has duplicate variable assignments"])
+    #             continue
+    #
+    #         if set(s_vars) != set(self.variables()):
+    #             errs.append([s, "Solution has incorrect variable in it"])
+    #             continue
+    #
+    #         for (var, val) in s:
+    #             var.setValue(val)
+    #
+    #         for c in self.constraints():
+    #             if not c.check():
+    #                 errs.append([s, "Solution does not satisfy constraint {}".format(c.name())])
+    #                 break
+    #
+    #     for (var, val) in current_values:
+    #         var.setValue(val)
+    #
+    #     return errs
 
     def __str__(self):
         return "CSP {}".format(self.name())
@@ -438,7 +441,7 @@ class Board:
             print()
 
 
-class State:
+class State(CSP):
     """
     State class wrapping a Board with some extra current state information.
     Note that State and Board are different. Board has the locations of the pieces.
@@ -446,7 +449,7 @@ class State:
     heuristic function, f value, current depth and parent.
     """
 
-    def __init__(self, board, depth, constraints, parent=None):
+    def __init__(self, name, board, depth, constraints, parent=None):
         """
         :param board: The board of the state.
         :type board: Board
@@ -457,16 +460,31 @@ class State:
         :param constraints: The constraints of current state
         :type constraints: list
         """
+        CSP.__init__(self, name, board.cells, constraints)
         self.board = board
         self.depth = depth
         self.parent = parent
-        self.constraints = constraints
         self.id = hash(board)  # The id for breaking ties.
 
     def __eq__(self, other):
         if self.id == other.id:
             return True
         return False
+
+    def partial_check(self):
+        for c in self.constraints():
+            if c.check() == 2:
+                return False
+        return True
+
+    def full_check(self):
+        for c in self.constraints():
+            if c.check() == 1 or c.check() == 2:
+                return False
+        for cell in self.board.cells:
+            if cell.getValue() is None:
+                return False
+        return True
 
 
 def read_from_file(filename):
@@ -514,12 +532,11 @@ def read_from_file(filename):
                         sc.battleships = int(ch)
                     else:
                         print("Can't get here! No ship")
-            constraints.append(sc)
+            # constraints.append(sc)
             break
         line_index += 1
 
     line_index = 0
-    line_index2 = 0
     for line in puzzle_file:
         word_index = len(line)
         for x, ch in enumerate(line):
@@ -574,10 +591,63 @@ def read_from_file(filename):
         line_index += 1
     board = Board(word_index, line_index, cells)
 
-    state = State(board, 0, constraints)
+    state = State("State", board, 0, constraints)
     puzzle_file.close()
 
     return state
+
+
+def select_unassigned_var(state: State):
+    # TODO MRV
+    for c in state.board.cells:
+        if c.getValue() is None:
+            return c
+    return False
+
+
+def backtracking_search(state: State):
+    return backtrack(state)
+
+
+def backtrack(state: State):
+    if state.full_check():
+        return [([c.x_coord, c.y_coord], c.getValue()) for c in state.board.cells]
+    var = select_unassigned_var(state)
+    if var is not False:
+        for value in var.curDomain():
+            var.setValue(value)
+            print(str(var), var.getValue())
+            if str(var) == 'Variable 55' and var.getValue() == '^':
+                print('a')
+            if value != '.':
+                var.is_ship = True
+            else:
+                var.is_ship = False
+            if state.partial_check():
+                result = backtrack(state)
+                if len(result) != 0:
+                    return result
+            var.pruneValue(value)
+    else:
+        return []
+    var.reset()
+    var.is_ship = None
+    return []
+
+
+def write_solution(state: State, filename: str):
+    """ Generate solution file base on the goal state.
+
+    """
+    f = open(filename, "w+")
+    sol = backtracking_search(state)
+    count = 0
+    for s in sol:
+        f.write(s[1])
+        if state.board.width - 1 == count:
+            f.write('\n')
+            count = -1
+        count += 1
 
 
 if __name__ == "__main__":
@@ -599,6 +669,7 @@ if __name__ == "__main__":
     # read the board from the file
     instate = read_from_file('test_input.txt')
     instate.board.display()
+    write_solution(instate, 'sol.txt')
     # generate state base on the board
     # inboard = read_from_file('test_successor_red.txt')
     # start = time.time()
