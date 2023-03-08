@@ -260,23 +260,530 @@ class ShipConstraint(Constraint):
     # TODO
 
 
-class WaterConstraint(Constraint):
-    def __init__(self, name, scope, limit):
-        Constraint.__init__(self, name, scope)
-        self.limit = limit
+def get_cell(scope, x_coord, y_coord) -> Cell:
+    for cell in scope:
+        if cell.x_coord == x_coord and cell.y_coord == y_coord:
+            return cell
 
-    def check(self):
-        count = 0
-        for cell in self._scope:
-            if cell.is_ship:
-                count += 1
-        if count == self.limit:
-            return 0
-        elif count < self.limit:
-            return 1
+
+def check_if_spot_valid(width, height, x_coord, y_coord):
+    if 0 <= x_coord <= width - 1:
+        if 0 <= y_coord <= height - 1:
+            return True
+    return False
+
+
+def check_water_constraints(width, height, cell: Cell, scope):
+    if cell.getValue() == char_top:
+        # position 1
+        if check_if_spot_valid(width, height, cell.x_coord - 1, cell.y_coord - 1):
+            temp = get_cell(scope, cell.x_coord - 1, cell.y_coord - 1)
+            if temp.getValue() != '.' and temp.getValue() is not None:
+                return 2
+            # forward checking
+            elif temp.getValue() is None:
+                for dom in temp.curDomain():
+                    if dom != '.':
+                        temp.pruneValue(dom)
+        # position 2
+        if check_if_spot_valid(width, height, cell.x_coord, cell.y_coord - 1):
+            temp = get_cell(scope, cell.x_coord, cell.y_coord - 1)
+            if temp.getValue() != '.' and temp.getValue() is not None:
+                return 2
+            # forward checking
+            elif temp.getValue() is None:
+                for dom in temp.curDomain():
+                    if dom != '.':
+                        temp.pruneValue(dom)
+        # position 3
+        if check_if_spot_valid(width, height, cell.x_coord + 1, cell.y_coord - 1):
+            temp = get_cell(scope, cell.x_coord + 1, cell.y_coord - 1)
+            if temp.getValue() != '.' and temp.getValue() is not None:
+                return 2
+            # forward checking
+            elif temp.getValue() is None:
+                for dom in temp.curDomain():
+                    if dom != '.':
+                        temp.pruneValue(dom)
+        # position 4
+        if check_if_spot_valid(width, height, cell.x_coord - 1, cell.y_coord):
+            temp = get_cell(scope, cell.x_coord - 1, cell.y_coord)
+            if temp.getValue() != '.' and temp.getValue() is not None:
+                return 2
+            # forward checking
+            elif temp.getValue() is None:
+                for dom in temp.curDomain():
+                    if dom != '.':
+                        temp.pruneValue(dom)
+        # position 5
+        if check_if_spot_valid(width, height, cell.x_coord + 1, cell.y_coord):
+            temp = get_cell(scope, cell.x_coord + 1, cell.y_coord)
+            if temp.getValue() != '.' and temp.getValue() is not None:
+                return 2
+            # forward checking
+            elif temp.getValue() is None:
+                for dom in temp.curDomain():
+                    if dom != '.':
+                        temp.pruneValue(dom)
+        # position 6
+        if check_if_spot_valid(width, height, cell.x_coord - 1, cell.y_coord + 1):
+            temp = get_cell(scope, cell.x_coord - 1, cell.y_coord + 1)
+            if temp.getValue() != '.' and temp.getValue() is not None:
+                return 2
+            # forward checking
+            elif temp.getValue() is None:
+                for dom in temp.curDomain():
+                    if dom != '.':
+                        temp.pruneValue(dom)
+        # position 7
+        if check_if_spot_valid(width, height, cell.x_coord, cell.y_coord + 1):
+            temp = get_cell(scope, cell.x_coord, cell.y_coord + 1)
+            if (temp.getValue() != char_bottom and temp.getValue() != char_middle) and temp.getValue() is not None:
+                return 2
+            # forward checking
+            elif temp.getValue() is None:
+                for dom in temp.curDomain():
+                    if dom != char_middle and dom != char_bottom:
+                        temp.pruneValue(dom)
         else:
-            # oversize
             return 2
+        # position 8
+        if check_if_spot_valid(width, height, cell.x_coord + 1, cell.y_coord + 1):
+            temp = get_cell(scope, cell.x_coord + 1, cell.y_coord + 1)
+            if temp.getValue() != '.' and temp.getValue() is not None:
+                return 2
+            # forward checking
+            elif temp.getValue() is None:
+                for dom in temp.curDomain():
+                    if dom != '.':
+                        temp.pruneValue(dom)
+    if cell.getValue() == char_bottom:
+        # position 1
+        if check_if_spot_valid(width, height, cell.x_coord - 1, cell.y_coord - 1):
+            temp = get_cell(scope, cell.x_coord - 1, cell.y_coord - 1)
+            if temp.getValue() != '.' and temp.getValue() is not None:
+                return 2
+            # forward checking
+            elif temp.getValue() is None:
+                for dom in temp.curDomain():
+                    if dom != '.':
+                        temp.pruneValue(dom)
+        # position 2
+        if check_if_spot_valid(width, height, cell.x_coord, cell.y_coord - 1):
+            temp = get_cell(scope, cell.x_coord, cell.y_coord - 1)
+            if (temp.getValue() != char_middle and temp.getValue() != char_top) and temp.getValue() is not None:
+                return 2
+            # forward checking
+            elif temp.getValue() is None:
+                for dom in temp.curDomain():
+                    if dom != char_middle and dom != char_top:
+                        temp.pruneValue(dom)
+        else:
+            return 2
+        # position 3
+        if check_if_spot_valid(width, height, cell.x_coord + 1, cell.y_coord - 1):
+            temp = get_cell(scope, cell.x_coord + 1, cell.y_coord - 1)
+            if temp.getValue() != '.' and temp.getValue() is not None:
+                return 2
+            # forward checking
+            elif temp.getValue() is None:
+                for dom in temp.curDomain():
+                    if dom != '.':
+                        temp.pruneValue(dom)
+        # position 4
+        if check_if_spot_valid(width, height, cell.x_coord - 1, cell.y_coord):
+            temp = get_cell(scope, cell.x_coord - 1, cell.y_coord)
+            if temp.getValue() != '.' and temp.getValue() is not None:
+                return 2
+            # forward checking
+            elif temp.getValue() is None:
+                for dom in temp.curDomain():
+                    if dom != '.':
+                        temp.pruneValue(dom)
+        # position 5
+        if check_if_spot_valid(width, height, cell.x_coord + 1, cell.y_coord):
+            temp = get_cell(scope, cell.x_coord + 1, cell.y_coord)
+            if temp.getValue() != '.' and temp.getValue() is not None:
+                return 2
+            # forward checking
+            elif temp.getValue() is None:
+                for dom in temp.curDomain():
+                    if dom != '.':
+                        temp.pruneValue(dom)
+        # position 6
+        if check_if_spot_valid(width, height, cell.x_coord - 1, cell.y_coord + 1):
+            temp = get_cell(scope, cell.x_coord - 1, cell.y_coord + 1)
+            if temp.getValue() != '.' and temp.getValue() is not None:
+                return 2
+            # forward checking
+            elif temp.getValue() is None:
+                for dom in temp.curDomain():
+                    if dom != '.':
+                        temp.pruneValue(dom)
+        # position 7
+        if check_if_spot_valid(width, height, cell.x_coord, cell.y_coord + 1):
+            temp = get_cell(scope, cell.x_coord, cell.y_coord + 1)
+            if temp.getValue() != '.' and temp.getValue() is not None:
+                return 2
+            # forward checking
+            elif temp.getValue() is None:
+                for dom in temp.curDomain():
+                    if dom != '.':
+                        temp.pruneValue(dom)
+        # position 8
+        if check_if_spot_valid(width, height, cell.x_coord + 1, cell.y_coord + 1):
+            temp = get_cell(scope, cell.x_coord + 1, cell.y_coord + 1)
+            if temp.getValue() != '.' and temp.getValue() is not None:
+                return 2
+            # forward checking
+            elif temp.getValue() is None:
+                for dom in temp.curDomain():
+                    if dom != '.':
+                        temp.pruneValue(dom)
+    if cell.getValue() == char_left:
+        # position 1
+        if check_if_spot_valid(width, height, cell.x_coord - 1, cell.y_coord - 1):
+            temp = get_cell(scope, cell.x_coord - 1, cell.y_coord - 1)
+            if temp.getValue() != '.' and temp.getValue() is not None:
+                return 2
+            # forward checking
+            elif temp.getValue() is None:
+                for dom in temp.curDomain():
+                    if dom != '.':
+                        temp.pruneValue(dom)
+        # position 2
+        if check_if_spot_valid(width, height, cell.x_coord, cell.y_coord - 1):
+            temp = get_cell(scope, cell.x_coord, cell.y_coord - 1)
+            if temp.getValue() != '.' and temp.getValue() is not None:
+                return 2
+            # forward checking
+            elif temp.getValue() is None:
+                for dom in temp.curDomain():
+                    if dom != '.':
+                        temp.pruneValue(dom)
+        # position 3
+        if check_if_spot_valid(width, height, cell.x_coord + 1, cell.y_coord - 1):
+            temp = get_cell(scope, cell.x_coord + 1, cell.y_coord - 1)
+            if temp.getValue() != '.' and temp.getValue() is not None:
+                return 2
+            # forward checking
+            elif temp.getValue() is None:
+                for dom in temp.curDomain():
+                    if dom != '.':
+                        temp.pruneValue(dom)
+        # position 4
+        if check_if_spot_valid(width, height, cell.x_coord - 1, cell.y_coord):
+            temp = get_cell(scope, cell.x_coord - 1, cell.y_coord)
+            if temp.getValue() != '.' and temp.getValue() is not None:
+                return 2
+            # forward checking
+            elif temp.getValue() is None:
+                for dom in temp.curDomain():
+                    if dom != '.':
+                        temp.pruneValue(dom)
+        # position 5
+        if check_if_spot_valid(width, height, cell.x_coord + 1, cell.y_coord):
+            temp = get_cell(scope, cell.x_coord + 1, cell.y_coord)
+            if (temp.getValue() != char_middle and temp.getValue() != char_right) and temp.getValue() is not None:
+                return 2
+            # forward checking
+            elif temp.getValue() is None:
+                for dom in temp.curDomain():
+                    if dom != char_middle and dom != char_right:
+                        temp.pruneValue(dom)
+        else:
+            return 2
+        # position 6
+        if check_if_spot_valid(width, height, cell.x_coord - 1, cell.y_coord + 1):
+            temp = get_cell(scope, cell.x_coord - 1, cell.y_coord + 1)
+            if temp.getValue() != '.' and temp.getValue() is not None:
+                return 2
+            # forward checking
+            elif temp.getValue() is None:
+                for dom in temp.curDomain():
+                    if dom != '.':
+                        temp.pruneValue(dom)
+        # position 7
+        if check_if_spot_valid(width, height, cell.x_coord, cell.y_coord + 1):
+            temp = get_cell(scope, cell.x_coord, cell.y_coord + 1)
+            if temp.getValue() != '.' and temp.getValue() is not None:
+                return 2
+            # forward checking
+            elif temp.getValue() is None:
+                for dom in temp.curDomain():
+                    if dom != '.':
+                        temp.pruneValue(dom)
+        # position 8
+        if check_if_spot_valid(width, height, cell.x_coord + 1, cell.y_coord + 1):
+            temp = get_cell(scope, cell.x_coord + 1, cell.y_coord + 1)
+            if temp.getValue() != '.' and temp.getValue() is not None:
+                return 2
+            # forward checking
+            elif temp.getValue() is None:
+                for dom in temp.curDomain():
+                    if dom != '.':
+                        temp.pruneValue(dom)
+    if cell.getValue() == char_right:
+        # position 1
+        if check_if_spot_valid(width, height, cell.x_coord - 1, cell.y_coord - 1):
+            temp = get_cell(scope, cell.x_coord - 1, cell.y_coord - 1)
+            if temp.getValue() != '.' and temp.getValue() is not None:
+                return 2
+            # forward checking
+            elif temp.getValue() is None:
+                for dom in temp.curDomain():
+                    if dom != '.':
+                        temp.pruneValue(dom)
+        # position 2
+        if check_if_spot_valid(width, height, cell.x_coord, cell.y_coord - 1):
+            temp = get_cell(scope, cell.x_coord, cell.y_coord - 1)
+            if temp.getValue() != '.' and temp.getValue() is not None:
+                return 2
+            # forward checking
+            elif temp.getValue() is None:
+                for dom in temp.curDomain():
+                    if dom != '.':
+                        temp.pruneValue(dom)
+        # position 3
+        if check_if_spot_valid(width, height, cell.x_coord + 1, cell.y_coord - 1):
+            temp = get_cell(scope, cell.x_coord + 1, cell.y_coord - 1)
+            if temp.getValue() != '.' and temp.getValue() is not None:
+                return 2
+            # forward checking
+            elif temp.getValue() is None:
+                for dom in temp.curDomain():
+                    if dom != '.':
+                        temp.pruneValue(dom)
+        # position 4
+        if check_if_spot_valid(width, height, cell.x_coord - 1, cell.y_coord):
+            temp = get_cell(scope, cell.x_coord - 1, cell.y_coord)
+            if (temp.getValue() != char_middle and temp.getValue() != char_left) and temp.getValue() is not None:
+                return 2
+            # forward checking
+            elif temp.getValue() is None:
+                for dom in temp.curDomain():
+                    if dom != char_middle and dom != char_left:
+                        temp.pruneValue(dom)
+        else:
+            return 2
+        # position 5
+        if check_if_spot_valid(width, height, cell.x_coord + 1, cell.y_coord):
+            temp = get_cell(scope, cell.x_coord + 1, cell.y_coord)
+            if temp.getValue() != '.' and temp.getValue() is not None:
+                return 2
+            # forward checking
+            elif temp.getValue() is None:
+                for dom in temp.curDomain():
+                    if dom != '.':
+                        temp.pruneValue(dom)
+        # position 6
+        if check_if_spot_valid(width, height, cell.x_coord - 1, cell.y_coord + 1):
+            temp = get_cell(scope, cell.x_coord - 1, cell.y_coord + 1)
+            if temp.getValue() != '.' and temp.getValue() is not None:
+                return 2
+            # forward checking
+            elif temp.getValue() is None:
+                for dom in temp.curDomain():
+                    if dom != '.':
+                        temp.pruneValue(dom)
+        # position 7
+        if check_if_spot_valid(width, height, cell.x_coord, cell.y_coord + 1):
+            temp = get_cell(scope, cell.x_coord, cell.y_coord + 1)
+            if temp.getValue() != '.' and temp.getValue() is not None:
+                return 2
+            # forward checking
+            elif temp.getValue() is None:
+                for dom in temp.curDomain():
+                    if dom != '.':
+                        temp.pruneValue(dom)
+        # position 8
+        if check_if_spot_valid(width, height, cell.x_coord + 1, cell.y_coord + 1):
+            temp = get_cell(scope, cell.x_coord + 1, cell.y_coord + 1)
+            if temp.getValue() != '.' and temp.getValue() is not None:
+                return 2
+            # forward checking
+            elif temp.getValue() is None:
+                for dom in temp.curDomain():
+                    if dom != '.':
+                        temp.pruneValue(dom)
+    # TODO
+    if cell.getValue() == char_middle:
+        if (cell.x_coord == 0 and cell.y_coord == 0) or (cell.x_coord == width - 1 and cell.y_coord == height - 1) or \
+                (cell.x_coord == 0 and cell.y_coord == height - 1) or (cell.x_coord == width - 1 and cell.y_coord == 0):
+            return 2
+        # position 1
+        if check_if_spot_valid(width, height, cell.x_coord - 1, cell.y_coord - 1):
+            temp = get_cell(scope, cell.x_coord - 1, cell.y_coord - 1)
+            if temp.getValue() != '.' and temp.getValue() is not None:
+                return 2
+            # forward checking
+            elif temp.getValue() is None:
+                for dom in temp.curDomain():
+                    if dom != '.':
+                        temp.pruneValue(dom)
+        # position 2
+        if check_if_spot_valid(width, height, cell.x_coord, cell.y_coord - 1):
+            temp = get_cell(scope, cell.x_coord, cell.y_coord - 1)
+            if (temp.getValue() != char_middle and temp.getValue() != char_top) and temp.getValue() is not None:
+                return 2
+            # forward checking
+            elif temp.getValue() is None:
+                for dom in temp.curDomain():
+                    if dom != char_middle and dom != char_top:
+                        temp.pruneValue(dom)
+        # position 3
+        if check_if_spot_valid(width, height, cell.x_coord + 1, cell.y_coord - 1):
+            temp = get_cell(scope, cell.x_coord + 1, cell.y_coord - 1)
+            if temp.getValue() != '.' and temp.getValue() is not None:
+                return 2
+            # forward checking
+            elif temp.getValue() is None:
+                for dom in temp.curDomain():
+                    if dom != '.':
+                        temp.pruneValue(dom)
+        # position 4
+        if check_if_spot_valid(width, height, cell.x_coord - 1, cell.y_coord):
+            temp = get_cell(scope, cell.x_coord - 1, cell.y_coord)
+            if (temp.getValue() != char_middle and temp.getValue() != char_left) and temp.getValue() is not None:
+                return 2
+            # forward checking
+            elif temp.getValue() is None:
+                for dom in temp.curDomain():
+                    if dom != char_middle and dom != char_left:
+                        temp.pruneValue(dom)
+        # position 5
+        if check_if_spot_valid(width, height, cell.x_coord + 1, cell.y_coord):
+            temp = get_cell(scope, cell.x_coord + 1, cell.y_coord)
+            if (temp.getValue() != char_middle and temp.getValue() != char_right) and temp.getValue() is not None:
+                return 2
+            # forward checking
+            elif temp.getValue() is None:
+                for dom in temp.curDomain():
+                    if dom != char_middle and dom != char_right:
+                        temp.pruneValue(dom)
+        # position 6
+        if check_if_spot_valid(width, height, cell.x_coord - 1, cell.y_coord + 1):
+            temp = get_cell(scope, cell.x_coord - 1, cell.y_coord + 1)
+            if temp.getValue() != '.' and temp.getValue() is not None:
+                return 2
+            # forward checking
+            elif temp.getValue() is None:
+                for dom in temp.curDomain():
+                    if dom != '.':
+                        temp.pruneValue(dom)
+        # position 7
+        if check_if_spot_valid(width, height, cell.x_coord, cell.y_coord + 1):
+            temp = get_cell(scope, cell.x_coord, cell.y_coord + 1)
+            if temp.getValue() != char_middle and temp.getValue() != char_bottom and temp.getValue() is not None:
+                return 2
+            # forward checking
+            elif temp.getValue() is None:
+                for dom in temp.curDomain():
+                    if dom != char_middle and dom != char_bottom:
+                        temp.pruneValue(dom)
+        # position 8
+        if check_if_spot_valid(width, height, cell.x_coord + 1, cell.y_coord + 1):
+            temp = get_cell(scope, cell.x_coord + 1, cell.y_coord + 1)
+            if temp.getValue() != '.' and temp.getValue() is not None:
+                return 2
+            # forward checking
+            elif temp.getValue() is None:
+                for dom in temp.curDomain():
+                    if dom != '.':
+                        temp.pruneValue(dom)
+    if cell.getValue() == char_submarine:
+        # position 1
+        if check_if_spot_valid(width, height, cell.x_coord - 1, cell.y_coord - 1):
+            temp = get_cell(scope, cell.x_coord - 1, cell.y_coord - 1)
+            if temp.getValue() != '.' and temp.getValue() is not None:
+                return 2
+            # forward checking
+            elif temp.getValue() is None:
+                for dom in temp.curDomain():
+                    if dom != '.':
+                        temp.pruneValue(dom)
+        # position 2
+        if check_if_spot_valid(width, height, cell.x_coord, cell.y_coord - 1):
+            temp = get_cell(scope, cell.x_coord, cell.y_coord - 1)
+            if temp.getValue() != '.' and temp.getValue() is not None:
+                return 2
+            # forward checking
+            elif temp.getValue() is None:
+                for dom in temp.curDomain():
+                    if dom != '.':
+                        temp.pruneValue(dom)
+        # position 3
+        if check_if_spot_valid(width, height, cell.x_coord + 1, cell.y_coord - 1):
+            temp = get_cell(scope, cell.x_coord + 1, cell.y_coord - 1)
+            if temp.getValue() != '.' and temp.getValue() is not None:
+                return 2
+            # forward checking
+            elif temp.getValue() is None:
+                for dom in temp.curDomain():
+                    if dom != '.':
+                        temp.pruneValue(dom)
+        # position 4
+        if check_if_spot_valid(width, height, cell.x_coord - 1, cell.y_coord):
+            temp = get_cell(scope, cell.x_coord - 1, cell.y_coord)
+            if temp.getValue() != '.' and temp.getValue() is not None:
+                return 2
+            # forward checking
+            elif temp.getValue() is None:
+                for dom in temp.curDomain():
+                    if dom != '.':
+                        temp.pruneValue(dom)
+        # position 5
+        if check_if_spot_valid(width, height, cell.x_coord + 1, cell.y_coord):
+            temp = get_cell(scope, cell.x_coord + 1, cell.y_coord)
+            if temp.getValue() != '.' and temp.getValue() is not None:
+                return 2
+            # forward checking
+            elif temp.getValue() is None:
+                for dom in temp.curDomain():
+                    if dom != '.':
+                        temp.pruneValue(dom)
+        # position 6
+        if check_if_spot_valid(width, height, cell.x_coord - 1, cell.y_coord + 1):
+            temp = get_cell(scope, cell.x_coord - 1, cell.y_coord + 1)
+            if temp.getValue() != '.' and temp.getValue() is not None:
+                return 2
+            # forward checking
+            elif temp.getValue() is None:
+                for dom in temp.curDomain():
+                    if dom != '.':
+                        temp.pruneValue(dom)
+        # position 7
+        if check_if_spot_valid(width, height, cell.x_coord, cell.y_coord + 1):
+            temp = get_cell(scope, cell.x_coord, cell.y_coord + 1)
+            if temp.getValue() != '.' and temp.getValue() is not None:
+                return 2
+            # forward checking
+            elif temp.getValue() is None:
+                for dom in temp.curDomain():
+                    if dom != '.':
+                        temp.pruneValue(dom)
+        # position 8
+        if check_if_spot_valid(width, height, cell.x_coord + 1, cell.y_coord + 1):
+            temp = get_cell(scope, cell.x_coord + 1, cell.y_coord + 1)
+            if temp.getValue() != '.' and temp.getValue() is not None:
+                return 2
+            # forward checking
+            elif temp.getValue() is None:
+                for dom in temp.curDomain():
+                    if dom != '.':
+                        temp.pruneValue(dom)
+    if cell.getValue() == char_water:
+        return 1
+
+
+class WaterConstraint(Constraint):
+    def __init__(self, name, scope, width, height):
+        Constraint.__init__(self, name, scope)
+        self.width = width
+        self.height = height
+
+    def check(self, cell):
+        return check_water_constraints(self.width, self.height, cell, self._scope)
 
 
 # object for holding a constraint problem
@@ -471,16 +978,21 @@ class State(CSP):
             return True
         return False
 
-    def partial_check(self):
+    def partial_check(self, cell: Cell):
         for c in self.constraints():
-            if c.check() == 2:
-                return False
+            if not isinstance(c, WaterConstraint):
+                if c.check() == 2:
+                    return False
+            else:
+                if c.check(cell) == 2:
+                    return False
         return True
 
     def full_check(self):
         for c in self.constraints():
-            if c.check() == 1 or c.check() == 2:
-                return False
+            if not isinstance(c, WaterConstraint):
+                if c.check() == 1 or c.check() == 2:
+                    return False
         for cell in self.board.cells:
             if cell.getValue() is None:
                 return False
@@ -590,7 +1102,8 @@ def read_from_file(filename):
                 temp_lookup_rc[line_index]._scope.append(cell)
         line_index += 1
     board = Board(word_index, line_index, cells)
-
+    wc = WaterConstraint('Water', cells, word_index, line_index)
+    constraints.append(wc)
     state = State("State", board, 0, constraints)
     puzzle_file.close()
 
@@ -609,6 +1122,25 @@ def backtracking_search(state: State):
     return backtrack(state)
 
 
+def recover_var(cell: Cell, scope):
+    if cell.getValue() == char_water:
+        cell.reset()
+    else:
+        cell.reset()
+        for c in scope:
+            if c.x_coord + c.y_coord * 10 > cell.x_coord + cell.y_coord * 10:
+                if (cell.x_coord - 1 == c.x_coord and cell.y_coord - 1 == c.y_coord) or (
+                        cell.x_coord == c.x_coord and cell.y_coord - 1 == c.y_coord) \
+                        or (cell.x_coord + 1 == c.x_coord and cell.y_coord - 1 == c.y_coord) or (
+                        cell.x_coord - 1 == c.x_coord and cell.y_coord == c.y_coord) \
+                        or (cell.x_coord == c.x_coord and cell.y_coord == c.y_coord) or (
+                        cell.x_coord + 1 == c.x_coord and cell.y_coord == c.y_coord) \
+                        or (cell.x_coord - 1 == c.x_coord and cell.y_coord + 1 == c.y_coord) or (
+                        cell.x_coord == c.x_coord and cell.y_coord + 1 == c.y_coord) \
+                        or (cell.x_coord + 1 == c.x_coord and cell.y_coord + 1 == c.y_coord):
+                    c.reset()
+
+
 def backtrack(state: State):
     if state.full_check():
         return [([c.x_coord, c.y_coord], c.getValue()) for c in state.board.cells]
@@ -616,21 +1148,21 @@ def backtrack(state: State):
     if var is not False:
         for value in var.curDomain():
             var.setValue(value)
-            print(str(var), var.getValue())
-            if str(var) == 'Variable 55' and var.getValue() == '^':
+            print(var.x_coord, var.y_coord, var.getValue())
+            if var.x_coord == 0 and var.y_coord == 1 and var.getValue() == char_middle:
                 print('a')
             if value != '.':
                 var.is_ship = True
             else:
                 var.is_ship = False
-            if state.partial_check():
+            if state.partial_check(var):
                 result = backtrack(state)
                 if len(result) != 0:
                     return result
             var.pruneValue(value)
     else:
         return []
-    var.reset()
+    recover_var(var, state.board.cells)
     var.is_ship = None
     return []
 
