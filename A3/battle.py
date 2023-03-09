@@ -663,7 +663,8 @@ def check_water_constraints(width, height, cell: Cell, scope):
         # position 2
         if check_if_spot_valid(width, height, cell.x_coord, cell.y_coord - 1):
             temp = get_cell(scope, cell.x_coord, cell.y_coord - 1)
-            if (temp.getValue() != char_middle and temp.getValue() != char_top) and temp.getValue() is not None and flag == 0:
+            if (
+                    temp.getValue() != char_middle and temp.getValue() != char_top) and temp.getValue() is not None and flag == 0:
                 return 2
             # forward checking
             elif temp.getValue() is None:
@@ -689,7 +690,8 @@ def check_water_constraints(width, height, cell: Cell, scope):
         # position 4
         if check_if_spot_valid(width, height, cell.x_coord - 1, cell.y_coord):
             temp = get_cell(scope, cell.x_coord - 1, cell.y_coord)
-            if (temp.getValue() != char_middle and temp.getValue() != char_left) and temp.getValue() is not None and flag == 0:
+            if (
+                    temp.getValue() != char_middle and temp.getValue() != char_left) and temp.getValue() is not None and flag == 0:
                 return 2
             # forward checking
             elif temp.getValue() is None:
@@ -704,7 +706,8 @@ def check_water_constraints(width, height, cell: Cell, scope):
         # position 5
         if check_if_spot_valid(width, height, cell.x_coord + 1, cell.y_coord):
             temp = get_cell(scope, cell.x_coord + 1, cell.y_coord)
-            if (temp.getValue() != char_middle and temp.getValue() != char_right) and temp.getValue() is not None and flag == 0:
+            if (
+                    temp.getValue() != char_middle and temp.getValue() != char_right) and temp.getValue() is not None and flag == 0:
                 return 2
             # forward checking
             elif temp.getValue() is None:
@@ -997,6 +1000,32 @@ class Board:
                 else:
                     print("Can't reach here!")
 
+    def update(self):
+        for i in range(self.height):
+            line = []
+            for j in range(self.width):
+                line.append('0')
+            self.grid.append(line)
+
+        for cell in self.cells:
+            if cell.getValue() is not None:
+                if cell.getValue() == char_submarine:
+                    self.grid[cell.y_coord][cell.x_coord] = char_submarine
+                elif cell.getValue() == char_water:
+                    self.grid[cell.y_coord][cell.x_coord] = char_water
+                elif cell.getValue() == char_top:
+                    self.grid[cell.y_coord][cell.x_coord] = char_top
+                elif cell.getValue() == char_left:
+                    self.grid[cell.y_coord][cell.x_coord] = char_left
+                elif cell.getValue() == char_bottom:
+                    self.grid[cell.y_coord][cell.x_coord] = char_bottom
+                elif cell.getValue() == char_right:
+                    self.grid[cell.y_coord][cell.x_coord] = char_right
+                elif cell.getValue() == char_middle:
+                    self.grid[cell.y_coord][cell.x_coord] = char_middle
+                else:
+                    print("Can't reach here!")
+
     def display(self):
         """
         Print out the current board.
@@ -1059,6 +1088,225 @@ class State(CSP):
             if cell.getValue() is None:
                 return False
         return True
+
+
+def preprocessing(state: State):
+    for c in state.constraints():
+        if isinstance(c, RowConstraint) or isinstance(c, ColConstraint):
+            if c.check() == 0:
+                for cell in c.scope():
+                    if cell.getValue() is None:
+                        cell.setValue(char_water)
+                        cell.resetDomain(['.'])
+                        cell._curdom = ['.']
+    for cell in state.board.cells:
+        if cell.getValue() is not None:
+            if cell.getValue() == char_top:
+                if check_if_spot_valid(state.board.width, state.board.height, cell.x_coord - 1, cell.y_coord - 1):
+                    temp = get_cell(state.board.cells, cell.x_coord - 1, cell.y_coord - 1)
+                    temp.setValue(char_water)
+                    temp.resetDomain(['.'])
+                    temp._curdom = ['.']
+                if check_if_spot_valid(state.board.width, state.board.height, cell.x_coord, cell.y_coord - 1):
+                    temp = get_cell(state.board.cells, cell.x_coord, cell.y_coord - 1)
+                    temp.setValue(char_water)
+                    temp.resetDomain(['.'])
+                    temp._curdom = ['.']
+                if check_if_spot_valid(state.board.width, state.board.height, cell.x_coord + 1, cell.y_coord - 1):
+                    temp = get_cell(state.board.cells, cell.x_coord + 1, cell.y_coord - 1)
+                    temp.setValue(char_water)
+                    temp.resetDomain(['.'])
+                    temp._curdom = ['.']
+                if check_if_spot_valid(state.board.width, state.board.height, cell.x_coord - 1, cell.y_coord):
+                    temp = get_cell(state.board.cells, cell.x_coord - 1, cell.y_coord)
+                    temp.setValue(char_water)
+                    temp.resetDomain(['.'])
+                    temp._curdom = ['.']
+                if check_if_spot_valid(state.board.width, state.board.height, cell.x_coord + 1, cell.y_coord):
+                    temp = get_cell(state.board.cells, cell.x_coord + 1, cell.y_coord)
+                    temp.setValue(char_water)
+                    temp.resetDomain(['.'])
+                    temp._curdom = ['.']
+                if check_if_spot_valid(state.board.width, state.board.height, cell.x_coord - 1, cell.y_coord + 1):
+                    temp = get_cell(state.board.cells, cell.x_coord - 1, cell.y_coord + 1)
+                    temp.setValue(char_water)
+                    temp.resetDomain(['.'])
+                    temp._curdom = ['.']
+                if check_if_spot_valid(state.board.width, state.board.height, cell.x_coord + 1, cell.y_coord + 1):
+                    temp = get_cell(state.board.cells, cell.x_coord + 1, cell.y_coord + 1)
+                    temp.setValue(char_water)
+                    temp.resetDomain(['.'])
+                    temp._curdom = ['.']
+            if cell.getValue() == char_bottom:
+                if check_if_spot_valid(state.board.width, state.board.height, cell.x_coord - 1, cell.y_coord - 1):
+                    temp = get_cell(state.board.cells, cell.x_coord - 1, cell.y_coord - 1)
+                    temp.setValue(char_water)
+                    temp.resetDomain(['.'])
+                    temp._curdom = ['.']
+                if check_if_spot_valid(state.board.width, state.board.height, cell.x_coord + 1, cell.y_coord - 1):
+                    temp = get_cell(state.board.cells, cell.x_coord + 1, cell.y_coord - 1)
+                    temp.setValue(char_water)
+                    temp.resetDomain(['.'])
+                    temp._curdom = ['.']
+                if check_if_spot_valid(state.board.width, state.board.height, cell.x_coord - 1, cell.y_coord):
+                    temp = get_cell(state.board.cells, cell.x_coord - 1, cell.y_coord)
+                    temp.setValue(char_water)
+                    temp.resetDomain(['.'])
+                    temp._curdom = ['.']
+                if check_if_spot_valid(state.board.width, state.board.height, cell.x_coord + 1, cell.y_coord):
+                    temp = get_cell(state.board.cells, cell.x_coord + 1, cell.y_coord)
+                    temp.setValue(char_water)
+                    temp.resetDomain(['.'])
+                    temp._curdom = ['.']
+                if check_if_spot_valid(state.board.width, state.board.height, cell.x_coord - 1, cell.y_coord + 1):
+                    temp = get_cell(state.board.cells, cell.x_coord - 1, cell.y_coord + 1)
+                    temp.setValue(char_water)
+                    temp.resetDomain(['.'])
+                    temp._curdom = ['.']
+                if check_if_spot_valid(state.board.width, state.board.height, cell.x_coord, cell.y_coord + 1):
+                    temp = get_cell(state.board.cells, cell.x_coord, cell.y_coord + 1)
+                    temp.setValue(char_water)
+                    temp.resetDomain(['.'])
+                    temp._curdom = ['.']
+                if check_if_spot_valid(state.board.width, state.board.height, cell.x_coord + 1, cell.y_coord + 1):
+                    temp = get_cell(state.board.cells, cell.x_coord + 1, cell.y_coord + 1)
+                    temp.setValue(char_water)
+                    temp.resetDomain(['.'])
+                    temp._curdom = ['.']
+            if cell.getValue() == char_left:
+                if check_if_spot_valid(state.board.width, state.board.height, cell.x_coord - 1, cell.y_coord - 1):
+                    temp = get_cell(state.board.cells, cell.x_coord - 1, cell.y_coord - 1)
+                    temp.setValue(char_water)
+                    temp.resetDomain(['.'])
+                    temp._curdom = ['.']
+                if check_if_spot_valid(state.board.width, state.board.height, cell.x_coord, cell.y_coord - 1):
+                    temp = get_cell(state.board.cells, cell.x_coord, cell.y_coord - 1)
+                    temp.setValue(char_water)
+                    temp.resetDomain(['.'])
+                    temp._curdom = ['.']
+                if check_if_spot_valid(state.board.width, state.board.height, cell.x_coord + 1, cell.y_coord - 1):
+                    temp = get_cell(state.board.cells, cell.x_coord + 1, cell.y_coord - 1)
+                    temp.setValue(char_water)
+                    temp.resetDomain(['.'])
+                    temp._curdom = ['.']
+                if check_if_spot_valid(state.board.width, state.board.height, cell.x_coord - 1, cell.y_coord):
+                    temp = get_cell(state.board.cells, cell.x_coord - 1, cell.y_coord)
+                    temp.setValue(char_water)
+                    temp.resetDomain(['.'])
+                    temp._curdom = ['.']
+                if check_if_spot_valid(state.board.width, state.board.height, cell.x_coord - 1, cell.y_coord + 1):
+                    temp = get_cell(state.board.cells, cell.x_coord - 1, cell.y_coord + 1)
+                    temp.setValue(char_water)
+                    temp.resetDomain(['.'])
+                    temp._curdom = ['.']
+                if check_if_spot_valid(state.board.width, state.board.height, cell.x_coord, cell.y_coord + 1):
+                    temp = get_cell(state.board.cells, cell.x_coord, cell.y_coord + 1)
+                    temp.setValue(char_water)
+                    temp.resetDomain(['.'])
+                    temp._curdom = ['.']
+                if check_if_spot_valid(state.board.width, state.board.height, cell.x_coord + 1, cell.y_coord + 1):
+                    temp = get_cell(state.board.cells, cell.x_coord + 1, cell.y_coord + 1)
+                    temp.setValue(char_water)
+                    temp.resetDomain(['.'])
+                    temp._curdom = ['.']
+            if cell.getValue() == char_right:
+                if check_if_spot_valid(state.board.width, state.board.height, cell.x_coord - 1, cell.y_coord - 1):
+                    temp = get_cell(state.board.cells, cell.x_coord - 1, cell.y_coord - 1)
+                    temp.setValue(char_water)
+                    temp.resetDomain(['.'])
+                    temp._curdom = ['.']
+                if check_if_spot_valid(state.board.width, state.board.height, cell.x_coord, cell.y_coord - 1):
+                    temp = get_cell(state.board.cells, cell.x_coord, cell.y_coord - 1)
+                    temp.setValue(char_water)
+                    temp.resetDomain(['.'])
+                    temp._curdom = ['.']
+                if check_if_spot_valid(state.board.width, state.board.height, cell.x_coord + 1, cell.y_coord - 1):
+                    temp = get_cell(state.board.cells, cell.x_coord + 1, cell.y_coord - 1)
+                    temp.setValue(char_water)
+                    temp.resetDomain(['.'])
+                    temp._curdom = ['.']
+                if check_if_spot_valid(state.board.width, state.board.height, cell.x_coord + 1, cell.y_coord):
+                    temp = get_cell(state.board.cells, cell.x_coord + 1, cell.y_coord)
+                    temp.setValue(char_water)
+                    temp.resetDomain(['.'])
+                    temp._curdom = ['.']
+                if check_if_spot_valid(state.board.width, state.board.height, cell.x_coord - 1, cell.y_coord + 1):
+                    temp = get_cell(state.board.cells, cell.x_coord - 1, cell.y_coord + 1)
+                    temp.setValue(char_water)
+                    temp.resetDomain(['.'])
+                    temp._curdom = ['.']
+                if check_if_spot_valid(state.board.width, state.board.height, cell.x_coord, cell.y_coord + 1):
+                    temp = get_cell(state.board.cells, cell.x_coord, cell.y_coord + 1)
+                    temp.setValue(char_water)
+                    temp.resetDomain(['.'])
+                    temp._curdom = ['.']
+                if check_if_spot_valid(state.board.width, state.board.height, cell.x_coord + 1, cell.y_coord + 1):
+                    temp = get_cell(state.board.cells, cell.x_coord + 1, cell.y_coord + 1)
+                    temp.setValue(char_water)
+                    temp.resetDomain(['.'])
+                    temp._curdom = ['.']
+            if cell.getValue() == char_middle:
+                if check_if_spot_valid(state.board.width, state.board.height, cell.x_coord - 1, cell.y_coord - 1):
+                    temp = get_cell(state.board.cells, cell.x_coord - 1, cell.y_coord - 1)
+                    temp.setValue(char_water)
+                    temp.resetDomain(['.'])
+                    temp._curdom = ['.']
+                if check_if_spot_valid(state.board.width, state.board.height, cell.x_coord + 1, cell.y_coord - 1):
+                    temp = get_cell(state.board.cells, cell.x_coord + 1, cell.y_coord - 1)
+                    temp.setValue(char_water)
+                    temp.resetDomain(['.'])
+                    temp._curdom = ['.']
+                if check_if_spot_valid(state.board.width, state.board.height, cell.x_coord - 1, cell.y_coord + 1):
+                    temp = get_cell(state.board.cells, cell.x_coord - 1, cell.y_coord + 1)
+                    temp.setValue(char_water)
+                    temp.resetDomain(['.'])
+                    temp._curdom = ['.']
+                if check_if_spot_valid(state.board.width, state.board.height, cell.x_coord + 1, cell.y_coord + 1):
+                    temp = get_cell(state.board.cells, cell.x_coord + 1, cell.y_coord + 1)
+                    temp.setValue(char_water)
+                    temp.resetDomain(['.'])
+                    temp._curdom = ['.']
+            if cell.getValue() == char_submarine:
+                if check_if_spot_valid(state.board.width, state.board.height, cell.x_coord - 1, cell.y_coord - 1):
+                    temp = get_cell(state.board.cells, cell.x_coord - 1, cell.y_coord - 1)
+                    temp.setValue(char_water)
+                    temp.resetDomain(['.'])
+                    temp._curdom = ['.']
+                if check_if_spot_valid(state.board.width, state.board.height, cell.x_coord, cell.y_coord - 1):
+                    temp = get_cell(state.board.cells, cell.x_coord, cell.y_coord - 1)
+                    temp.setValue(char_water)
+                    temp.resetDomain(['.'])
+                    temp._curdom = ['.']
+                if check_if_spot_valid(state.board.width, state.board.height, cell.x_coord + 1, cell.y_coord - 1):
+                    temp = get_cell(state.board.cells, cell.x_coord + 1, cell.y_coord - 1)
+                    temp.setValue(char_water)
+                    temp.resetDomain(['.'])
+                    temp._curdom = ['.']
+                if check_if_spot_valid(state.board.width, state.board.height, cell.x_coord - 1, cell.y_coord):
+                    temp = get_cell(state.board.cells, cell.x_coord - 1, cell.y_coord)
+                    temp.setValue(char_water)
+                    temp.resetDomain(['.'])
+                    temp._curdom = ['.']
+                if check_if_spot_valid(state.board.width, state.board.height, cell.x_coord + 1, cell.y_coord):
+                    temp = get_cell(state.board.cells, cell.x_coord + 1, cell.y_coord)
+                    temp.setValue(char_water)
+                    temp.resetDomain(['.'])
+                    temp._curdom = ['.']
+                if check_if_spot_valid(state.board.width, state.board.height, cell.x_coord - 1, cell.y_coord + 1):
+                    temp = get_cell(state.board.cells, cell.x_coord - 1, cell.y_coord + 1)
+                    temp.setValue(char_water)
+                    temp.resetDomain(['.'])
+                    temp._curdom = ['.']
+                if check_if_spot_valid(state.board.width, state.board.height, cell.x_coord, cell.y_coord + 1):
+                    temp = get_cell(state.board.cells, cell.x_coord, cell.y_coord + 1)
+                    temp.setValue(char_water)
+                    temp.resetDomain(['.'])
+                    temp._curdom = ['.']
+                if check_if_spot_valid(state.board.width, state.board.height, cell.x_coord + 1, cell.y_coord + 1):
+                    temp = get_cell(state.board.cells, cell.x_coord + 1, cell.y_coord + 1)
+                    temp.setValue(char_water)
+                    temp.resetDomain(['.'])
+                    temp._curdom = ['.']
 
 
 def read_from_file(filename):
@@ -1265,8 +1513,8 @@ if __name__ == "__main__":
 
     # read the board from the file
     start = time.time()
-    instate = read_from_file('test_input2.txt')
-    instate.board.display()
+    instate = read_from_file('test_input.txt')
+    preprocessing(instate)
     write_solution(instate, 'sol.txt')
     end = time.time()
     # shipp = ShipConstraint('sc', instate.board.cells, 3, 2, 1, 0)
