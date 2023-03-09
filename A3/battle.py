@@ -144,6 +144,11 @@ class Cell(Variable):
     def __str__(self):
         return "Variable {}{}".format(self.x_coord, self.y_coord)
 
+    def __lt__(self, other):
+        if len(self._dom) < len(other._dom):
+            return True
+        return False
+
 
 # implement various types of constraints
 class Constraint:
@@ -634,7 +639,6 @@ def check_water_constraints(width, height, cell: Cell, scope):
                 for dom in temp.curDomain():
                     if dom != '.':
                         temp.pruneValue(dom)
-    # TODO
     if cell.getValue() == char_middle:
         flag = 0
         tv1 = 0
@@ -1363,8 +1367,8 @@ def read_from_file(filename):
         word_index = len(line)
         for x, ch in enumerate(line):
             if ch == '0':
-                cell = Cell('Cell', [char_top, char_submarine, char_bottom, char_water, char_middle, char_left,
-                                     char_right], False, x, line_index)
+                cell = Cell('Cell', [char_water, char_top, char_bottom, char_left,
+                                     char_right, char_middle, char_submarine], False, x, line_index)
                 cells.append(cell)
                 temp_lookup_cc[x]._scope.append(cell)
                 temp_lookup_rc[line_index]._scope.append(cell)
@@ -1425,10 +1429,19 @@ def read_from_file(filename):
 
 def select_unassigned_var(state: State):
     # TODO MRV
+    # temp = []
+    # for c in state.board.cells:
+    #     if c.getValue() is None:
+    #         temp.append(c)
+    # if len(temp) != 0:
+    #     return min(temp)
+    # else:
+    #     return False
     for c in state.board.cells:
         if c.getValue() is None:
             return c
     return False
+
 
 
 def backtracking_search(state: State):
@@ -1510,18 +1523,15 @@ if __name__ == "__main__":
     #     help="The output file that contains the solution."
     # )
     # args = parser.parse_args()
+    # instate = read_from_file(args.inputfile)
+    # preprocessing(instate)
+    # write_solution(instate, args.outputfile)
 
-    # read the board from the file
+
     start = time.time()
-    instate = read_from_file('test_input.txt')
+    instate = read_from_file('test_input4.txt')
     preprocessing(instate)
     write_solution(instate, 'sol.txt')
     end = time.time()
-    # shipp = ShipConstraint('sc', instate.board.cells, 3, 2, 1, 0)
-    # print(shipp.check())
-    # generate state base on the board
-    # inboard = read_from_file('test_successor_red.txt')
     print(end - start)
 
-    # write solution base on algo choice
-    # write_solution(state, args.outputfile)
