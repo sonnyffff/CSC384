@@ -239,9 +239,8 @@ class ColConstraint(Constraint):
 
 
 class ShipConstraint(Constraint):
-    def __init__(self, name, scope, state, submarine, destroyers, cruisers, battleships):
+    def __init__(self, name, scope, submarine, destroyers, cruisers, battleships):
         Constraint.__init__(self, name, scope)
-        self.state = state
         self.submarine = submarine
         self.destroyers = destroyers
         self.cruisers = cruisers
@@ -250,14 +249,43 @@ class ShipConstraint(Constraint):
     def check(self):
         submarine = 0
         destroyers = 0
-        scruisers = 0
+        cruisers = 0
         battleships = 0
+        counter1 = 0
+        counter2 = 0
+        width = math.sqrt(len(self._scope) + 1)
         for cell in self._scope:
             if cell.getValue() == char_submarine:
                 submarine += 1
-            elif cell.getValue() == char_top:
-                return
-    # TODO
+            elif cell.getValue() == char_left:
+                counter1 = 0
+            elif cell.getValue() == char_middle:
+                counter1 += 1
+            elif cell.getValue() == char_right:
+                if counter1 == 0:
+                    destroyers += 1
+                elif counter1 == 1:
+                    cruisers += 1
+                elif counter1 == 2:
+                    battleships += 1
+        for i in range(0, int(width)):
+            for cell in self._scope:
+                if cell.x_coord == i:
+                    if cell.getValue() == char_top:
+                        counter2 = 0
+                    elif cell.getValue() == char_middle:
+                        counter2 += 1
+                    elif cell.getValue() == char_bottom:
+                        if counter2 == 0:
+                            destroyers += 1
+                        elif counter2 == 1:
+                            cruisers += 1
+                        elif counter2 == 2:
+                            battleships += 1
+        if self.destroyers == destroyers and self.battleships == battleships and self.cruisers == cruisers and \
+                self.submarine == submarine:
+            return 0
+        return 2
 
 
 def get_cell(scope, x_coord, y_coord) -> Cell:
@@ -608,6 +636,17 @@ def check_water_constraints(width, height, cell: Cell, scope):
                         temp.pruneValue(dom)
     # TODO
     if cell.getValue() == char_middle:
+        flag = 0
+        tv1 = 0
+        tv2 = 0
+        if check_if_spot_valid(width, height, cell.x_coord, cell.y_coord - 1):
+            tv1 = get_cell(scope, cell.x_coord, cell.y_coord - 1).getValue()
+        if check_if_spot_valid(width, height, cell.x_coord - 1, cell.y_coord):
+            tv2 = get_cell(scope, cell.x_coord - 1, cell.y_coord).getValue()
+        if tv1 == char_top or tv1 == char_middle:
+            flag = 'v'
+        elif tv2 == char_left or tv2 == char_middle:
+            flag = 'h'
         if (cell.x_coord == 0 and cell.y_coord == 0) or (cell.x_coord == width - 1 and cell.y_coord == height - 1) or \
                 (cell.x_coord == 0 and cell.y_coord == height - 1) or (cell.x_coord == width - 1 and cell.y_coord == 0):
             return 2
@@ -624,13 +663,19 @@ def check_water_constraints(width, height, cell: Cell, scope):
         # position 2
         if check_if_spot_valid(width, height, cell.x_coord, cell.y_coord - 1):
             temp = get_cell(scope, cell.x_coord, cell.y_coord - 1)
-            if (temp.getValue() != char_middle and temp.getValue() != char_top) and temp.getValue() is not None:
+            if (temp.getValue() != char_middle and temp.getValue() != char_top) and temp.getValue() is not None and flag == 0:
                 return 2
             # forward checking
             elif temp.getValue() is None:
-                for dom in temp.curDomain():
-                    if dom != char_middle and dom != char_top:
-                        temp.pruneValue(dom)
+                if flag == 'h':
+                    for dom in temp.curDomain():
+                        if dom != '.':
+                            temp.pruneValue(dom)
+                else:
+                    for dom in temp.curDomain():
+                        if dom != char_middle and dom != char_top:
+                            temp.pruneValue(dom)
+
         # position 3
         if check_if_spot_valid(width, height, cell.x_coord + 1, cell.y_coord - 1):
             temp = get_cell(scope, cell.x_coord + 1, cell.y_coord - 1)
@@ -644,23 +689,33 @@ def check_water_constraints(width, height, cell: Cell, scope):
         # position 4
         if check_if_spot_valid(width, height, cell.x_coord - 1, cell.y_coord):
             temp = get_cell(scope, cell.x_coord - 1, cell.y_coord)
-            if (temp.getValue() != char_middle and temp.getValue() != char_left) and temp.getValue() is not None:
+            if (temp.getValue() != char_middle and temp.getValue() != char_left) and temp.getValue() is not None and flag == 0:
                 return 2
             # forward checking
             elif temp.getValue() is None:
-                for dom in temp.curDomain():
-                    if dom != char_middle and dom != char_left:
-                        temp.pruneValue(dom)
+                if flag == 'v':
+                    for dom in temp.curDomain():
+                        if dom != '.':
+                            temp.pruneValue(dom)
+                else:
+                    for dom in temp.curDomain():
+                        if dom != char_middle and dom != char_left:
+                            temp.pruneValue(dom)
         # position 5
         if check_if_spot_valid(width, height, cell.x_coord + 1, cell.y_coord):
             temp = get_cell(scope, cell.x_coord + 1, cell.y_coord)
-            if (temp.getValue() != char_middle and temp.getValue() != char_right) and temp.getValue() is not None:
+            if (temp.getValue() != char_middle and temp.getValue() != char_right) and temp.getValue() is not None and flag == 0:
                 return 2
             # forward checking
             elif temp.getValue() is None:
-                for dom in temp.curDomain():
-                    if dom != char_middle and dom != char_right:
-                        temp.pruneValue(dom)
+                if flag == 'v':
+                    for dom in temp.curDomain():
+                        if dom != '.':
+                            temp.pruneValue(dom)
+                else:
+                    for dom in temp.curDomain():
+                        if dom != char_middle and dom != char_right:
+                            temp.pruneValue(dom)
         # position 6
         if check_if_spot_valid(width, height, cell.x_coord - 1, cell.y_coord + 1):
             temp = get_cell(scope, cell.x_coord - 1, cell.y_coord + 1)
@@ -674,13 +729,18 @@ def check_water_constraints(width, height, cell: Cell, scope):
         # position 7
         if check_if_spot_valid(width, height, cell.x_coord, cell.y_coord + 1):
             temp = get_cell(scope, cell.x_coord, cell.y_coord + 1)
-            if temp.getValue() != char_middle and temp.getValue() != char_bottom and temp.getValue() is not None:
+            if temp.getValue() != char_middle and temp.getValue() != char_bottom and temp.getValue() is not None and flag == 0:
                 return 2
             # forward checking
             elif temp.getValue() is None:
-                for dom in temp.curDomain():
-                    if dom != char_middle and dom != char_bottom:
-                        temp.pruneValue(dom)
+                if flag == 'h':
+                    for dom in temp.curDomain():
+                        if dom != '.':
+                            temp.pruneValue(dom)
+                else:
+                    for dom in temp.curDomain():
+                        if dom != char_middle and dom != char_bottom:
+                            temp.pruneValue(dom)
         # position 8
         if check_if_spot_valid(width, height, cell.x_coord + 1, cell.y_coord + 1):
             temp = get_cell(scope, cell.x_coord + 1, cell.y_coord + 1)
@@ -980,10 +1040,10 @@ class State(CSP):
 
     def partial_check(self, cell: Cell):
         for c in self.constraints():
-            if not isinstance(c, WaterConstraint):
+            if not isinstance(c, WaterConstraint) and not isinstance(c, ShipConstraint):
                 if c.check() == 2:
                     return False
-            else:
+            elif isinstance(c, WaterConstraint):
                 if c.check(cell) == 2:
                     return False
         return True
@@ -991,6 +1051,8 @@ class State(CSP):
     def full_check(self):
         for c in self.constraints():
             if not isinstance(c, WaterConstraint):
+                # if isinstance(c, ShipConstraint):
+                #     print('a')
                 if c.check() == 1 or c.check() == 2:
                     return False
         for cell in self.board.cells:
@@ -1031,7 +1093,7 @@ def read_from_file(filename):
                     constraints.append(cc)
                     temp_lookup_cc[x] = cc
         elif line_index == 2:
-            sc = ShipConstraint("ShipC", [], None, 0, 0, 0, 0)
+            sc = ShipConstraint("ShipC", [], 0, 0, 0, 0)
             for x, ch in enumerate(line):
                 if ch != '\n':
                     if x == 0:
@@ -1044,7 +1106,7 @@ def read_from_file(filename):
                         sc.battleships = int(ch)
                     else:
                         print("Can't get here! No ship")
-            # constraints.append(sc)
+            constraints.append(sc)
             break
         line_index += 1
 
@@ -1104,6 +1166,9 @@ def read_from_file(filename):
     board = Board(word_index, line_index, cells)
     wc = WaterConstraint('Water', cells, word_index, line_index)
     constraints.append(wc)
+    for c in constraints:
+        if isinstance(c, ShipConstraint):
+            c._scope = cells
     state = State("State", board, 0, constraints)
     puzzle_file.close()
 
@@ -1148,9 +1213,9 @@ def backtrack(state: State):
     if var is not False:
         for value in var.curDomain():
             var.setValue(value)
-            print(var.x_coord, var.y_coord, var.getValue())
-            if var.x_coord == 0 and var.y_coord == 1 and var.getValue() == char_middle:
-                print('a')
+            # print(var.x_coord, var.y_coord, var.getValue())
+            # if var.x_coord == 1 and var.y_coord == 3 and var.getValue() == char_middle:
+            #         print('a')
             if value != '.':
                 var.is_ship = True
             else:
@@ -1199,13 +1264,16 @@ if __name__ == "__main__":
     # args = parser.parse_args()
 
     # read the board from the file
-    instate = read_from_file('test_input.txt')
+    start = time.time()
+    instate = read_from_file('test_input2.txt')
     instate.board.display()
     write_solution(instate, 'sol.txt')
+    end = time.time()
+    # shipp = ShipConstraint('sc', instate.board.cells, 3, 2, 1, 0)
+    # print(shipp.check())
     # generate state base on the board
     # inboard = read_from_file('test_successor_red.txt')
-    # start = time.time()
-    # print(end - start)
+    print(end - start)
 
     # write solution base on algo choice
     # write_solution(state, args.outputfile)
