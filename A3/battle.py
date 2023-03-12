@@ -1,7 +1,4 @@
-import sys
-import copy
 import math
-from heapq import heappush, heappop
 import argparse
 import time
 
@@ -12,6 +9,7 @@ char_right = '>'
 char_top = '^'
 char_bottom = 'v'
 char_middle = 'M'
+CELL_DICT = dict()
 
 
 class Variable:
@@ -294,9 +292,7 @@ class ShipConstraint(Constraint):
 
 
 def get_cell(scope, x_coord, y_coord) -> Cell:
-    for cell in scope:
-        if cell.x_coord == x_coord and cell.y_coord == y_coord:
-            return cell
+    return CELL_DICT[(x_coord, y_coord)]
 
 
 def check_if_spot_valid(width, height, x_coord, y_coord):
@@ -1370,48 +1366,56 @@ def read_from_file(filename):
                 cell = Cell('Cell', [char_water, char_top, char_bottom, char_left,
                                      char_right, char_middle, char_submarine], False, x, line_index)
                 cells.append(cell)
+                CELL_DICT[(x, line_index)] = cell
                 temp_lookup_cc[x]._scope.append(cell)
                 temp_lookup_rc[line_index]._scope.append(cell)
             elif ch == char_submarine:
                 cell = Cell('Cell', [char_submarine], True, x, line_index)
                 cell.setValue(char_submarine)
                 cells.append(cell)
+                CELL_DICT[(x, line_index)] = cell
                 temp_lookup_cc[x]._scope.append(cell)
                 temp_lookup_rc[line_index]._scope.append(cell)
             elif ch == char_water:
                 cell = Cell('Cell', [char_water], False, x, line_index)
                 cell.setValue(char_water)
                 cells.append(cell)
+                CELL_DICT[(x, line_index)] = cell
                 temp_lookup_cc[x]._scope.append(cell)
                 temp_lookup_rc[line_index]._scope.append(cell)
             elif ch == char_top:
                 cell = Cell('Cell', [char_top], True, x, line_index)
                 cell.setValue(char_top)
                 cells.append(cell)
+                CELL_DICT[(x, line_index)] = cell
                 temp_lookup_cc[x]._scope.append(cell)
                 temp_lookup_rc[line_index]._scope.append(cell)
             elif ch == char_bottom:
                 cell = Cell('Cell', [char_bottom], True, x, line_index)
                 cell.setValue(char_bottom)
                 cells.append(cell)
+                CELL_DICT[(x, line_index)] = cell
                 temp_lookup_cc[x]._scope.append(cell)
                 temp_lookup_rc[line_index]._scope.append(cell)
             elif ch == char_left:
                 cell = Cell('Cell', [char_left], True, x, line_index)
                 cell.setValue(char_left)
                 cells.append(cell)
+                CELL_DICT[(x, line_index)] = cell
                 temp_lookup_cc[x]._scope.append(cell)
                 temp_lookup_rc[line_index]._scope.append(cell)
             elif ch == char_right:
                 cell = Cell('Cell', [char_right], True, x, line_index)
                 cell.setValue(char_right)
                 cells.append(cell)
+                CELL_DICT[(x, line_index)] = cell
                 temp_lookup_cc[x]._scope.append(cell)
                 temp_lookup_rc[line_index]._scope.append(cell)
             elif ch == char_middle:
                 cell = Cell('Cell', [char_middle], True, x, line_index)
                 cell.setValue(char_middle)
                 cells.append(cell)
+                CELL_DICT[(x, line_index)] = cell
                 temp_lookup_cc[x]._scope.append(cell)
                 temp_lookup_rc[line_index]._scope.append(cell)
         line_index += 1
@@ -1441,7 +1445,6 @@ def select_unassigned_var(state: State):
         if c.getValue() is None:
             return c
     return False
-
 
 
 def backtracking_search(state: State):
@@ -1527,11 +1530,9 @@ if __name__ == "__main__":
     # preprocessing(instate)
     # write_solution(instate, args.outputfile)
 
-
     start = time.time()
-    instate = read_from_file('test_input4.txt')
+    instate = read_from_file('test_input77_3.txt')
     preprocessing(instate)
     write_solution(instate, 'sol.txt')
     end = time.time()
     print(end - start)
-
