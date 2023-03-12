@@ -1196,7 +1196,6 @@ def backtracking_search(state: State):
 
 
 def recover_var(cell: Cell, scope):
-    cell.reset()
     for c in cell.restore:
         c.reset()
     cell.restore = []
@@ -1215,6 +1214,8 @@ def forward_checking(cell, state: State):
                 for dom in temp.curDomain():
                     if dom != '.':
                         temp.pruneValue(dom)
+                if len(temp._curdom) == 0:
+                    return False
         # position 2
         if check_if_spot_valid(width, height, cell.x_coord, cell.y_coord - 1):
             temp = get_cell(scope, cell.x_coord, cell.y_coord - 1)
@@ -1223,6 +1224,8 @@ def forward_checking(cell, state: State):
                 for dom in temp.curDomain():
                     if dom != '.':
                         temp.pruneValue(dom)
+                if len(temp._curdom) == 0:
+                    return False
         # position 3
         if check_if_spot_valid(width, height, cell.x_coord + 1, cell.y_coord - 1):
             temp = get_cell(scope, cell.x_coord + 1, cell.y_coord - 1)
@@ -1231,6 +1234,8 @@ def forward_checking(cell, state: State):
                 for dom in temp.curDomain():
                     if dom != '.':
                         temp.pruneValue(dom)
+                if len(temp._curdom) == 0:
+                    return False
         # position 4
         if check_if_spot_valid(width, height, cell.x_coord - 1, cell.y_coord):
             temp = get_cell(scope, cell.x_coord - 1, cell.y_coord)
@@ -1239,6 +1244,8 @@ def forward_checking(cell, state: State):
                 for dom in temp.curDomain():
                     if dom != '.':
                         temp.pruneValue(dom)
+                if len(temp._curdom) == 0:
+                    return False
         # position 5
         if check_if_spot_valid(width, height, cell.x_coord + 1, cell.y_coord):
             temp = get_cell(scope, cell.x_coord + 1, cell.y_coord)
@@ -1247,6 +1254,8 @@ def forward_checking(cell, state: State):
                 for dom in temp.curDomain():
                     if dom != '.':
                         temp.pruneValue(dom)
+                if len(temp._curdom) == 0:
+                    return False
         # position 6
         if check_if_spot_valid(width, height, cell.x_coord - 1, cell.y_coord + 1):
             temp = get_cell(scope, cell.x_coord - 1, cell.y_coord + 1)
@@ -1255,6 +1264,8 @@ def forward_checking(cell, state: State):
                 for dom in temp.curDomain():
                     if dom != '.':
                         temp.pruneValue(dom)
+                if len(temp._curdom) == 0:
+                    return False
         # position 7
         if check_if_spot_valid(width, height, cell.x_coord, cell.y_coord + 1):
             temp = get_cell(scope, cell.x_coord, cell.y_coord + 1)
@@ -1263,6 +1274,8 @@ def forward_checking(cell, state: State):
                 for dom in temp.curDomain():
                     if dom != char_middle and dom != char_bottom:
                         temp.pruneValue(dom)
+                if len(temp._curdom) == 0:
+                    return False
         # position 8
         if check_if_spot_valid(width, height, cell.x_coord + 1, cell.y_coord + 1):
             temp = get_cell(scope, cell.x_coord + 1, cell.y_coord + 1)
@@ -1271,6 +1284,8 @@ def forward_checking(cell, state: State):
                 for dom in temp.curDomain():
                     if dom != '.':
                         temp.pruneValue(dom)
+                if len(temp._curdom) == 0:
+                    return False
     if cell.getValue() == char_bottom:
         # position 1
         if check_if_spot_valid(width, height, cell.x_coord - 1, cell.y_coord - 1):
@@ -1280,6 +1295,8 @@ def forward_checking(cell, state: State):
                 for dom in temp.curDomain():
                     if dom != '.':
                         temp.pruneValue(dom)
+                if len(temp._curdom) == 0:
+                    return False
         # position 2
         if check_if_spot_valid(width, height, cell.x_coord, cell.y_coord - 1):
             temp = get_cell(scope, cell.x_coord, cell.y_coord - 1)
@@ -1288,6 +1305,8 @@ def forward_checking(cell, state: State):
                 for dom in temp.curDomain():
                     if dom != char_middle and dom != char_top:
                         temp.pruneValue(dom)
+                if len(temp._curdom) == 0:
+                    return False
         # position 3
         if check_if_spot_valid(width, height, cell.x_coord + 1, cell.y_coord - 1):
             temp = get_cell(scope, cell.x_coord + 1, cell.y_coord - 1)
@@ -1296,6 +1315,8 @@ def forward_checking(cell, state: State):
                 for dom in temp.curDomain():
                     if dom != '.':
                         temp.pruneValue(dom)
+                if len(temp._curdom) == 0:
+                    return False
         # position 4
         if check_if_spot_valid(width, height, cell.x_coord - 1, cell.y_coord):
             temp = get_cell(scope, cell.x_coord - 1, cell.y_coord)
@@ -1304,6 +1325,8 @@ def forward_checking(cell, state: State):
                 for dom in temp.curDomain():
                     if dom != '.':
                         temp.pruneValue(dom)
+                if len(temp._curdom) == 0:
+                    return False
         # position 5
         if check_if_spot_valid(width, height, cell.x_coord + 1, cell.y_coord):
             temp = get_cell(scope, cell.x_coord + 1, cell.y_coord)
@@ -1312,6 +1335,8 @@ def forward_checking(cell, state: State):
                 for dom in temp.curDomain():
                     if dom != '.':
                         temp.pruneValue(dom)
+                if len(temp._curdom) == 0:
+                    return False
         # position 6
         if check_if_spot_valid(width, height, cell.x_coord - 1, cell.y_coord + 1):
             temp = get_cell(scope, cell.x_coord - 1, cell.y_coord + 1)
@@ -1320,6 +1345,8 @@ def forward_checking(cell, state: State):
                 for dom in temp.curDomain():
                     if dom != '.':
                         temp.pruneValue(dom)
+                if len(temp._curdom) == 0:
+                    return False
         # position 7
         if check_if_spot_valid(width, height, cell.x_coord, cell.y_coord + 1):
             temp = get_cell(scope, cell.x_coord, cell.y_coord + 1)
@@ -1328,6 +1355,8 @@ def forward_checking(cell, state: State):
                 for dom in temp.curDomain():
                     if dom != '.':
                         temp.pruneValue(dom)
+                if len(temp._curdom) == 0:
+                    return False
         # position 8
         if check_if_spot_valid(width, height, cell.x_coord + 1, cell.y_coord + 1):
             temp = get_cell(scope, cell.x_coord + 1, cell.y_coord + 1)
@@ -1336,6 +1365,8 @@ def forward_checking(cell, state: State):
                 for dom in temp.curDomain():
                     if dom != '.':
                         temp.pruneValue(dom)
+                if len(temp._curdom) == 0:
+                    return False
     if cell.getValue() == char_left:
         # position 1
         if check_if_spot_valid(width, height, cell.x_coord - 1, cell.y_coord - 1):
@@ -1345,6 +1376,8 @@ def forward_checking(cell, state: State):
                 for dom in temp.curDomain():
                     if dom != '.':
                         temp.pruneValue(dom)
+                if len(temp._curdom) == 0:
+                    return False
         # position 2
         if check_if_spot_valid(width, height, cell.x_coord, cell.y_coord - 1):
             temp = get_cell(scope, cell.x_coord, cell.y_coord - 1)
@@ -1353,6 +1386,8 @@ def forward_checking(cell, state: State):
                 for dom in temp.curDomain():
                     if dom != '.':
                         temp.pruneValue(dom)
+                if len(temp._curdom) == 0:
+                    return False
         # position 3
         if check_if_spot_valid(width, height, cell.x_coord + 1, cell.y_coord - 1):
             temp = get_cell(scope, cell.x_coord + 1, cell.y_coord - 1)
@@ -1361,6 +1396,8 @@ def forward_checking(cell, state: State):
                 for dom in temp.curDomain():
                     if dom != '.':
                         temp.pruneValue(dom)
+                if len(temp._curdom) == 0:
+                    return False
         # position 4
         if check_if_spot_valid(width, height, cell.x_coord - 1, cell.y_coord):
             temp = get_cell(scope, cell.x_coord - 1, cell.y_coord)
@@ -1369,6 +1406,8 @@ def forward_checking(cell, state: State):
                 for dom in temp.curDomain():
                     if dom != '.':
                         temp.pruneValue(dom)
+                if len(temp._curdom) == 0:
+                    return False
         # position 5
         if check_if_spot_valid(width, height, cell.x_coord + 1, cell.y_coord):
             temp = get_cell(scope, cell.x_coord + 1, cell.y_coord)
@@ -1377,6 +1416,8 @@ def forward_checking(cell, state: State):
                 for dom in temp.curDomain():
                     if dom != char_middle and dom != char_right:
                         temp.pruneValue(dom)
+                if len(temp._curdom) == 0:
+                    return False
         # position 6
         if check_if_spot_valid(width, height, cell.x_coord - 1, cell.y_coord + 1):
             temp = get_cell(scope, cell.x_coord - 1, cell.y_coord + 1)
@@ -1385,6 +1426,8 @@ def forward_checking(cell, state: State):
                 for dom in temp.curDomain():
                     if dom != '.':
                         temp.pruneValue(dom)
+                if len(temp._curdom) == 0:
+                    return False
         # position 7
         if check_if_spot_valid(width, height, cell.x_coord, cell.y_coord + 1):
             temp = get_cell(scope, cell.x_coord, cell.y_coord + 1)
@@ -1393,6 +1436,8 @@ def forward_checking(cell, state: State):
                 for dom in temp.curDomain():
                     if dom != '.':
                         temp.pruneValue(dom)
+                if len(temp._curdom) == 0:
+                    return False
         # position 8
         if check_if_spot_valid(width, height, cell.x_coord + 1, cell.y_coord + 1):
             temp = get_cell(scope, cell.x_coord + 1, cell.y_coord + 1)
@@ -1401,6 +1446,8 @@ def forward_checking(cell, state: State):
                 for dom in temp.curDomain():
                     if dom != '.':
                         temp.pruneValue(dom)
+                if len(temp._curdom) == 0:
+                    return False
     if cell.getValue() == char_right:
         # position 1
         if check_if_spot_valid(width, height, cell.x_coord - 1, cell.y_coord - 1):
@@ -1410,6 +1457,8 @@ def forward_checking(cell, state: State):
                 for dom in temp.curDomain():
                     if dom != '.':
                         temp.pruneValue(dom)
+                if len(temp._curdom) == 0:
+                    return False
         # position 2
         if check_if_spot_valid(width, height, cell.x_coord, cell.y_coord - 1):
             temp = get_cell(scope, cell.x_coord, cell.y_coord - 1)
@@ -1418,6 +1467,8 @@ def forward_checking(cell, state: State):
                 for dom in temp.curDomain():
                     if dom != '.':
                         temp.pruneValue(dom)
+                if len(temp._curdom) == 0:
+                    return False
         # position 3
         if check_if_spot_valid(width, height, cell.x_coord + 1, cell.y_coord - 1):
             temp = get_cell(scope, cell.x_coord + 1, cell.y_coord - 1)
@@ -1426,6 +1477,8 @@ def forward_checking(cell, state: State):
                 for dom in temp.curDomain():
                     if dom != '.':
                         temp.pruneValue(dom)
+                if len(temp._curdom) == 0:
+                    return False
         # position 4
         if check_if_spot_valid(width, height, cell.x_coord - 1, cell.y_coord):
             temp = get_cell(scope, cell.x_coord - 1, cell.y_coord)
@@ -1434,6 +1487,8 @@ def forward_checking(cell, state: State):
                 for dom in temp.curDomain():
                     if dom != char_middle and dom != char_left:
                         temp.pruneValue(dom)
+                if len(temp._curdom) == 0:
+                    return False
         # position 5
         if check_if_spot_valid(width, height, cell.x_coord + 1, cell.y_coord):
             temp = get_cell(scope, cell.x_coord + 1, cell.y_coord)
@@ -1442,6 +1497,8 @@ def forward_checking(cell, state: State):
                 for dom in temp.curDomain():
                     if dom != '.':
                         temp.pruneValue(dom)
+                if len(temp._curdom) == 0:
+                    return False
         # position 6
         if check_if_spot_valid(width, height, cell.x_coord - 1, cell.y_coord + 1):
             temp = get_cell(scope, cell.x_coord - 1, cell.y_coord + 1)
@@ -1450,6 +1507,8 @@ def forward_checking(cell, state: State):
                 for dom in temp.curDomain():
                     if dom != '.':
                         temp.pruneValue(dom)
+                if len(temp._curdom) == 0:
+                    return False
         # position 7
         if check_if_spot_valid(width, height, cell.x_coord, cell.y_coord + 1):
             temp = get_cell(scope, cell.x_coord, cell.y_coord + 1)
@@ -1458,6 +1517,8 @@ def forward_checking(cell, state: State):
                 for dom in temp.curDomain():
                     if dom != '.':
                         temp.pruneValue(dom)
+                if len(temp._curdom) == 0:
+                    return False
         # position 8
         if check_if_spot_valid(width, height, cell.x_coord + 1, cell.y_coord + 1):
             temp = get_cell(scope, cell.x_coord + 1, cell.y_coord + 1)
@@ -1466,6 +1527,8 @@ def forward_checking(cell, state: State):
                 for dom in temp.curDomain():
                     if dom != '.':
                         temp.pruneValue(dom)
+                if len(temp._curdom) == 0:
+                    return False
     if cell.getValue() == char_middle:
         flag = 0
         tv1 = 0
@@ -1486,6 +1549,8 @@ def forward_checking(cell, state: State):
                 for dom in temp.curDomain():
                     if dom != '.':
                         temp.pruneValue(dom)
+                if len(temp._curdom) == 0:
+                    return False
         # position 2
         if check_if_spot_valid(width, height, cell.x_coord, cell.y_coord - 1):
             temp = get_cell(scope, cell.x_coord, cell.y_coord - 1)
@@ -1495,10 +1560,14 @@ def forward_checking(cell, state: State):
                     for dom in temp.curDomain():
                         if dom != '.':
                             temp.pruneValue(dom)
+                    if len(temp._curdom) == 0:
+                        return False
                 else:
                     for dom in temp.curDomain():
                         if dom != char_middle and dom != char_top:
                             temp.pruneValue(dom)
+                    if len(temp._curdom) == 0:
+                        return False
         # position 3
         if check_if_spot_valid(width, height, cell.x_coord + 1, cell.y_coord - 1):
             temp = get_cell(scope, cell.x_coord + 1, cell.y_coord - 1)
@@ -1507,6 +1576,8 @@ def forward_checking(cell, state: State):
                 for dom in temp.curDomain():
                     if dom != '.':
                         temp.pruneValue(dom)
+                if len(temp._curdom) == 0:
+                    return False
         # position 4
         if check_if_spot_valid(width, height, cell.x_coord - 1, cell.y_coord):
             temp = get_cell(scope, cell.x_coord - 1, cell.y_coord)
@@ -1516,10 +1587,14 @@ def forward_checking(cell, state: State):
                     for dom in temp.curDomain():
                         if dom != '.':
                             temp.pruneValue(dom)
+                    if len(temp._curdom) == 0:
+                        return False
                 else:
                     for dom in temp.curDomain():
                         if dom != char_middle and dom != char_left:
                             temp.pruneValue(dom)
+                    if len(temp._curdom) == 0:
+                        return False
         # position 5
         if check_if_spot_valid(width, height, cell.x_coord + 1, cell.y_coord):
             temp = get_cell(scope, cell.x_coord + 1, cell.y_coord)
@@ -1529,10 +1604,14 @@ def forward_checking(cell, state: State):
                     for dom in temp.curDomain():
                         if dom != '.':
                             temp.pruneValue(dom)
+                    if len(temp._curdom) == 0:
+                        return False
                 else:
                     for dom in temp.curDomain():
                         if dom != char_middle and dom != char_right:
                             temp.pruneValue(dom)
+                    if len(temp._curdom) == 0:
+                        return False
         # position 6
         if check_if_spot_valid(width, height, cell.x_coord - 1, cell.y_coord + 1):
             temp = get_cell(scope, cell.x_coord - 1, cell.y_coord + 1)
@@ -1541,6 +1620,8 @@ def forward_checking(cell, state: State):
                 for dom in temp.curDomain():
                     if dom != '.':
                         temp.pruneValue(dom)
+                if len(temp._curdom) == 0:
+                    return False
         # position 7
         if check_if_spot_valid(width, height, cell.x_coord, cell.y_coord + 1):
             temp = get_cell(scope, cell.x_coord, cell.y_coord + 1)
@@ -1550,10 +1631,14 @@ def forward_checking(cell, state: State):
                     for dom in temp.curDomain():
                         if dom != '.':
                             temp.pruneValue(dom)
+                    if len(temp._curdom) == 0:
+                        return False
                 else:
                     for dom in temp.curDomain():
                         if dom != char_middle and dom != char_bottom:
                             temp.pruneValue(dom)
+                    if len(temp._curdom) == 0:
+                        return False
         # position 8
         if check_if_spot_valid(width, height, cell.x_coord + 1, cell.y_coord + 1):
             temp = get_cell(scope, cell.x_coord + 1, cell.y_coord + 1)
@@ -1562,6 +1647,8 @@ def forward_checking(cell, state: State):
                 for dom in temp.curDomain():
                     if dom != '.':
                         temp.pruneValue(dom)
+                if len(temp._curdom) == 0:
+                    return False
     if cell.getValue() == char_submarine:
         # position 1
         if check_if_spot_valid(width, height, cell.x_coord - 1, cell.y_coord - 1):
@@ -1571,6 +1658,8 @@ def forward_checking(cell, state: State):
                 for dom in temp.curDomain():
                     if dom != '.':
                         temp.pruneValue(dom)
+                if len(temp._curdom) == 0:
+                    return False
         # position 2
         if check_if_spot_valid(width, height, cell.x_coord, cell.y_coord - 1):
             temp = get_cell(scope, cell.x_coord, cell.y_coord - 1)
@@ -1579,6 +1668,8 @@ def forward_checking(cell, state: State):
                 for dom in temp.curDomain():
                     if dom != '.':
                         temp.pruneValue(dom)
+                if len(temp._curdom) == 0:
+                    return False
         # position 3
         if check_if_spot_valid(width, height, cell.x_coord + 1, cell.y_coord - 1):
             temp = get_cell(scope, cell.x_coord + 1, cell.y_coord - 1)
@@ -1587,6 +1678,8 @@ def forward_checking(cell, state: State):
                 for dom in temp.curDomain():
                     if dom != '.':
                         temp.pruneValue(dom)
+                if len(temp._curdom) == 0:
+                    return False
         # position 4
         if check_if_spot_valid(width, height, cell.x_coord - 1, cell.y_coord):
             temp = get_cell(scope, cell.x_coord - 1, cell.y_coord)
@@ -1595,6 +1688,8 @@ def forward_checking(cell, state: State):
                 for dom in temp.curDomain():
                     if dom != '.':
                         temp.pruneValue(dom)
+                if len(temp._curdom) == 0:
+                    return False
         # position 5
         if check_if_spot_valid(width, height, cell.x_coord + 1, cell.y_coord):
             temp = get_cell(scope, cell.x_coord + 1, cell.y_coord)
@@ -1603,6 +1698,8 @@ def forward_checking(cell, state: State):
                 for dom in temp.curDomain():
                     if dom != '.':
                         temp.pruneValue(dom)
+                if len(temp._curdom) == 0:
+                    return False
         # position 6
         if check_if_spot_valid(width, height, cell.x_coord - 1, cell.y_coord + 1):
             temp = get_cell(scope, cell.x_coord - 1, cell.y_coord + 1)
@@ -1611,6 +1708,8 @@ def forward_checking(cell, state: State):
                 for dom in temp.curDomain():
                     if dom != '.':
                         temp.pruneValue(dom)
+                if len(temp._curdom) == 0:
+                    return False
         # position 7
         if check_if_spot_valid(width, height, cell.x_coord, cell.y_coord + 1):
             temp = get_cell(scope, cell.x_coord, cell.y_coord + 1)
@@ -1619,6 +1718,8 @@ def forward_checking(cell, state: State):
                 for dom in temp.curDomain():
                     if dom != '.':
                         temp.pruneValue(dom)
+                if len(temp._curdom) == 0:
+                    return False
         # position 8
         if check_if_spot_valid(width, height, cell.x_coord + 1, cell.y_coord + 1):
             temp = get_cell(scope, cell.x_coord + 1, cell.y_coord + 1)
@@ -1627,6 +1728,8 @@ def forward_checking(cell, state: State):
                 for dom in temp.curDomain():
                     if dom != '.':
                         temp.pruneValue(dom)
+                if len(temp._curdom) == 0:
+                    return False
     # Row col forward checking
     for c in state.constraints():
         if isinstance(c, RowConstraint) or isinstance(c, ColConstraint):
@@ -1636,7 +1739,10 @@ def forward_checking(cell, state: State):
                         for dom in ce.curDomain():
                             if dom != '.':
                                 ce.pruneValue(dom)
+                        if len(ce._curdom) == 0:
+                            return False
                         cell.add_restore(ce)
+    return True
     # for c in state.board.cells:
     #     if len(c._curdom) == 0:
     #         return False
@@ -1658,14 +1764,15 @@ def backtrack(state: State):
             else:
                 var.is_ship = False
             if state.partial_check(var):
-                forward_checking(var, state)
-                result = backtrack(state)
-                if len(result) != 0:
-                    return result
+                if forward_checking(var, state):
+                    result = backtrack(state)
+                    if len(result) != 0:
+                        return result
+                recover_var(var, state.board.cells)
             var.pruneValue(value)
     else:
         return []
-    recover_var(var, state.board.cells)
+    var.reset()
     var.is_ship = None
     return []
 
@@ -1705,7 +1812,7 @@ if __name__ == "__main__":
     # write_solution(instate, args.outputfile)
 
     start = time.time()
-    instate = read_from_file('test_input77_2.txt')
+    instate = read_from_file('test_input77_3.txt')
     preprocessing(instate)
     write_solution(instate, 'sol.txt')
     end = time.time()
