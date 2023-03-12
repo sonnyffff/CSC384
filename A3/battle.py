@@ -264,6 +264,8 @@ class ShipConstraint(Constraint):
         for cell in self._scope:
             if cell.getValue() == char_submarine:
                 submarine += 1
+                if submarine > self.submarine:
+                    return 2
             elif cell.getValue() == char_left:
                 counter1 = 0
             elif cell.getValue() == char_middle:
@@ -271,10 +273,16 @@ class ShipConstraint(Constraint):
             elif cell.getValue() == char_right:
                 if counter1 == 0:
                     destroyers += 1
+                    if destroyers > self.destroyers:
+                        return 2
                 elif counter1 == 1:
                     cruisers += 1
+                    if cruisers > self.cruisers:
+                        return 2
                 elif counter1 == 2:
                     battleships += 1
+                    if battleships > self.battleships:
+                        return 2
         for i in range(0, int(width)):
             for cell in self._scope:
                 if cell.x_coord == i:
@@ -285,10 +293,16 @@ class ShipConstraint(Constraint):
                     elif cell.getValue() == char_bottom:
                         if counter2 == 0:
                             destroyers += 1
+                            if destroyers > self.destroyers:
+                                return 2
                         elif counter2 == 1:
                             cruisers += 1
+                            if cruisers > self.cruisers:
+                                return 2
                         elif counter2 == 2:
                             battleships += 1
+                            if battleships > self.battleships:
+                                return 2
         if self.destroyers == destroyers and self.battleships == battleships and self.cruisers == cruisers and \
                 self.submarine == submarine:
             return 0
@@ -812,13 +826,15 @@ class State(CSP):
         return False
 
     def partial_check(self, cell: Cell):
+        if self.constraints()[-1].check(cell) == 2:
+            return False
         for c in self.constraints():
             if not isinstance(c, WaterConstraint) and not isinstance(c, ShipConstraint):
                 if c.check() == 2:
                     return False
-            elif isinstance(c, WaterConstraint):
-                if c.check(cell) == 2:
-                    return False
+            # elif isinstance(c, WaterConstraint):
+            #     if c.check(cell) == 2:
+            #         return False
         return True
 
     def full_check(self):
@@ -1107,8 +1123,8 @@ def read_from_file(filename):
         word_index = len(line)
         for x, ch in enumerate(line):
             if ch == '0':
-                cell = Cell('Cell', [char_water, char_top, char_bottom, char_left,
-                                     char_right, char_middle, char_submarine], False, x, line_index)
+                cell = Cell('Cell', [char_water, char_middle, char_top, char_bottom, char_left,
+                                     char_right, char_submarine], False, x, line_index)
                 cells.append(cell)
                 CELL_DICT[(x, line_index)] = cell
                 temp_lookup_cc[x]._scope.append(cell)
@@ -1185,10 +1201,24 @@ def select_unassigned_var(state: State):
     #     return min(temp)
     # else:
     #     return False
+    # for c in state.board.cells:
+    #     if c.getValue() is None:
+    #         return c
+    # return False
+    temp = []
+    ret = 0
+    minv = math.inf
     for c in state.board.cells:
         if c.getValue() is None:
-            return c
-    return False
+            temp.append(c)
+    if len(temp) != 0:
+        for c in temp:
+            if len(c._curdom) < minv:
+                minv = len(c._curdom)
+                ret = c
+        return ret
+    else:
+        return False
 
 
 def backtracking_search(state: State):
@@ -1205,6 +1235,19 @@ def forward_checking(cell, state: State):
     width = state.board.width
     height = width
     scope = state.board.cells
+    # Row col forward checking
+    for c in state.constraints():
+        if isinstance(c, RowConstraint) or isinstance(c, ColConstraint):
+            if c.check() == 0:
+                for ce in c.scope():
+                    if ce.getValue() is None:
+                        for dom in ce.curDomain():
+                            if dom != '.':
+                                ce.pruneValue(dom)
+                        if len(ce._curdom) == 0:
+                            return False
+                        cell.add_restore(ce)
+
     if cell.getValue() == char_top:
         # position 1
         if check_if_spot_valid(width, height, cell.x_coord - 1, cell.y_coord - 1):
@@ -1730,18 +1773,6 @@ def forward_checking(cell, state: State):
                         temp.pruneValue(dom)
                 if len(temp._curdom) == 0:
                     return False
-    # Row col forward checking
-    for c in state.constraints():
-        if isinstance(c, RowConstraint) or isinstance(c, ColConstraint):
-            if c.check() == 0:
-                for ce in c.scope():
-                    if ce.getValue() is None:
-                        for dom in ce.curDomain():
-                            if dom != '.':
-                                ce.pruneValue(dom)
-                        if len(ce._curdom) == 0:
-                            return False
-                        cell.add_restore(ce)
     return True
     # for c in state.board.cells:
     #     if len(c._curdom) == 0:
@@ -1812,7 +1843,7 @@ if __name__ == "__main__":
     # write_solution(instate, args.outputfile)
 
     start = time.time()
-    instate = read_from_file('test_input77_3.txt')
+    instate = read_from_file('test_input66_1.txt')
     preprocessing(instate)
     write_solution(instate, 'sol.txt')
     end = time.time()
