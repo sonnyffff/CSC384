@@ -268,49 +268,51 @@ class ShipConstraint(Constraint):
         counter2 = 0
         width = math.sqrt(len(self._scope) + 1)
         for cell in self._scope:
-            if cell.getValue() == char_submarine:
-                submarine += 1
-                if submarine > self.submarine:
-                    return 2
-            elif cell.getValue() == char_left:
-                counter1 = 0
-            elif cell.getValue() == char_middle:
-                counter1 += 1
-            elif cell.getValue() == char_right:
-                if counter1 == 0:
-                    destroyers += 1
-                    if destroyers > self.destroyers:
+            if cell.getValue() != '.':
+                if cell.getValue() == char_submarine:
+                    submarine += 1
+                    if submarine > self.submarine:
                         return 2
-                elif counter1 == 1:
-                    cruisers += 1
-                    if cruisers > self.cruisers:
-                        return 2
-                elif counter1 == 2:
-                    battleships += 1
-                    if battleships > self.battleships:
-                        return 2
+                elif cell.getValue() == char_left:
+                    counter1 = 0
+                elif cell.getValue() == char_middle:
+                    counter1 += 1
+                elif cell.getValue() == char_right:
+                    if counter1 == 0:
+                        destroyers += 1
+                        if destroyers > self.destroyers:
+                            return 2
+                    elif counter1 == 1:
+                        cruisers += 1
+                        if cruisers > self.cruisers:
+                            return 2
+                    elif counter1 == 2:
+                        battleships += 1
+                        if battleships > self.battleships:
+                            return 2
         for i in range(0, int(width)):
             # for cell in self._scope:
             #     if cell.x_coord == i:
             for j in range(0, int(width)):
                 cell = CELL_DICT[(i, j)]
-                if cell.getValue() == char_top:
-                    counter2 = 0
-                elif cell.getValue() == char_middle:
-                    counter2 += 1
-                elif cell.getValue() == char_bottom:
-                    if counter2 == 0:
-                        destroyers += 1
-                        if destroyers > self.destroyers:
-                            return 2
-                    elif counter2 == 1:
-                        cruisers += 1
-                        if cruisers > self.cruisers:
-                            return 2
-                    elif counter2 == 2:
-                        battleships += 1
-                        if battleships > self.battleships:
-                            return 2
+                if cell.getValue() != '.':
+                    if cell.getValue() == char_top:
+                        counter2 = 0
+                    elif cell.getValue() == char_middle:
+                        counter2 += 1
+                    elif cell.getValue() == char_bottom:
+                        if counter2 == 0:
+                            destroyers += 1
+                            if destroyers > self.destroyers:
+                                return 2
+                        elif counter2 == 1:
+                            cruisers += 1
+                            if cruisers > self.cruisers:
+                                return 2
+                        elif counter2 == 2:
+                            battleships += 1
+                            if battleships > self.battleships:
+                                return 2
         if self.destroyers == destroyers and self.battleships == battleships and self.cruisers == cruisers and \
                 self.submarine == submarine:
             return 0
@@ -838,6 +840,8 @@ class State(CSP):
         return False
 
     def partial_check(self, cell: Cell):
+        if cell.getValue() == '.':
+            return True
         for c in cell.constraint:
             if c.check() == 2:
                 return False
@@ -1308,8 +1312,6 @@ def recover_var(restore):
 
 def forward_checking(cell, state: State, restore):
     width = state.board.width
-    height = width
-    scope = state.board.cells
     # Row col forward checking
     # for c in state.constraints():
     #     if isinstance(c, RowConstraint) or isinstance(c, ColConstraint):
@@ -1323,6 +1325,8 @@ def forward_checking(cell, state: State, restore):
     #                     if len(ce._curdom) == 0:
     #                         return False
     #                     # cell.add_restore(ce)
+    if cell.getValue() == '.':
+        return True
     for c in cell.constraint:
         if c.check() == 0:
             for ce in c.scope():
