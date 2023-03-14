@@ -220,12 +220,15 @@ class RowConstraint(Constraint):
 
     def check(self):
         count = 0
+        flag = 0
         for cell in self._scope:
             if cell.is_ship:
                 count += 1
+            if cell.getValue() is None:
+                flag = 1
         if count == self.limit:
             return 0
-        elif count < self.limit:
+        elif flag == 1 and count < self.limit:
             return 1
         else:
             # oversize
@@ -239,12 +242,15 @@ class ColConstraint(Constraint):
 
     def check(self):
         count = 0
+        flag = 0
         for cell in self._scope:
             if cell.is_ship:
                 count += 1
+            if cell.getValue() is None:
+                flag = 1
         if count == self.limit:
             return 0
-        elif count < self.limit:
+        elif flag == 1 and count < self.limit:
             return 1
         else:
             # oversize
@@ -842,6 +848,7 @@ class State(CSP):
     def partial_check(self, cell: Cell):
         if cell.getValue() == '.':
             return True
+        assert(len(cell.constraint) == 2)
         for c in cell.constraint:
             if c.check() == 2:
                 return False
@@ -1280,21 +1287,16 @@ def select_unassigned_var(state: State):
     #     if c.getValue() is None:
     #         return c
     # return False
-    # for c in state.board.cells:
-    #     if c.getValue() is None:
-    #         return c
-    # return False
-    temp = []
+
     ret = 0
     minv = math.inf
     for c in state.board.cells:
         if c.getValue() is None:
-            temp.append(c)
-    if len(temp) != 0:
-        for c in temp:
+            # temp.append(c)
             if len(c._curdom) < minv:
                 minv = len(c._curdom)
                 ret = c
+    if ret != 0:
         return ret
     else:
         return False
@@ -1937,10 +1939,16 @@ def backtrack(state: State):
                     if len(result) != 0:
                         return result
                 recover_var(restore)
-            var.pruneValue(value)
+            # var.pruneValue(value)
     else:
         return []
-    var.reset()
+    # if var.domain() != store:
+    #     print(var.domain())
+    #     print(store)
+
+    # var.reset()
+    # var._curdom = store
+    var._value = None
     var.is_ship = None
     return []
 
@@ -1980,7 +1988,7 @@ if __name__ == "__main__":
     # write_solution(instate, args.outputfile)
 
     start = time.time()
-    instate = read_from_file('test_input88_1.txt')
+    instate = read_from_file('test_input.txt')
     preprocessing(instate)
     write_solution(instate, 'sol.txt')
     end = time.time()
