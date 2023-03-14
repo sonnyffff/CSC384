@@ -1,6 +1,7 @@
 import math
 import argparse
 import time
+import copy
 
 char_submarine = 'S'
 char_water = '.'
@@ -135,7 +136,8 @@ class Cell(Variable):
         self.is_ship = is_ship
         self.x_coord = x_coord
         self.y_coord = y_coord
-        self.restore = []
+        self.restore = {}
+        self.constraint = []
 
     def __hash__(self):
         return hash((self.name, self.domain, self.x_coord, self.y_coord))
@@ -148,8 +150,12 @@ class Cell(Variable):
             return True
         return False
 
-    def add_restore(self, item):
-        self.restore.append(item)
+    def add_restore(self, item, domain):
+        self.restore[item] = domain
+        # self.restore.append(item)
+
+    def add_constraint(self, constraint):
+        self.constraint.append(constraint)
 
 
 # implement various types of constraints
@@ -508,6 +514,12 @@ def check_water_constraints(width, height, cell: Cell, scope):
         if (cell.x_coord == 0 and cell.y_coord == 0) or (cell.x_coord == width - 1 and cell.y_coord == height - 1) or \
                 (cell.x_coord == 0 and cell.y_coord == height - 1) or (cell.x_coord == width - 1 and cell.y_coord == 0):
             return 2
+        if flag == 'v':
+            if cell.y_coord == 0 or cell.y_coord == width - 1:
+                return 2
+        elif flag == 'h':
+            if cell.x_coord == 0 or cell.x_coord == width - 1:
+                return 2
         # position 1
         if check_if_spot_valid(width, height, cell.x_coord - 1, cell.y_coord - 1):
             temp = get_cell(scope, cell.x_coord - 1, cell.y_coord - 1)
@@ -519,7 +531,6 @@ def check_water_constraints(width, height, cell: Cell, scope):
             if (
                     temp.getValue() != char_middle and temp.getValue() != char_top) and temp.getValue() is not None and flag == 0:
                 return 2
-
         # position 3
         if check_if_spot_valid(width, height, cell.x_coord + 1, cell.y_coord - 1):
             temp = get_cell(scope, cell.x_coord + 1, cell.y_coord - 1)
@@ -826,15 +837,18 @@ class State(CSP):
         return False
 
     def partial_check(self, cell: Cell):
+        for c in cell.constraint:
+            if c.check() == 2:
+                return False
         if self.constraints()[-1].check(cell) == 2:
             return False
-        for c in self.constraints():
-            if not isinstance(c, WaterConstraint) and not isinstance(c, ShipConstraint):
-                if c.check() == 2:
-                    return False
-            # elif isinstance(c, WaterConstraint):
-            #     if c.check(cell) == 2:
-            #         return False
+        # for c in self.constraints():
+        #     if not isinstance(c, WaterConstraint) and not isinstance(c, ShipConstraint):
+        #         if c.check() == 2:
+        #             return False
+        #     elif isinstance(c, WaterConstraint):
+        #         if c.check(cell) == 2:
+        #             return False
         return True
 
     def full_check(self):
@@ -897,6 +911,16 @@ def preprocessing(state: State):
                     temp.setValue(char_water)
                     temp.resetDomain(['.'])
                     temp._curdom = ['.']
+                if check_if_spot_valid(state.board.width, state.board.height, cell.x_coord - 1, cell.y_coord + 2):
+                    temp = get_cell(state.board.cells, cell.x_coord - 1, cell.y_coord + 2)
+                    temp.setValue(char_water)
+                    temp.resetDomain(['.'])
+                    temp._curdom = ['.']
+                if check_if_spot_valid(state.board.width, state.board.height, cell.x_coord + 1, cell.y_coord + 2):
+                    temp = get_cell(state.board.cells, cell.x_coord + 1, cell.y_coord + 2)
+                    temp.setValue(char_water)
+                    temp.resetDomain(['.'])
+                    temp._curdom = ['.']
             if cell.getValue() == char_bottom:
                 if check_if_spot_valid(state.board.width, state.board.height, cell.x_coord - 1, cell.y_coord - 1):
                     temp = get_cell(state.board.cells, cell.x_coord - 1, cell.y_coord - 1)
@@ -930,6 +954,16 @@ def preprocessing(state: State):
                     temp._curdom = ['.']
                 if check_if_spot_valid(state.board.width, state.board.height, cell.x_coord + 1, cell.y_coord + 1):
                     temp = get_cell(state.board.cells, cell.x_coord + 1, cell.y_coord + 1)
+                    temp.setValue(char_water)
+                    temp.resetDomain(['.'])
+                    temp._curdom = ['.']
+                if check_if_spot_valid(state.board.width, state.board.height, cell.x_coord - 1, cell.y_coord - 2):
+                    temp = get_cell(state.board.cells, cell.x_coord - 1, cell.y_coord - 2)
+                    temp.setValue(char_water)
+                    temp.resetDomain(['.'])
+                    temp._curdom = ['.']
+                if check_if_spot_valid(state.board.width, state.board.height, cell.x_coord + 1, cell.y_coord - 2):
+                    temp = get_cell(state.board.cells, cell.x_coord + 1, cell.y_coord - 2)
                     temp.setValue(char_water)
                     temp.resetDomain(['.'])
                     temp._curdom = ['.']
@@ -969,6 +1003,16 @@ def preprocessing(state: State):
                     temp.setValue(char_water)
                     temp.resetDomain(['.'])
                     temp._curdom = ['.']
+                if check_if_spot_valid(state.board.width, state.board.height, cell.x_coord + 2, cell.y_coord - 1):
+                    temp = get_cell(state.board.cells, cell.x_coord + 2, cell.y_coord - 1)
+                    temp.setValue(char_water)
+                    temp.resetDomain(['.'])
+                    temp._curdom = ['.']
+                if check_if_spot_valid(state.board.width, state.board.height, cell.x_coord + 2, cell.y_coord + 1):
+                    temp = get_cell(state.board.cells, cell.x_coord + 2, cell.y_coord + 1)
+                    temp.setValue(char_water)
+                    temp.resetDomain(['.'])
+                    temp._curdom = ['.']
             if cell.getValue() == char_right:
                 if check_if_spot_valid(state.board.width, state.board.height, cell.x_coord - 1, cell.y_coord - 1):
                     temp = get_cell(state.board.cells, cell.x_coord - 1, cell.y_coord - 1)
@@ -1002,6 +1046,16 @@ def preprocessing(state: State):
                     temp._curdom = ['.']
                 if check_if_spot_valid(state.board.width, state.board.height, cell.x_coord + 1, cell.y_coord + 1):
                     temp = get_cell(state.board.cells, cell.x_coord + 1, cell.y_coord + 1)
+                    temp.setValue(char_water)
+                    temp.resetDomain(['.'])
+                    temp._curdom = ['.']
+                if check_if_spot_valid(state.board.width, state.board.height, cell.x_coord - 2, cell.y_coord - 1):
+                    temp = get_cell(state.board.cells, cell.x_coord - 2, cell.y_coord - 1)
+                    temp.setValue(char_water)
+                    temp.resetDomain(['.'])
+                    temp._curdom = ['.']
+                if check_if_spot_valid(state.board.width, state.board.height, cell.x_coord - 2, cell.y_coord + 1):
+                    temp = get_cell(state.board.cells, cell.x_coord - 2, cell.y_coord + 1)
                     temp.setValue(char_water)
                     temp.resetDomain(['.'])
                     temp._curdom = ['.']
@@ -1129,6 +1183,8 @@ def read_from_file(filename):
                 CELL_DICT[(x, line_index)] = cell
                 temp_lookup_cc[x]._scope.append(cell)
                 temp_lookup_rc[line_index]._scope.append(cell)
+                cell.add_constraint(temp_lookup_cc[x])
+                cell.add_constraint(temp_lookup_rc[line_index])
             elif ch == char_submarine:
                 cell = Cell('Cell', [char_submarine], True, x, line_index)
                 cell.setValue(char_submarine)
@@ -1136,6 +1192,8 @@ def read_from_file(filename):
                 CELL_DICT[(x, line_index)] = cell
                 temp_lookup_cc[x]._scope.append(cell)
                 temp_lookup_rc[line_index]._scope.append(cell)
+                cell.add_constraint(temp_lookup_cc[x])
+                cell.add_constraint(temp_lookup_rc[line_index])
             elif ch == char_water:
                 cell = Cell('Cell', [char_water], False, x, line_index)
                 cell.setValue(char_water)
@@ -1143,6 +1201,8 @@ def read_from_file(filename):
                 CELL_DICT[(x, line_index)] = cell
                 temp_lookup_cc[x]._scope.append(cell)
                 temp_lookup_rc[line_index]._scope.append(cell)
+                cell.add_constraint(temp_lookup_cc[x])
+                cell.add_constraint(temp_lookup_rc[line_index])
             elif ch == char_top:
                 cell = Cell('Cell', [char_top], True, x, line_index)
                 cell.setValue(char_top)
@@ -1150,6 +1210,8 @@ def read_from_file(filename):
                 CELL_DICT[(x, line_index)] = cell
                 temp_lookup_cc[x]._scope.append(cell)
                 temp_lookup_rc[line_index]._scope.append(cell)
+                cell.add_constraint(temp_lookup_cc[x])
+                cell.add_constraint(temp_lookup_rc[line_index])
             elif ch == char_bottom:
                 cell = Cell('Cell', [char_bottom], True, x, line_index)
                 cell.setValue(char_bottom)
@@ -1157,6 +1219,8 @@ def read_from_file(filename):
                 CELL_DICT[(x, line_index)] = cell
                 temp_lookup_cc[x]._scope.append(cell)
                 temp_lookup_rc[line_index]._scope.append(cell)
+                cell.add_constraint(temp_lookup_cc[x])
+                cell.add_constraint(temp_lookup_rc[line_index])
             elif ch == char_left:
                 cell = Cell('Cell', [char_left], True, x, line_index)
                 cell.setValue(char_left)
@@ -1164,6 +1228,8 @@ def read_from_file(filename):
                 CELL_DICT[(x, line_index)] = cell
                 temp_lookup_cc[x]._scope.append(cell)
                 temp_lookup_rc[line_index]._scope.append(cell)
+                cell.add_constraint(temp_lookup_cc[x])
+                cell.add_constraint(temp_lookup_rc[line_index])
             elif ch == char_right:
                 cell = Cell('Cell', [char_right], True, x, line_index)
                 cell.setValue(char_right)
@@ -1171,6 +1237,8 @@ def read_from_file(filename):
                 CELL_DICT[(x, line_index)] = cell
                 temp_lookup_cc[x]._scope.append(cell)
                 temp_lookup_rc[line_index]._scope.append(cell)
+                cell.add_constraint(temp_lookup_cc[x])
+                cell.add_constraint(temp_lookup_rc[line_index])
             elif ch == char_middle:
                 cell = Cell('Cell', [char_middle], True, x, line_index)
                 cell.setValue(char_middle)
@@ -1178,6 +1246,8 @@ def read_from_file(filename):
                 CELL_DICT[(x, line_index)] = cell
                 temp_lookup_cc[x]._scope.append(cell)
                 temp_lookup_rc[line_index]._scope.append(cell)
+                cell.add_constraint(temp_lookup_cc[x])
+                cell.add_constraint(temp_lookup_rc[line_index])
         line_index += 1
     board = Board(word_index, line_index, cells)
     wc = WaterConstraint('Water', cells, word_index, line_index)
@@ -1205,6 +1275,10 @@ def select_unassigned_var(state: State):
     #     if c.getValue() is None:
     #         return c
     # return False
+    # for c in state.board.cells:
+    #     if c.getValue() is None:
+    #         return c
+    # return False
     temp = []
     ret = 0
     minv = math.inf
@@ -1225,35 +1299,48 @@ def backtracking_search(state: State):
     return backtrack(state)
 
 
-def recover_var(cell: Cell, scope):
-    for c in cell.restore:
-        c.reset()
-    cell.restore = []
+def recover_var(restore):
+    if len(restore) != 0:
+        for c in restore:
+            c._curdom = restore[c]
 
 
-def forward_checking(cell, state: State):
+def forward_checking(cell, state: State, restore):
     width = state.board.width
     height = width
     scope = state.board.cells
     # Row col forward checking
-    for c in state.constraints():
-        if isinstance(c, RowConstraint) or isinstance(c, ColConstraint):
-            if c.check() == 0:
-                for ce in c.scope():
-                    if ce.getValue() is None:
-                        for dom in ce.curDomain():
-                            if dom != '.':
-                                ce.pruneValue(dom)
-                        if len(ce._curdom) == 0:
-                            return False
-                        cell.add_restore(ce)
+    # for c in state.constraints():
+    #     if isinstance(c, RowConstraint) or isinstance(c, ColConstraint):
+    #         if c.check() == 0:
+    #             for ce in c.scope():
+    #                 if ce.getValue() is None:
+    #                     restore[ce] = copy.copy(ce._curdom)
+    #                     for dom in ce.curDomain():
+    #                         if dom != '.':
+    #                             ce.pruneValue(dom)
+    #                     if len(ce._curdom) == 0:
+    #                         return False
+    #                     # cell.add_restore(ce)
+    for c in cell.constraint:
+        if c.check() == 0:
+            for ce in c.scope():
+                if ce.getValue() is None:
+                    restore[ce] = copy.copy(ce._curdom)
+                    for dom in ce.curDomain():
+                        if dom != '.':
+                            ce.pruneValue(dom)
+                    if len(ce._curdom) == 0:
+                        return False
+                    # cell.add_restore(ce)
 
     if cell.getValue() == char_top:
         # position 1
         if check_if_spot_valid(width, height, cell.x_coord - 1, cell.y_coord - 1):
             temp = get_cell(scope, cell.x_coord - 1, cell.y_coord - 1)
             if temp.getValue() is None:
-                cell.add_restore(temp)
+                if temp not in restore:
+                    restore[temp] = copy.copy(temp._curdom)
                 for dom in temp.curDomain():
                     if dom != '.':
                         temp.pruneValue(dom)
@@ -1263,7 +1350,8 @@ def forward_checking(cell, state: State):
         if check_if_spot_valid(width, height, cell.x_coord, cell.y_coord - 1):
             temp = get_cell(scope, cell.x_coord, cell.y_coord - 1)
             if temp.getValue() is None:
-                cell.add_restore(temp)
+                if temp not in restore:
+                    restore[temp] = copy.copy(temp._curdom)
                 for dom in temp.curDomain():
                     if dom != '.':
                         temp.pruneValue(dom)
@@ -1273,7 +1361,8 @@ def forward_checking(cell, state: State):
         if check_if_spot_valid(width, height, cell.x_coord + 1, cell.y_coord - 1):
             temp = get_cell(scope, cell.x_coord + 1, cell.y_coord - 1)
             if temp.getValue() is None:
-                cell.add_restore(temp)
+                if temp not in restore:
+                    restore[temp] = copy.copy(temp._curdom)
                 for dom in temp.curDomain():
                     if dom != '.':
                         temp.pruneValue(dom)
@@ -1283,7 +1372,8 @@ def forward_checking(cell, state: State):
         if check_if_spot_valid(width, height, cell.x_coord - 1, cell.y_coord):
             temp = get_cell(scope, cell.x_coord - 1, cell.y_coord)
             if temp.getValue() is None:
-                cell.add_restore(temp)
+                if temp not in restore:
+                    restore[temp] = copy.copy(temp._curdom)
                 for dom in temp.curDomain():
                     if dom != '.':
                         temp.pruneValue(dom)
@@ -1293,7 +1383,8 @@ def forward_checking(cell, state: State):
         if check_if_spot_valid(width, height, cell.x_coord + 1, cell.y_coord):
             temp = get_cell(scope, cell.x_coord + 1, cell.y_coord)
             if temp.getValue() is None:
-                cell.add_restore(temp)
+                if temp not in restore:
+                    restore[temp] = copy.copy(temp._curdom)
                 for dom in temp.curDomain():
                     if dom != '.':
                         temp.pruneValue(dom)
@@ -1303,7 +1394,8 @@ def forward_checking(cell, state: State):
         if check_if_spot_valid(width, height, cell.x_coord - 1, cell.y_coord + 1):
             temp = get_cell(scope, cell.x_coord - 1, cell.y_coord + 1)
             if temp.getValue() is None:
-                cell.add_restore(temp)
+                if temp not in restore:
+                    restore[temp] = copy.copy(temp._curdom)
                 for dom in temp.curDomain():
                     if dom != '.':
                         temp.pruneValue(dom)
@@ -1313,7 +1405,8 @@ def forward_checking(cell, state: State):
         if check_if_spot_valid(width, height, cell.x_coord, cell.y_coord + 1):
             temp = get_cell(scope, cell.x_coord, cell.y_coord + 1)
             if temp.getValue() is None:
-                cell.add_restore(temp)
+                if temp not in restore:
+                    restore[temp] = copy.copy(temp._curdom)
                 for dom in temp.curDomain():
                     if dom != char_middle and dom != char_bottom:
                         temp.pruneValue(dom)
@@ -1323,7 +1416,8 @@ def forward_checking(cell, state: State):
         if check_if_spot_valid(width, height, cell.x_coord + 1, cell.y_coord + 1):
             temp = get_cell(scope, cell.x_coord + 1, cell.y_coord + 1)
             if temp.getValue() is None:
-                cell.add_restore(temp)
+                if temp not in restore:
+                    restore[temp] = copy.copy(temp._curdom)
                 for dom in temp.curDomain():
                     if dom != '.':
                         temp.pruneValue(dom)
@@ -1334,7 +1428,8 @@ def forward_checking(cell, state: State):
         if check_if_spot_valid(width, height, cell.x_coord - 1, cell.y_coord - 1):
             temp = get_cell(scope, cell.x_coord - 1, cell.y_coord - 1)
             if temp.getValue() is None:
-                cell.add_restore(temp)
+                if temp not in restore:
+                    restore[temp] = copy.copy(temp._curdom)
                 for dom in temp.curDomain():
                     if dom != '.':
                         temp.pruneValue(dom)
@@ -1344,7 +1439,8 @@ def forward_checking(cell, state: State):
         if check_if_spot_valid(width, height, cell.x_coord, cell.y_coord - 1):
             temp = get_cell(scope, cell.x_coord, cell.y_coord - 1)
             if temp.getValue() is None:
-                cell.add_restore(temp)
+                if temp not in restore:
+                    restore[temp] = copy.copy(temp._curdom)
                 for dom in temp.curDomain():
                     if dom != char_middle and dom != char_top:
                         temp.pruneValue(dom)
@@ -1354,7 +1450,8 @@ def forward_checking(cell, state: State):
         if check_if_spot_valid(width, height, cell.x_coord + 1, cell.y_coord - 1):
             temp = get_cell(scope, cell.x_coord + 1, cell.y_coord - 1)
             if temp.getValue() is None:
-                cell.add_restore(temp)
+                if temp not in restore:
+                    restore[temp] = copy.copy(temp._curdom)
                 for dom in temp.curDomain():
                     if dom != '.':
                         temp.pruneValue(dom)
@@ -1364,7 +1461,8 @@ def forward_checking(cell, state: State):
         if check_if_spot_valid(width, height, cell.x_coord - 1, cell.y_coord):
             temp = get_cell(scope, cell.x_coord - 1, cell.y_coord)
             if temp.getValue() is None:
-                cell.add_restore(temp)
+                if temp not in restore:
+                    restore[temp] = copy.copy(temp._curdom)
                 for dom in temp.curDomain():
                     if dom != '.':
                         temp.pruneValue(dom)
@@ -1374,7 +1472,8 @@ def forward_checking(cell, state: State):
         if check_if_spot_valid(width, height, cell.x_coord + 1, cell.y_coord):
             temp = get_cell(scope, cell.x_coord + 1, cell.y_coord)
             if temp.getValue() is None:
-                cell.add_restore(temp)
+                if temp not in restore:
+                    restore[temp] = copy.copy(temp._curdom)
                 for dom in temp.curDomain():
                     if dom != '.':
                         temp.pruneValue(dom)
@@ -1384,7 +1483,8 @@ def forward_checking(cell, state: State):
         if check_if_spot_valid(width, height, cell.x_coord - 1, cell.y_coord + 1):
             temp = get_cell(scope, cell.x_coord - 1, cell.y_coord + 1)
             if temp.getValue() is None:
-                cell.add_restore(temp)
+                if temp not in restore:
+                    restore[temp] = copy.copy(temp._curdom)
                 for dom in temp.curDomain():
                     if dom != '.':
                         temp.pruneValue(dom)
@@ -1394,7 +1494,8 @@ def forward_checking(cell, state: State):
         if check_if_spot_valid(width, height, cell.x_coord, cell.y_coord + 1):
             temp = get_cell(scope, cell.x_coord, cell.y_coord + 1)
             if temp.getValue() is None:
-                cell.add_restore(temp)
+                if temp not in restore:
+                    restore[temp] = copy.copy(temp._curdom)
                 for dom in temp.curDomain():
                     if dom != '.':
                         temp.pruneValue(dom)
@@ -1404,7 +1505,8 @@ def forward_checking(cell, state: State):
         if check_if_spot_valid(width, height, cell.x_coord + 1, cell.y_coord + 1):
             temp = get_cell(scope, cell.x_coord + 1, cell.y_coord + 1)
             if temp.getValue() is None:
-                cell.add_restore(temp)
+                if temp not in restore:
+                    restore[temp] = copy.copy(temp._curdom)
                 for dom in temp.curDomain():
                     if dom != '.':
                         temp.pruneValue(dom)
@@ -1415,7 +1517,8 @@ def forward_checking(cell, state: State):
         if check_if_spot_valid(width, height, cell.x_coord - 1, cell.y_coord - 1):
             temp = get_cell(scope, cell.x_coord - 1, cell.y_coord - 1)
             if temp.getValue() is None:
-                cell.add_restore(temp)
+                if temp not in restore:
+                    restore[temp] = copy.copy(temp._curdom)
                 for dom in temp.curDomain():
                     if dom != '.':
                         temp.pruneValue(dom)
@@ -1425,7 +1528,8 @@ def forward_checking(cell, state: State):
         if check_if_spot_valid(width, height, cell.x_coord, cell.y_coord - 1):
             temp = get_cell(scope, cell.x_coord, cell.y_coord - 1)
             if temp.getValue() is None:
-                cell.add_restore(temp)
+                if temp not in restore:
+                    restore[temp] = copy.copy(temp._curdom)
                 for dom in temp.curDomain():
                     if dom != '.':
                         temp.pruneValue(dom)
@@ -1435,7 +1539,8 @@ def forward_checking(cell, state: State):
         if check_if_spot_valid(width, height, cell.x_coord + 1, cell.y_coord - 1):
             temp = get_cell(scope, cell.x_coord + 1, cell.y_coord - 1)
             if temp.getValue() is None:
-                cell.add_restore(temp)
+                if temp not in restore:
+                    restore[temp] = copy.copy(temp._curdom)
                 for dom in temp.curDomain():
                     if dom != '.':
                         temp.pruneValue(dom)
@@ -1445,7 +1550,8 @@ def forward_checking(cell, state: State):
         if check_if_spot_valid(width, height, cell.x_coord - 1, cell.y_coord):
             temp = get_cell(scope, cell.x_coord - 1, cell.y_coord)
             if temp.getValue() is None:
-                cell.add_restore(temp)
+                if temp not in restore:
+                    restore[temp] = copy.copy(temp._curdom)
                 for dom in temp.curDomain():
                     if dom != '.':
                         temp.pruneValue(dom)
@@ -1455,7 +1561,8 @@ def forward_checking(cell, state: State):
         if check_if_spot_valid(width, height, cell.x_coord + 1, cell.y_coord):
             temp = get_cell(scope, cell.x_coord + 1, cell.y_coord)
             if temp.getValue() is None:
-                cell.add_restore(temp)
+                if temp not in restore:
+                    restore[temp] = copy.copy(temp._curdom)
                 for dom in temp.curDomain():
                     if dom != char_middle and dom != char_right:
                         temp.pruneValue(dom)
@@ -1465,7 +1572,8 @@ def forward_checking(cell, state: State):
         if check_if_spot_valid(width, height, cell.x_coord - 1, cell.y_coord + 1):
             temp = get_cell(scope, cell.x_coord - 1, cell.y_coord + 1)
             if temp.getValue() is None:
-                cell.add_restore(temp)
+                if temp not in restore:
+                    restore[temp] = copy.copy(temp._curdom)
                 for dom in temp.curDomain():
                     if dom != '.':
                         temp.pruneValue(dom)
@@ -1475,7 +1583,8 @@ def forward_checking(cell, state: State):
         if check_if_spot_valid(width, height, cell.x_coord, cell.y_coord + 1):
             temp = get_cell(scope, cell.x_coord, cell.y_coord + 1)
             if temp.getValue() is None:
-                cell.add_restore(temp)
+                if temp not in restore:
+                    restore[temp] = copy.copy(temp._curdom)
                 for dom in temp.curDomain():
                     if dom != '.':
                         temp.pruneValue(dom)
@@ -1485,7 +1594,8 @@ def forward_checking(cell, state: State):
         if check_if_spot_valid(width, height, cell.x_coord + 1, cell.y_coord + 1):
             temp = get_cell(scope, cell.x_coord + 1, cell.y_coord + 1)
             if temp.getValue() is None:
-                cell.add_restore(temp)
+                if temp not in restore:
+                    restore[temp] = copy.copy(temp._curdom)
                 for dom in temp.curDomain():
                     if dom != '.':
                         temp.pruneValue(dom)
@@ -1496,7 +1606,8 @@ def forward_checking(cell, state: State):
         if check_if_spot_valid(width, height, cell.x_coord - 1, cell.y_coord - 1):
             temp = get_cell(scope, cell.x_coord - 1, cell.y_coord - 1)
             if temp.getValue() is None:
-                cell.add_restore(temp)
+                if temp not in restore:
+                    restore[temp] = copy.copy(temp._curdom)
                 for dom in temp.curDomain():
                     if dom != '.':
                         temp.pruneValue(dom)
@@ -1506,7 +1617,8 @@ def forward_checking(cell, state: State):
         if check_if_spot_valid(width, height, cell.x_coord, cell.y_coord - 1):
             temp = get_cell(scope, cell.x_coord, cell.y_coord - 1)
             if temp.getValue() is None:
-                cell.add_restore(temp)
+                if temp not in restore:
+                    restore[temp] = copy.copy(temp._curdom)
                 for dom in temp.curDomain():
                     if dom != '.':
                         temp.pruneValue(dom)
@@ -1516,7 +1628,8 @@ def forward_checking(cell, state: State):
         if check_if_spot_valid(width, height, cell.x_coord + 1, cell.y_coord - 1):
             temp = get_cell(scope, cell.x_coord + 1, cell.y_coord - 1)
             if temp.getValue() is None:
-                cell.add_restore(temp)
+                if temp not in restore:
+                    restore[temp] = copy.copy(temp._curdom)
                 for dom in temp.curDomain():
                     if dom != '.':
                         temp.pruneValue(dom)
@@ -1526,7 +1639,8 @@ def forward_checking(cell, state: State):
         if check_if_spot_valid(width, height, cell.x_coord - 1, cell.y_coord):
             temp = get_cell(scope, cell.x_coord - 1, cell.y_coord)
             if temp.getValue() is None:
-                cell.add_restore(temp)
+                if temp not in restore:
+                    restore[temp] = copy.copy(temp._curdom)
                 for dom in temp.curDomain():
                     if dom != char_middle and dom != char_left:
                         temp.pruneValue(dom)
@@ -1536,7 +1650,8 @@ def forward_checking(cell, state: State):
         if check_if_spot_valid(width, height, cell.x_coord + 1, cell.y_coord):
             temp = get_cell(scope, cell.x_coord + 1, cell.y_coord)
             if temp.getValue() is None:
-                cell.add_restore(temp)
+                if temp not in restore:
+                    restore[temp] = copy.copy(temp._curdom)
                 for dom in temp.curDomain():
                     if dom != '.':
                         temp.pruneValue(dom)
@@ -1546,7 +1661,8 @@ def forward_checking(cell, state: State):
         if check_if_spot_valid(width, height, cell.x_coord - 1, cell.y_coord + 1):
             temp = get_cell(scope, cell.x_coord - 1, cell.y_coord + 1)
             if temp.getValue() is None:
-                cell.add_restore(temp)
+                if temp not in restore:
+                    restore[temp] = copy.copy(temp._curdom)
                 for dom in temp.curDomain():
                     if dom != '.':
                         temp.pruneValue(dom)
@@ -1556,7 +1672,8 @@ def forward_checking(cell, state: State):
         if check_if_spot_valid(width, height, cell.x_coord, cell.y_coord + 1):
             temp = get_cell(scope, cell.x_coord, cell.y_coord + 1)
             if temp.getValue() is None:
-                cell.add_restore(temp)
+                if temp not in restore:
+                    restore[temp] = copy.copy(temp._curdom)
                 for dom in temp.curDomain():
                     if dom != '.':
                         temp.pruneValue(dom)
@@ -1566,7 +1683,8 @@ def forward_checking(cell, state: State):
         if check_if_spot_valid(width, height, cell.x_coord + 1, cell.y_coord + 1):
             temp = get_cell(scope, cell.x_coord + 1, cell.y_coord + 1)
             if temp.getValue() is None:
-                cell.add_restore(temp)
+                if temp not in restore:
+                    restore[temp] = copy.copy(temp._curdom)
                 for dom in temp.curDomain():
                     if dom != '.':
                         temp.pruneValue(dom)
@@ -1588,7 +1706,8 @@ def forward_checking(cell, state: State):
         if check_if_spot_valid(width, height, cell.x_coord - 1, cell.y_coord - 1):
             temp = get_cell(scope, cell.x_coord - 1, cell.y_coord - 1)
             if temp.getValue() is None:
-                cell.add_restore(temp)
+                if temp not in restore:
+                    restore[temp] = copy.copy(temp._curdom)
                 for dom in temp.curDomain():
                     if dom != '.':
                         temp.pruneValue(dom)
@@ -1598,7 +1717,8 @@ def forward_checking(cell, state: State):
         if check_if_spot_valid(width, height, cell.x_coord, cell.y_coord - 1):
             temp = get_cell(scope, cell.x_coord, cell.y_coord - 1)
             if temp.getValue() is None:
-                cell.add_restore(temp)
+                if temp not in restore:
+                    restore[temp] = copy.copy(temp._curdom)
                 if flag == 'h':
                     for dom in temp.curDomain():
                         if dom != '.':
@@ -1615,7 +1735,8 @@ def forward_checking(cell, state: State):
         if check_if_spot_valid(width, height, cell.x_coord + 1, cell.y_coord - 1):
             temp = get_cell(scope, cell.x_coord + 1, cell.y_coord - 1)
             if temp.getValue() is None:
-                cell.add_restore(temp)
+                if temp not in restore:
+                    restore[temp] = copy.copy(temp._curdom)
                 for dom in temp.curDomain():
                     if dom != '.':
                         temp.pruneValue(dom)
@@ -1625,7 +1746,8 @@ def forward_checking(cell, state: State):
         if check_if_spot_valid(width, height, cell.x_coord - 1, cell.y_coord):
             temp = get_cell(scope, cell.x_coord - 1, cell.y_coord)
             if temp.getValue() is None:
-                cell.add_restore(temp)
+                if temp not in restore:
+                    restore[temp] = copy.copy(temp._curdom)
                 if flag == 'v':
                     for dom in temp.curDomain():
                         if dom != '.':
@@ -1642,7 +1764,8 @@ def forward_checking(cell, state: State):
         if check_if_spot_valid(width, height, cell.x_coord + 1, cell.y_coord):
             temp = get_cell(scope, cell.x_coord + 1, cell.y_coord)
             if temp.getValue() is None:
-                cell.add_restore(temp)
+                if temp not in restore:
+                    restore[temp] = copy.copy(temp._curdom)
                 if flag == 'v':
                     for dom in temp.curDomain():
                         if dom != '.':
@@ -1659,7 +1782,8 @@ def forward_checking(cell, state: State):
         if check_if_spot_valid(width, height, cell.x_coord - 1, cell.y_coord + 1):
             temp = get_cell(scope, cell.x_coord - 1, cell.y_coord + 1)
             if temp.getValue() is None:
-                cell.add_restore(temp)
+                if temp not in restore:
+                    restore[temp] = copy.copy(temp._curdom)
                 for dom in temp.curDomain():
                     if dom != '.':
                         temp.pruneValue(dom)
@@ -1669,7 +1793,8 @@ def forward_checking(cell, state: State):
         if check_if_spot_valid(width, height, cell.x_coord, cell.y_coord + 1):
             temp = get_cell(scope, cell.x_coord, cell.y_coord + 1)
             if temp.getValue() is None:
-                cell.add_restore(temp)
+                if temp not in restore:
+                    restore[temp] = copy.copy(temp._curdom)
                 if flag == 'h':
                     for dom in temp.curDomain():
                         if dom != '.':
@@ -1686,7 +1811,8 @@ def forward_checking(cell, state: State):
         if check_if_spot_valid(width, height, cell.x_coord + 1, cell.y_coord + 1):
             temp = get_cell(scope, cell.x_coord + 1, cell.y_coord + 1)
             if temp.getValue() is None:
-                cell.add_restore(temp)
+                if temp not in restore:
+                    restore[temp] = copy.copy(temp._curdom)
                 for dom in temp.curDomain():
                     if dom != '.':
                         temp.pruneValue(dom)
@@ -1697,7 +1823,8 @@ def forward_checking(cell, state: State):
         if check_if_spot_valid(width, height, cell.x_coord - 1, cell.y_coord - 1):
             temp = get_cell(scope, cell.x_coord - 1, cell.y_coord - 1)
             if temp.getValue() is None:
-                cell.add_restore(temp)
+                if temp not in restore:
+                    restore[temp] = copy.copy(temp._curdom)
                 for dom in temp.curDomain():
                     if dom != '.':
                         temp.pruneValue(dom)
@@ -1707,7 +1834,8 @@ def forward_checking(cell, state: State):
         if check_if_spot_valid(width, height, cell.x_coord, cell.y_coord - 1):
             temp = get_cell(scope, cell.x_coord, cell.y_coord - 1)
             if temp.getValue() is None:
-                cell.add_restore(temp)
+                if temp not in restore:
+                    restore[temp] = copy.copy(temp._curdom)
                 for dom in temp.curDomain():
                     if dom != '.':
                         temp.pruneValue(dom)
@@ -1717,7 +1845,8 @@ def forward_checking(cell, state: State):
         if check_if_spot_valid(width, height, cell.x_coord + 1, cell.y_coord - 1):
             temp = get_cell(scope, cell.x_coord + 1, cell.y_coord - 1)
             if temp.getValue() is None:
-                cell.add_restore(temp)
+                if temp not in restore:
+                    restore[temp] = copy.copy(temp._curdom)
                 for dom in temp.curDomain():
                     if dom != '.':
                         temp.pruneValue(dom)
@@ -1727,7 +1856,8 @@ def forward_checking(cell, state: State):
         if check_if_spot_valid(width, height, cell.x_coord - 1, cell.y_coord):
             temp = get_cell(scope, cell.x_coord - 1, cell.y_coord)
             if temp.getValue() is None:
-                cell.add_restore(temp)
+                if temp not in restore:
+                    restore[temp] = copy.copy(temp._curdom)
                 for dom in temp.curDomain():
                     if dom != '.':
                         temp.pruneValue(dom)
@@ -1737,7 +1867,8 @@ def forward_checking(cell, state: State):
         if check_if_spot_valid(width, height, cell.x_coord + 1, cell.y_coord):
             temp = get_cell(scope, cell.x_coord + 1, cell.y_coord)
             if temp.getValue() is None:
-                cell.add_restore(temp)
+                if temp not in restore:
+                    restore[temp] = copy.copy(temp._curdom)
                 for dom in temp.curDomain():
                     if dom != '.':
                         temp.pruneValue(dom)
@@ -1747,7 +1878,8 @@ def forward_checking(cell, state: State):
         if check_if_spot_valid(width, height, cell.x_coord - 1, cell.y_coord + 1):
             temp = get_cell(scope, cell.x_coord - 1, cell.y_coord + 1)
             if temp.getValue() is None:
-                cell.add_restore(temp)
+                if temp not in restore:
+                    restore[temp] = copy.copy(temp._curdom)
                 for dom in temp.curDomain():
                     if dom != '.':
                         temp.pruneValue(dom)
@@ -1757,7 +1889,8 @@ def forward_checking(cell, state: State):
         if check_if_spot_valid(width, height, cell.x_coord, cell.y_coord + 1):
             temp = get_cell(scope, cell.x_coord, cell.y_coord + 1)
             if temp.getValue() is None:
-                cell.add_restore(temp)
+                if temp not in restore:
+                    restore[temp] = copy.copy(temp._curdom)
                 for dom in temp.curDomain():
                     if dom != '.':
                         temp.pruneValue(dom)
@@ -1767,7 +1900,8 @@ def forward_checking(cell, state: State):
         if check_if_spot_valid(width, height, cell.x_coord + 1, cell.y_coord + 1):
             temp = get_cell(scope, cell.x_coord + 1, cell.y_coord + 1)
             if temp.getValue() is None:
-                cell.add_restore(temp)
+                if temp not in restore:
+                    restore[temp] = copy.copy(temp._curdom)
                 for dom in temp.curDomain():
                     if dom != '.':
                         temp.pruneValue(dom)
@@ -1785,22 +1919,29 @@ def backtrack(state: State):
         return [([c.x_coord, c.y_coord], c.getValue()) for c in state.board.cells]
     var = select_unassigned_var(state)
     if var is not False:
+        # store = copy.copy(var._curdom)
         for value in var.curDomain():
             var.setValue(value)
             # print(var.x_coord, var.y_coord, var.getValue())
-            # if var.x_coord == 1 and var.y_coord == 3 and var.getValue() == char_middle:
+            # if var.x_coord == 5 and var.y_coord == 5 and var.getValue() == '.':
             #         print('a')
             if value != '.':
                 var.is_ship = True
             else:
                 var.is_ship = False
             if state.partial_check(var):
-                if forward_checking(var, state):
+                restore = dict()
+                if forward_checking(var, state, restore):
                     result = backtrack(state)
                     if len(result) != 0:
                         return result
-                recover_var(var, state.board.cells)
+                recover_var(restore)
             var.pruneValue(value)
+            # for cell in state.board.cells:
+            #     if cell._curdom != cell._dom:
+            #         print('a')
+            # if all(cell._curdom == cell._dom for cell in state.board.cells):
+            #     print('a')
     else:
         return []
     var.reset()
@@ -1843,7 +1984,7 @@ if __name__ == "__main__":
     # write_solution(instate, args.outputfile)
 
     start = time.time()
-    instate = read_from_file('test_input66_1.txt')
+    instate = read_from_file('test_input88_1.txt')
     preprocessing(instate)
     write_solution(instate, 'sol.txt')
     end = time.time()
