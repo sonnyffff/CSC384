@@ -290,38 +290,40 @@ class ShipConstraint(Constraint):
                     if battleships > self.battleships:
                         return 2
         for i in range(0, int(width)):
-            for cell in self._scope:
-                if cell.x_coord == i:
-                    if cell.getValue() == char_top:
-                        counter2 = 0
-                    elif cell.getValue() == char_middle:
-                        counter2 += 1
-                    elif cell.getValue() == char_bottom:
-                        if counter2 == 0:
-                            destroyers += 1
-                            if destroyers > self.destroyers:
-                                return 2
-                        elif counter2 == 1:
-                            cruisers += 1
-                            if cruisers > self.cruisers:
-                                return 2
-                        elif counter2 == 2:
-                            battleships += 1
-                            if battleships > self.battleships:
-                                return 2
+            # for cell in self._scope:
+            #     if cell.x_coord == i:
+            for j in range(0, int(width)):
+                cell = CELL_DICT[(i, j)]
+                if cell.getValue() == char_top:
+                    counter2 = 0
+                elif cell.getValue() == char_middle:
+                    counter2 += 1
+                elif cell.getValue() == char_bottom:
+                    if counter2 == 0:
+                        destroyers += 1
+                        if destroyers > self.destroyers:
+                            return 2
+                    elif counter2 == 1:
+                        cruisers += 1
+                        if cruisers > self.cruisers:
+                            return 2
+                    elif counter2 == 2:
+                        battleships += 1
+                        if battleships > self.battleships:
+                            return 2
         if self.destroyers == destroyers and self.battleships == battleships and self.cruisers == cruisers and \
                 self.submarine == submarine:
             return 0
         return 2
 
 
-def get_cell(scope, x_coord, y_coord) -> Cell:
+def get_cell(x_coord, y_coord) -> Cell:
     return CELL_DICT[(x_coord, y_coord)]
 
 
-def check_if_spot_valid(width, height, x_coord, y_coord):
+def check_if_spot_valid(width, x_coord, y_coord):
     if 0 <= x_coord <= width - 1:
-        if 0 <= y_coord <= height - 1:
+        if 0 <= y_coord <= width - 1:
             return True
     return False
 
@@ -329,184 +331,184 @@ def check_if_spot_valid(width, height, x_coord, y_coord):
 def check_water_constraints(width, height, cell: Cell, scope):
     if cell.getValue() == char_top:
         # position 1
-        if check_if_spot_valid(width, height, cell.x_coord - 1, cell.y_coord - 1):
-            temp = get_cell(scope, cell.x_coord - 1, cell.y_coord - 1)
+        if check_if_spot_valid(width, cell.x_coord - 1, cell.y_coord - 1):
+            temp = get_cell(cell.x_coord - 1, cell.y_coord - 1)
             if temp.getValue() != '.' and temp.getValue() is not None:
                 return 2
         # position 2
-        if check_if_spot_valid(width, height, cell.x_coord, cell.y_coord - 1):
-            temp = get_cell(scope, cell.x_coord, cell.y_coord - 1)
+        if check_if_spot_valid(width, cell.x_coord, cell.y_coord - 1):
+            temp = get_cell(cell.x_coord, cell.y_coord - 1)
             if temp.getValue() != '.' and temp.getValue() is not None:
                 return 2
         # position 3
-        if check_if_spot_valid(width, height, cell.x_coord + 1, cell.y_coord - 1):
-            temp = get_cell(scope, cell.x_coord + 1, cell.y_coord - 1)
+        if check_if_spot_valid(width, cell.x_coord + 1, cell.y_coord - 1):
+            temp = get_cell(cell.x_coord + 1, cell.y_coord - 1)
             if temp.getValue() != '.' and temp.getValue() is not None:
                 return 2
         # position 4
-        if check_if_spot_valid(width, height, cell.x_coord - 1, cell.y_coord):
-            temp = get_cell(scope, cell.x_coord - 1, cell.y_coord)
+        if check_if_spot_valid(width, cell.x_coord - 1, cell.y_coord):
+            temp = get_cell(cell.x_coord - 1, cell.y_coord)
             if temp.getValue() != '.' and temp.getValue() is not None:
                 return 2
         # position 5
-        if check_if_spot_valid(width, height, cell.x_coord + 1, cell.y_coord):
-            temp = get_cell(scope, cell.x_coord + 1, cell.y_coord)
+        if check_if_spot_valid(width, cell.x_coord + 1, cell.y_coord):
+            temp = get_cell(cell.x_coord + 1, cell.y_coord)
             if temp.getValue() != '.' and temp.getValue() is not None:
                 return 2
         # position 6
-        if check_if_spot_valid(width, height, cell.x_coord - 1, cell.y_coord + 1):
-            temp = get_cell(scope, cell.x_coord - 1, cell.y_coord + 1)
+        if check_if_spot_valid(width, cell.x_coord - 1, cell.y_coord + 1):
+            temp = get_cell(cell.x_coord - 1, cell.y_coord + 1)
             if temp.getValue() != '.' and temp.getValue() is not None:
                 return 2
         # position 7
-        if check_if_spot_valid(width, height, cell.x_coord, cell.y_coord + 1):
-            temp = get_cell(scope, cell.x_coord, cell.y_coord + 1)
+        if check_if_spot_valid(width, cell.x_coord, cell.y_coord + 1):
+            temp = get_cell(cell.x_coord, cell.y_coord + 1)
             if (temp.getValue() != char_bottom and temp.getValue() != char_middle) and temp.getValue() is not None:
                 return 2
         else:
             return 2
         # position 8
-        if check_if_spot_valid(width, height, cell.x_coord + 1, cell.y_coord + 1):
-            temp = get_cell(scope, cell.x_coord + 1, cell.y_coord + 1)
+        if check_if_spot_valid(width, cell.x_coord + 1, cell.y_coord + 1):
+            temp = get_cell(cell.x_coord + 1, cell.y_coord + 1)
             if temp.getValue() != '.' and temp.getValue() is not None:
                 return 2
     if cell.getValue() == char_bottom:
         # position 1
-        if check_if_spot_valid(width, height, cell.x_coord - 1, cell.y_coord - 1):
-            temp = get_cell(scope, cell.x_coord - 1, cell.y_coord - 1)
+        if check_if_spot_valid(width, cell.x_coord - 1, cell.y_coord - 1):
+            temp = get_cell(cell.x_coord - 1, cell.y_coord - 1)
             if temp.getValue() != '.' and temp.getValue() is not None:
                 return 2
         # position 2
-        if check_if_spot_valid(width, height, cell.x_coord, cell.y_coord - 1):
-            temp = get_cell(scope, cell.x_coord, cell.y_coord - 1)
+        if check_if_spot_valid(width, cell.x_coord, cell.y_coord - 1):
+            temp = get_cell(cell.x_coord, cell.y_coord - 1)
             if (temp.getValue() != char_middle and temp.getValue() != char_top) and temp.getValue() is not None:
                 return 2
         else:
             return 2
         # position 3
-        if check_if_spot_valid(width, height, cell.x_coord + 1, cell.y_coord - 1):
-            temp = get_cell(scope, cell.x_coord + 1, cell.y_coord - 1)
+        if check_if_spot_valid(width, cell.x_coord + 1, cell.y_coord - 1):
+            temp = get_cell(cell.x_coord + 1, cell.y_coord - 1)
             if temp.getValue() != '.' and temp.getValue() is not None:
                 return 2
         # position 4
-        if check_if_spot_valid(width, height, cell.x_coord - 1, cell.y_coord):
-            temp = get_cell(scope, cell.x_coord - 1, cell.y_coord)
+        if check_if_spot_valid(width, cell.x_coord - 1, cell.y_coord):
+            temp = get_cell(cell.x_coord - 1, cell.y_coord)
             if temp.getValue() != '.' and temp.getValue() is not None:
                 return 2
         # position 5
-        if check_if_spot_valid(width, height, cell.x_coord + 1, cell.y_coord):
-            temp = get_cell(scope, cell.x_coord + 1, cell.y_coord)
+        if check_if_spot_valid(width, cell.x_coord + 1, cell.y_coord):
+            temp = get_cell(cell.x_coord + 1, cell.y_coord)
             if temp.getValue() != '.' and temp.getValue() is not None:
                 return 2
         # position 6
-        if check_if_spot_valid(width, height, cell.x_coord - 1, cell.y_coord + 1):
-            temp = get_cell(scope, cell.x_coord - 1, cell.y_coord + 1)
+        if check_if_spot_valid(width, cell.x_coord - 1, cell.y_coord + 1):
+            temp = get_cell(cell.x_coord - 1, cell.y_coord + 1)
             if temp.getValue() != '.' and temp.getValue() is not None:
                 return 2
         # position 7
-        if check_if_spot_valid(width, height, cell.x_coord, cell.y_coord + 1):
-            temp = get_cell(scope, cell.x_coord, cell.y_coord + 1)
+        if check_if_spot_valid(width, cell.x_coord, cell.y_coord + 1):
+            temp = get_cell(cell.x_coord, cell.y_coord + 1)
             if temp.getValue() != '.' and temp.getValue() is not None:
                 return 2
         # position 8
-        if check_if_spot_valid(width, height, cell.x_coord + 1, cell.y_coord + 1):
-            temp = get_cell(scope, cell.x_coord + 1, cell.y_coord + 1)
+        if check_if_spot_valid(width, cell.x_coord + 1, cell.y_coord + 1):
+            temp = get_cell(cell.x_coord + 1, cell.y_coord + 1)
             if temp.getValue() != '.' and temp.getValue() is not None:
                 return 2
     if cell.getValue() == char_left:
         # position 1
-        if check_if_spot_valid(width, height, cell.x_coord - 1, cell.y_coord - 1):
-            temp = get_cell(scope, cell.x_coord - 1, cell.y_coord - 1)
+        if check_if_spot_valid(width, cell.x_coord - 1, cell.y_coord - 1):
+            temp = get_cell(cell.x_coord - 1, cell.y_coord - 1)
             if temp.getValue() != '.' and temp.getValue() is not None:
                 return 2
         # position 2
-        if check_if_spot_valid(width, height, cell.x_coord, cell.y_coord - 1):
-            temp = get_cell(scope, cell.x_coord, cell.y_coord - 1)
+        if check_if_spot_valid(width, cell.x_coord, cell.y_coord - 1):
+            temp = get_cell(cell.x_coord, cell.y_coord - 1)
             if temp.getValue() != '.' and temp.getValue() is not None:
                 return 2
         # position 3
-        if check_if_spot_valid(width, height, cell.x_coord + 1, cell.y_coord - 1):
-            temp = get_cell(scope, cell.x_coord + 1, cell.y_coord - 1)
+        if check_if_spot_valid(width, cell.x_coord + 1, cell.y_coord - 1):
+            temp = get_cell(cell.x_coord + 1, cell.y_coord - 1)
             if temp.getValue() != '.' and temp.getValue() is not None:
                 return 2
         # position 4
-        if check_if_spot_valid(width, height, cell.x_coord - 1, cell.y_coord):
-            temp = get_cell(scope, cell.x_coord - 1, cell.y_coord)
+        if check_if_spot_valid(width, cell.x_coord - 1, cell.y_coord):
+            temp = get_cell(cell.x_coord - 1, cell.y_coord)
             if temp.getValue() != '.' and temp.getValue() is not None:
                 return 2
         # position 5
-        if check_if_spot_valid(width, height, cell.x_coord + 1, cell.y_coord):
-            temp = get_cell(scope, cell.x_coord + 1, cell.y_coord)
+        if check_if_spot_valid(width, cell.x_coord + 1, cell.y_coord):
+            temp = get_cell(cell.x_coord + 1, cell.y_coord)
             if (temp.getValue() != char_middle and temp.getValue() != char_right) and temp.getValue() is not None:
                 return 2
         else:
             return 2
         # position 6
-        if check_if_spot_valid(width, height, cell.x_coord - 1, cell.y_coord + 1):
-            temp = get_cell(scope, cell.x_coord - 1, cell.y_coord + 1)
+        if check_if_spot_valid(width, cell.x_coord - 1, cell.y_coord + 1):
+            temp = get_cell(cell.x_coord - 1, cell.y_coord + 1)
             if temp.getValue() != '.' and temp.getValue() is not None:
                 return 2
         # position 7
-        if check_if_spot_valid(width, height, cell.x_coord, cell.y_coord + 1):
-            temp = get_cell(scope, cell.x_coord, cell.y_coord + 1)
+        if check_if_spot_valid(width, cell.x_coord, cell.y_coord + 1):
+            temp = get_cell(cell.x_coord, cell.y_coord + 1)
             if temp.getValue() != '.' and temp.getValue() is not None:
                 return 2
         # position 8
-        if check_if_spot_valid(width, height, cell.x_coord + 1, cell.y_coord + 1):
-            temp = get_cell(scope, cell.x_coord + 1, cell.y_coord + 1)
+        if check_if_spot_valid(width, cell.x_coord + 1, cell.y_coord + 1):
+            temp = get_cell(cell.x_coord + 1, cell.y_coord + 1)
             if temp.getValue() != '.' and temp.getValue() is not None:
                 return 2
     if cell.getValue() == char_right:
         # position 1
-        if check_if_spot_valid(width, height, cell.x_coord - 1, cell.y_coord - 1):
-            temp = get_cell(scope, cell.x_coord - 1, cell.y_coord - 1)
+        if check_if_spot_valid(width, cell.x_coord - 1, cell.y_coord - 1):
+            temp = get_cell(cell.x_coord - 1, cell.y_coord - 1)
             if temp.getValue() != '.' and temp.getValue() is not None:
                 return 2
         # position 2
-        if check_if_spot_valid(width, height, cell.x_coord, cell.y_coord - 1):
-            temp = get_cell(scope, cell.x_coord, cell.y_coord - 1)
+        if check_if_spot_valid(width, cell.x_coord, cell.y_coord - 1):
+            temp = get_cell(cell.x_coord, cell.y_coord - 1)
             if temp.getValue() != '.' and temp.getValue() is not None:
                 return 2
         # position 3
-        if check_if_spot_valid(width, height, cell.x_coord + 1, cell.y_coord - 1):
-            temp = get_cell(scope, cell.x_coord + 1, cell.y_coord - 1)
+        if check_if_spot_valid(width, cell.x_coord + 1, cell.y_coord - 1):
+            temp = get_cell(cell.x_coord + 1, cell.y_coord - 1)
             if temp.getValue() != '.' and temp.getValue() is not None:
                 return 2
         # position 4
-        if check_if_spot_valid(width, height, cell.x_coord - 1, cell.y_coord):
-            temp = get_cell(scope, cell.x_coord - 1, cell.y_coord)
+        if check_if_spot_valid(width, cell.x_coord - 1, cell.y_coord):
+            temp = get_cell(cell.x_coord - 1, cell.y_coord)
             if (temp.getValue() != char_middle and temp.getValue() != char_left) and temp.getValue() is not None:
                 return 2
         else:
             return 2
         # position 5
-        if check_if_spot_valid(width, height, cell.x_coord + 1, cell.y_coord):
-            temp = get_cell(scope, cell.x_coord + 1, cell.y_coord)
+        if check_if_spot_valid(width, cell.x_coord + 1, cell.y_coord):
+            temp = get_cell(cell.x_coord + 1, cell.y_coord)
             if temp.getValue() != '.' and temp.getValue() is not None:
                 return 2
         # position 6
-        if check_if_spot_valid(width, height, cell.x_coord - 1, cell.y_coord + 1):
-            temp = get_cell(scope, cell.x_coord - 1, cell.y_coord + 1)
+        if check_if_spot_valid(width, cell.x_coord - 1, cell.y_coord + 1):
+            temp = get_cell(cell.x_coord - 1, cell.y_coord + 1)
             if temp.getValue() != '.' and temp.getValue() is not None:
                 return 2
         # position 7
-        if check_if_spot_valid(width, height, cell.x_coord, cell.y_coord + 1):
-            temp = get_cell(scope, cell.x_coord, cell.y_coord + 1)
+        if check_if_spot_valid(width, cell.x_coord, cell.y_coord + 1):
+            temp = get_cell(cell.x_coord, cell.y_coord + 1)
             if temp.getValue() != '.' and temp.getValue() is not None:
                 return 2
         # position 8
-        if check_if_spot_valid(width, height, cell.x_coord + 1, cell.y_coord + 1):
-            temp = get_cell(scope, cell.x_coord + 1, cell.y_coord + 1)
+        if check_if_spot_valid(width, cell.x_coord + 1, cell.y_coord + 1):
+            temp = get_cell(cell.x_coord + 1, cell.y_coord + 1)
             if temp.getValue() != '.' and temp.getValue() is not None:
                 return 2
     if cell.getValue() == char_middle:
         flag = 0
         tv1 = 0
         tv2 = 0
-        if check_if_spot_valid(width, height, cell.x_coord, cell.y_coord - 1):
-            tv1 = get_cell(scope, cell.x_coord, cell.y_coord - 1).getValue()
-        if check_if_spot_valid(width, height, cell.x_coord - 1, cell.y_coord):
-            tv2 = get_cell(scope, cell.x_coord - 1, cell.y_coord).getValue()
+        if check_if_spot_valid(width, cell.x_coord, cell.y_coord - 1):
+            tv1 = get_cell(cell.x_coord, cell.y_coord - 1).getValue()
+        if check_if_spot_valid(width, cell.x_coord - 1, cell.y_coord):
+            tv2 = get_cell(cell.x_coord - 1, cell.y_coord).getValue()
         if tv1 == char_top or tv1 == char_middle:
             flag = 'v'
         elif tv2 == char_left or tv2 == char_middle:
@@ -521,87 +523,87 @@ def check_water_constraints(width, height, cell: Cell, scope):
             if cell.x_coord == 0 or cell.x_coord == width - 1:
                 return 2
         # position 1
-        if check_if_spot_valid(width, height, cell.x_coord - 1, cell.y_coord - 1):
-            temp = get_cell(scope, cell.x_coord - 1, cell.y_coord - 1)
+        if check_if_spot_valid(width, cell.x_coord - 1, cell.y_coord - 1):
+            temp = get_cell(cell.x_coord - 1, cell.y_coord - 1)
             if temp.getValue() != '.' and temp.getValue() is not None:
                 return 2
         # position 2
-        if check_if_spot_valid(width, height, cell.x_coord, cell.y_coord - 1):
-            temp = get_cell(scope, cell.x_coord, cell.y_coord - 1)
+        if check_if_spot_valid(width, cell.x_coord, cell.y_coord - 1):
+            temp = get_cell(cell.x_coord, cell.y_coord - 1)
             if (
                     temp.getValue() != char_middle and temp.getValue() != char_top) and temp.getValue() is not None and flag == 0:
                 return 2
         # position 3
-        if check_if_spot_valid(width, height, cell.x_coord + 1, cell.y_coord - 1):
-            temp = get_cell(scope, cell.x_coord + 1, cell.y_coord - 1)
+        if check_if_spot_valid(width, cell.x_coord + 1, cell.y_coord - 1):
+            temp = get_cell(cell.x_coord + 1, cell.y_coord - 1)
             if temp.getValue() != '.' and temp.getValue() is not None:
                 return 2
         # position 4
-        if check_if_spot_valid(width, height, cell.x_coord - 1, cell.y_coord):
-            temp = get_cell(scope, cell.x_coord - 1, cell.y_coord)
+        if check_if_spot_valid(width, cell.x_coord - 1, cell.y_coord):
+            temp = get_cell(cell.x_coord - 1, cell.y_coord)
             if (
                     temp.getValue() != char_middle and temp.getValue() != char_left) and temp.getValue() is not None and flag == 0:
                 return 2
         # position 5
-        if check_if_spot_valid(width, height, cell.x_coord + 1, cell.y_coord):
-            temp = get_cell(scope, cell.x_coord + 1, cell.y_coord)
+        if check_if_spot_valid(width, cell.x_coord + 1, cell.y_coord):
+            temp = get_cell(cell.x_coord + 1, cell.y_coord)
             if (
                     temp.getValue() != char_middle and temp.getValue() != char_right) and temp.getValue() is not None and flag == 0:
                 return 2
         # position 6
-        if check_if_spot_valid(width, height, cell.x_coord - 1, cell.y_coord + 1):
-            temp = get_cell(scope, cell.x_coord - 1, cell.y_coord + 1)
+        if check_if_spot_valid(width, cell.x_coord - 1, cell.y_coord + 1):
+            temp = get_cell(cell.x_coord - 1, cell.y_coord + 1)
             if temp.getValue() != '.' and temp.getValue() is not None:
                 return 2
         # position 7
-        if check_if_spot_valid(width, height, cell.x_coord, cell.y_coord + 1):
-            temp = get_cell(scope, cell.x_coord, cell.y_coord + 1)
+        if check_if_spot_valid(width, cell.x_coord, cell.y_coord + 1):
+            temp = get_cell(cell.x_coord, cell.y_coord + 1)
             if temp.getValue() != char_middle and temp.getValue() != char_bottom and temp.getValue() is not None and flag == 0:
                 return 2
         # position 8
-        if check_if_spot_valid(width, height, cell.x_coord + 1, cell.y_coord + 1):
-            temp = get_cell(scope, cell.x_coord + 1, cell.y_coord + 1)
+        if check_if_spot_valid(width, cell.x_coord + 1, cell.y_coord + 1):
+            temp = get_cell(cell.x_coord + 1, cell.y_coord + 1)
             if temp.getValue() != '.' and temp.getValue() is not None:
                 return 2
     if cell.getValue() == char_submarine:
         # position 1
-        if check_if_spot_valid(width, height, cell.x_coord - 1, cell.y_coord - 1):
-            temp = get_cell(scope, cell.x_coord - 1, cell.y_coord - 1)
+        if check_if_spot_valid(width, cell.x_coord - 1, cell.y_coord - 1):
+            temp = get_cell(cell.x_coord - 1, cell.y_coord - 1)
             if temp.getValue() != '.' and temp.getValue() is not None:
                 return 2
         # position 2
-        if check_if_spot_valid(width, height, cell.x_coord, cell.y_coord - 1):
-            temp = get_cell(scope, cell.x_coord, cell.y_coord - 1)
+        if check_if_spot_valid(width, cell.x_coord, cell.y_coord - 1):
+            temp = get_cell(cell.x_coord, cell.y_coord - 1)
             if temp.getValue() != '.' and temp.getValue() is not None:
                 return 2
         # position 3
-        if check_if_spot_valid(width, height, cell.x_coord + 1, cell.y_coord - 1):
-            temp = get_cell(scope, cell.x_coord + 1, cell.y_coord - 1)
+        if check_if_spot_valid(width, cell.x_coord + 1, cell.y_coord - 1):
+            temp = get_cell(cell.x_coord + 1, cell.y_coord - 1)
             if temp.getValue() != '.' and temp.getValue() is not None:
                 return 2
         # position 4
-        if check_if_spot_valid(width, height, cell.x_coord - 1, cell.y_coord):
-            temp = get_cell(scope, cell.x_coord - 1, cell.y_coord)
+        if check_if_spot_valid(width, cell.x_coord - 1, cell.y_coord):
+            temp = get_cell(cell.x_coord - 1, cell.y_coord)
             if temp.getValue() != '.' and temp.getValue() is not None:
                 return 2
         # position 5
-        if check_if_spot_valid(width, height, cell.x_coord + 1, cell.y_coord):
-            temp = get_cell(scope, cell.x_coord + 1, cell.y_coord)
+        if check_if_spot_valid(width, cell.x_coord + 1, cell.y_coord):
+            temp = get_cell(cell.x_coord + 1, cell.y_coord)
             if temp.getValue() != '.' and temp.getValue() is not None:
                 return 2
         # position 6
-        if check_if_spot_valid(width, height, cell.x_coord - 1, cell.y_coord + 1):
-            temp = get_cell(scope, cell.x_coord - 1, cell.y_coord + 1)
+        if check_if_spot_valid(width, cell.x_coord - 1, cell.y_coord + 1):
+            temp = get_cell(cell.x_coord - 1, cell.y_coord + 1)
             if temp.getValue() != '.' and temp.getValue() is not None:
                 return 2
         # position 7
-        if check_if_spot_valid(width, height, cell.x_coord, cell.y_coord + 1):
-            temp = get_cell(scope, cell.x_coord, cell.y_coord + 1)
+        if check_if_spot_valid(width, cell.x_coord, cell.y_coord + 1):
+            temp = get_cell(cell.x_coord, cell.y_coord + 1)
             if temp.getValue() != '.' and temp.getValue() is not None:
                 return 2
         # position 8
-        if check_if_spot_valid(width, height, cell.x_coord + 1, cell.y_coord + 1):
-            temp = get_cell(scope, cell.x_coord + 1, cell.y_coord + 1)
+        if check_if_spot_valid(width, cell.x_coord + 1, cell.y_coord + 1):
+            temp = get_cell(cell.x_coord + 1, cell.y_coord + 1)
             if temp.getValue() != '.' and temp.getValue() is not None:
                 return 2
     if cell.getValue() == char_water:
@@ -719,14 +721,13 @@ class Board:
     Board class for setting up the playing board.
     """
 
-    def __init__(self, width, height, cells: list[Cell]):
+    def __init__(self, width, cells: list[Cell]):
         """
         :param pieces: The list of Pieces
         :type pieces: List[Variable]
         """
 
         self.width = width
-        self.height = height
 
         self.cells = cells
         # self.grid is a 2-d (size * size) array automatically generated
@@ -744,7 +745,7 @@ class Board:
 
         """
 
-        for i in range(self.height):
+        for i in range(self.width):
             line = []
             for j in range(self.width):
                 line.append('0')
@@ -770,7 +771,7 @@ class Board:
                     print("Can't reach here!")
 
     def update(self):
-        for i in range(self.height):
+        for i in range(self.width):
             line = []
             for j in range(self.width):
                 line.append('0')
@@ -876,248 +877,248 @@ def preprocessing(state: State):
     for cell in state.board.cells:
         if cell.getValue() is not None:
             if cell.getValue() == char_top:
-                if check_if_spot_valid(state.board.width, state.board.height, cell.x_coord - 1, cell.y_coord - 1):
-                    temp = get_cell(state.board.cells, cell.x_coord - 1, cell.y_coord - 1)
+                if check_if_spot_valid(state.board.width, cell.x_coord - 1, cell.y_coord - 1):
+                    temp = get_cell(cell.x_coord - 1, cell.y_coord - 1)
                     temp.setValue(char_water)
                     temp.resetDomain(['.'])
                     temp._curdom = ['.']
-                if check_if_spot_valid(state.board.width, state.board.height, cell.x_coord, cell.y_coord - 1):
-                    temp = get_cell(state.board.cells, cell.x_coord, cell.y_coord - 1)
+                if check_if_spot_valid(state.board.width, cell.x_coord, cell.y_coord - 1):
+                    temp = get_cell(cell.x_coord, cell.y_coord - 1)
                     temp.setValue(char_water)
                     temp.resetDomain(['.'])
                     temp._curdom = ['.']
-                if check_if_spot_valid(state.board.width, state.board.height, cell.x_coord + 1, cell.y_coord - 1):
-                    temp = get_cell(state.board.cells, cell.x_coord + 1, cell.y_coord - 1)
+                if check_if_spot_valid(state.board.width, cell.x_coord + 1, cell.y_coord - 1):
+                    temp = get_cell(cell.x_coord + 1, cell.y_coord - 1)
                     temp.setValue(char_water)
                     temp.resetDomain(['.'])
                     temp._curdom = ['.']
-                if check_if_spot_valid(state.board.width, state.board.height, cell.x_coord - 1, cell.y_coord):
-                    temp = get_cell(state.board.cells, cell.x_coord - 1, cell.y_coord)
+                if check_if_spot_valid(state.board.width, cell.x_coord - 1, cell.y_coord):
+                    temp = get_cell(cell.x_coord - 1, cell.y_coord)
                     temp.setValue(char_water)
                     temp.resetDomain(['.'])
                     temp._curdom = ['.']
-                if check_if_spot_valid(state.board.width, state.board.height, cell.x_coord + 1, cell.y_coord):
-                    temp = get_cell(state.board.cells, cell.x_coord + 1, cell.y_coord)
+                if check_if_spot_valid(state.board.width, cell.x_coord + 1, cell.y_coord):
+                    temp = get_cell(cell.x_coord + 1, cell.y_coord)
                     temp.setValue(char_water)
                     temp.resetDomain(['.'])
                     temp._curdom = ['.']
-                if check_if_spot_valid(state.board.width, state.board.height, cell.x_coord - 1, cell.y_coord + 1):
-                    temp = get_cell(state.board.cells, cell.x_coord - 1, cell.y_coord + 1)
+                if check_if_spot_valid(state.board.width, cell.x_coord - 1, cell.y_coord + 1):
+                    temp = get_cell(cell.x_coord - 1, cell.y_coord + 1)
                     temp.setValue(char_water)
                     temp.resetDomain(['.'])
                     temp._curdom = ['.']
-                if check_if_spot_valid(state.board.width, state.board.height, cell.x_coord + 1, cell.y_coord + 1):
-                    temp = get_cell(state.board.cells, cell.x_coord + 1, cell.y_coord + 1)
+                if check_if_spot_valid(state.board.width, cell.x_coord + 1, cell.y_coord + 1):
+                    temp = get_cell(cell.x_coord + 1, cell.y_coord + 1)
                     temp.setValue(char_water)
                     temp.resetDomain(['.'])
                     temp._curdom = ['.']
-                if check_if_spot_valid(state.board.width, state.board.height, cell.x_coord - 1, cell.y_coord + 2):
-                    temp = get_cell(state.board.cells, cell.x_coord - 1, cell.y_coord + 2)
+                if check_if_spot_valid(state.board.width, cell.x_coord - 1, cell.y_coord + 2):
+                    temp = get_cell(cell.x_coord - 1, cell.y_coord + 2)
                     temp.setValue(char_water)
                     temp.resetDomain(['.'])
                     temp._curdom = ['.']
-                if check_if_spot_valid(state.board.width, state.board.height, cell.x_coord + 1, cell.y_coord + 2):
-                    temp = get_cell(state.board.cells, cell.x_coord + 1, cell.y_coord + 2)
+                if check_if_spot_valid(state.board.width, cell.x_coord + 1, cell.y_coord + 2):
+                    temp = get_cell(cell.x_coord + 1, cell.y_coord + 2)
                     temp.setValue(char_water)
                     temp.resetDomain(['.'])
                     temp._curdom = ['.']
             if cell.getValue() == char_bottom:
-                if check_if_spot_valid(state.board.width, state.board.height, cell.x_coord - 1, cell.y_coord - 1):
-                    temp = get_cell(state.board.cells, cell.x_coord - 1, cell.y_coord - 1)
+                if check_if_spot_valid(state.board.width, cell.x_coord - 1, cell.y_coord - 1):
+                    temp = get_cell(cell.x_coord - 1, cell.y_coord - 1)
                     temp.setValue(char_water)
                     temp.resetDomain(['.'])
                     temp._curdom = ['.']
-                if check_if_spot_valid(state.board.width, state.board.height, cell.x_coord + 1, cell.y_coord - 1):
-                    temp = get_cell(state.board.cells, cell.x_coord + 1, cell.y_coord - 1)
+                if check_if_spot_valid(state.board.width, cell.x_coord + 1, cell.y_coord - 1):
+                    temp = get_cell(cell.x_coord + 1, cell.y_coord - 1)
                     temp.setValue(char_water)
                     temp.resetDomain(['.'])
                     temp._curdom = ['.']
-                if check_if_spot_valid(state.board.width, state.board.height, cell.x_coord - 1, cell.y_coord):
-                    temp = get_cell(state.board.cells, cell.x_coord - 1, cell.y_coord)
+                if check_if_spot_valid(state.board.width, cell.x_coord - 1, cell.y_coord):
+                    temp = get_cell(cell.x_coord - 1, cell.y_coord)
                     temp.setValue(char_water)
                     temp.resetDomain(['.'])
                     temp._curdom = ['.']
-                if check_if_spot_valid(state.board.width, state.board.height, cell.x_coord + 1, cell.y_coord):
-                    temp = get_cell(state.board.cells, cell.x_coord + 1, cell.y_coord)
+                if check_if_spot_valid(state.board.width, cell.x_coord + 1, cell.y_coord):
+                    temp = get_cell(cell.x_coord + 1, cell.y_coord)
                     temp.setValue(char_water)
                     temp.resetDomain(['.'])
                     temp._curdom = ['.']
-                if check_if_spot_valid(state.board.width, state.board.height, cell.x_coord - 1, cell.y_coord + 1):
-                    temp = get_cell(state.board.cells, cell.x_coord - 1, cell.y_coord + 1)
+                if check_if_spot_valid(state.board.width, cell.x_coord - 1, cell.y_coord + 1):
+                    temp = get_cell(cell.x_coord - 1, cell.y_coord + 1)
                     temp.setValue(char_water)
                     temp.resetDomain(['.'])
                     temp._curdom = ['.']
-                if check_if_spot_valid(state.board.width, state.board.height, cell.x_coord, cell.y_coord + 1):
-                    temp = get_cell(state.board.cells, cell.x_coord, cell.y_coord + 1)
+                if check_if_spot_valid(state.board.width, cell.x_coord, cell.y_coord + 1):
+                    temp = get_cell(cell.x_coord, cell.y_coord + 1)
                     temp.setValue(char_water)
                     temp.resetDomain(['.'])
                     temp._curdom = ['.']
-                if check_if_spot_valid(state.board.width, state.board.height, cell.x_coord + 1, cell.y_coord + 1):
-                    temp = get_cell(state.board.cells, cell.x_coord + 1, cell.y_coord + 1)
+                if check_if_spot_valid(state.board.width, cell.x_coord + 1, cell.y_coord + 1):
+                    temp = get_cell(cell.x_coord + 1, cell.y_coord + 1)
                     temp.setValue(char_water)
                     temp.resetDomain(['.'])
                     temp._curdom = ['.']
-                if check_if_spot_valid(state.board.width, state.board.height, cell.x_coord - 1, cell.y_coord - 2):
-                    temp = get_cell(state.board.cells, cell.x_coord - 1, cell.y_coord - 2)
+                if check_if_spot_valid(state.board.width, cell.x_coord - 1, cell.y_coord - 2):
+                    temp = get_cell(cell.x_coord - 1, cell.y_coord - 2)
                     temp.setValue(char_water)
                     temp.resetDomain(['.'])
                     temp._curdom = ['.']
-                if check_if_spot_valid(state.board.width, state.board.height, cell.x_coord + 1, cell.y_coord - 2):
-                    temp = get_cell(state.board.cells, cell.x_coord + 1, cell.y_coord - 2)
+                if check_if_spot_valid(state.board.width, cell.x_coord + 1, cell.y_coord - 2):
+                    temp = get_cell(cell.x_coord + 1, cell.y_coord - 2)
                     temp.setValue(char_water)
                     temp.resetDomain(['.'])
                     temp._curdom = ['.']
             if cell.getValue() == char_left:
-                if check_if_spot_valid(state.board.width, state.board.height, cell.x_coord - 1, cell.y_coord - 1):
-                    temp = get_cell(state.board.cells, cell.x_coord - 1, cell.y_coord - 1)
+                if check_if_spot_valid(state.board.width, cell.x_coord - 1, cell.y_coord - 1):
+                    temp = get_cell(cell.x_coord - 1, cell.y_coord - 1)
                     temp.setValue(char_water)
                     temp.resetDomain(['.'])
                     temp._curdom = ['.']
-                if check_if_spot_valid(state.board.width, state.board.height, cell.x_coord, cell.y_coord - 1):
-                    temp = get_cell(state.board.cells, cell.x_coord, cell.y_coord - 1)
+                if check_if_spot_valid(state.board.width, cell.x_coord, cell.y_coord - 1):
+                    temp = get_cell(cell.x_coord, cell.y_coord - 1)
                     temp.setValue(char_water)
                     temp.resetDomain(['.'])
                     temp._curdom = ['.']
-                if check_if_spot_valid(state.board.width, state.board.height, cell.x_coord + 1, cell.y_coord - 1):
-                    temp = get_cell(state.board.cells, cell.x_coord + 1, cell.y_coord - 1)
+                if check_if_spot_valid(state.board.width, cell.x_coord + 1, cell.y_coord - 1):
+                    temp = get_cell(cell.x_coord + 1, cell.y_coord - 1)
                     temp.setValue(char_water)
                     temp.resetDomain(['.'])
                     temp._curdom = ['.']
-                if check_if_spot_valid(state.board.width, state.board.height, cell.x_coord - 1, cell.y_coord):
-                    temp = get_cell(state.board.cells, cell.x_coord - 1, cell.y_coord)
+                if check_if_spot_valid(state.board.width, cell.x_coord - 1, cell.y_coord):
+                    temp = get_cell(cell.x_coord - 1, cell.y_coord)
                     temp.setValue(char_water)
                     temp.resetDomain(['.'])
                     temp._curdom = ['.']
-                if check_if_spot_valid(state.board.width, state.board.height, cell.x_coord - 1, cell.y_coord + 1):
-                    temp = get_cell(state.board.cells, cell.x_coord - 1, cell.y_coord + 1)
+                if check_if_spot_valid(state.board.width, cell.x_coord - 1, cell.y_coord + 1):
+                    temp = get_cell(cell.x_coord - 1, cell.y_coord + 1)
                     temp.setValue(char_water)
                     temp.resetDomain(['.'])
                     temp._curdom = ['.']
-                if check_if_spot_valid(state.board.width, state.board.height, cell.x_coord, cell.y_coord + 1):
-                    temp = get_cell(state.board.cells, cell.x_coord, cell.y_coord + 1)
+                if check_if_spot_valid(state.board.width, cell.x_coord, cell.y_coord + 1):
+                    temp = get_cell(cell.x_coord, cell.y_coord + 1)
                     temp.setValue(char_water)
                     temp.resetDomain(['.'])
                     temp._curdom = ['.']
-                if check_if_spot_valid(state.board.width, state.board.height, cell.x_coord + 1, cell.y_coord + 1):
-                    temp = get_cell(state.board.cells, cell.x_coord + 1, cell.y_coord + 1)
+                if check_if_spot_valid(state.board.width, cell.x_coord + 1, cell.y_coord + 1):
+                    temp = get_cell(cell.x_coord + 1, cell.y_coord + 1)
                     temp.setValue(char_water)
                     temp.resetDomain(['.'])
                     temp._curdom = ['.']
-                if check_if_spot_valid(state.board.width, state.board.height, cell.x_coord + 2, cell.y_coord - 1):
-                    temp = get_cell(state.board.cells, cell.x_coord + 2, cell.y_coord - 1)
+                if check_if_spot_valid(state.board.width, cell.x_coord + 2, cell.y_coord - 1):
+                    temp = get_cell(cell.x_coord + 2, cell.y_coord - 1)
                     temp.setValue(char_water)
                     temp.resetDomain(['.'])
                     temp._curdom = ['.']
-                if check_if_spot_valid(state.board.width, state.board.height, cell.x_coord + 2, cell.y_coord + 1):
-                    temp = get_cell(state.board.cells, cell.x_coord + 2, cell.y_coord + 1)
+                if check_if_spot_valid(state.board.width, cell.x_coord + 2, cell.y_coord + 1):
+                    temp = get_cell(cell.x_coord + 2, cell.y_coord + 1)
                     temp.setValue(char_water)
                     temp.resetDomain(['.'])
                     temp._curdom = ['.']
             if cell.getValue() == char_right:
-                if check_if_spot_valid(state.board.width, state.board.height, cell.x_coord - 1, cell.y_coord - 1):
-                    temp = get_cell(state.board.cells, cell.x_coord - 1, cell.y_coord - 1)
+                if check_if_spot_valid(state.board.width, cell.x_coord - 1, cell.y_coord - 1):
+                    temp = get_cell(cell.x_coord - 1, cell.y_coord - 1)
                     temp.setValue(char_water)
                     temp.resetDomain(['.'])
                     temp._curdom = ['.']
-                if check_if_spot_valid(state.board.width, state.board.height, cell.x_coord, cell.y_coord - 1):
-                    temp = get_cell(state.board.cells, cell.x_coord, cell.y_coord - 1)
+                if check_if_spot_valid(state.board.width, cell.x_coord, cell.y_coord - 1):
+                    temp = get_cell(cell.x_coord, cell.y_coord - 1)
                     temp.setValue(char_water)
                     temp.resetDomain(['.'])
                     temp._curdom = ['.']
-                if check_if_spot_valid(state.board.width, state.board.height, cell.x_coord + 1, cell.y_coord - 1):
-                    temp = get_cell(state.board.cells, cell.x_coord + 1, cell.y_coord - 1)
+                if check_if_spot_valid(state.board.width, cell.x_coord + 1, cell.y_coord - 1):
+                    temp = get_cell(cell.x_coord + 1, cell.y_coord - 1)
                     temp.setValue(char_water)
                     temp.resetDomain(['.'])
                     temp._curdom = ['.']
-                if check_if_spot_valid(state.board.width, state.board.height, cell.x_coord + 1, cell.y_coord):
-                    temp = get_cell(state.board.cells, cell.x_coord + 1, cell.y_coord)
+                if check_if_spot_valid(state.board.width, cell.x_coord + 1, cell.y_coord):
+                    temp = get_cell(cell.x_coord + 1, cell.y_coord)
                     temp.setValue(char_water)
                     temp.resetDomain(['.'])
                     temp._curdom = ['.']
-                if check_if_spot_valid(state.board.width, state.board.height, cell.x_coord - 1, cell.y_coord + 1):
-                    temp = get_cell(state.board.cells, cell.x_coord - 1, cell.y_coord + 1)
+                if check_if_spot_valid(state.board.width, cell.x_coord - 1, cell.y_coord + 1):
+                    temp = get_cell(cell.x_coord - 1, cell.y_coord + 1)
                     temp.setValue(char_water)
                     temp.resetDomain(['.'])
                     temp._curdom = ['.']
-                if check_if_spot_valid(state.board.width, state.board.height, cell.x_coord, cell.y_coord + 1):
-                    temp = get_cell(state.board.cells, cell.x_coord, cell.y_coord + 1)
+                if check_if_spot_valid(state.board.width, cell.x_coord, cell.y_coord + 1):
+                    temp = get_cell(cell.x_coord, cell.y_coord + 1)
                     temp.setValue(char_water)
                     temp.resetDomain(['.'])
                     temp._curdom = ['.']
-                if check_if_spot_valid(state.board.width, state.board.height, cell.x_coord + 1, cell.y_coord + 1):
-                    temp = get_cell(state.board.cells, cell.x_coord + 1, cell.y_coord + 1)
+                if check_if_spot_valid(state.board.width, cell.x_coord + 1, cell.y_coord + 1):
+                    temp = get_cell(cell.x_coord + 1, cell.y_coord + 1)
                     temp.setValue(char_water)
                     temp.resetDomain(['.'])
                     temp._curdom = ['.']
-                if check_if_spot_valid(state.board.width, state.board.height, cell.x_coord - 2, cell.y_coord - 1):
-                    temp = get_cell(state.board.cells, cell.x_coord - 2, cell.y_coord - 1)
+                if check_if_spot_valid(state.board.width, cell.x_coord - 2, cell.y_coord - 1):
+                    temp = get_cell(cell.x_coord - 2, cell.y_coord - 1)
                     temp.setValue(char_water)
                     temp.resetDomain(['.'])
                     temp._curdom = ['.']
-                if check_if_spot_valid(state.board.width, state.board.height, cell.x_coord - 2, cell.y_coord + 1):
-                    temp = get_cell(state.board.cells, cell.x_coord - 2, cell.y_coord + 1)
+                if check_if_spot_valid(state.board.width, cell.x_coord - 2, cell.y_coord + 1):
+                    temp = get_cell(cell.x_coord - 2, cell.y_coord + 1)
                     temp.setValue(char_water)
                     temp.resetDomain(['.'])
                     temp._curdom = ['.']
             if cell.getValue() == char_middle:
-                if check_if_spot_valid(state.board.width, state.board.height, cell.x_coord - 1, cell.y_coord - 1):
-                    temp = get_cell(state.board.cells, cell.x_coord - 1, cell.y_coord - 1)
+                if check_if_spot_valid(state.board.width, cell.x_coord - 1, cell.y_coord - 1):
+                    temp = get_cell(cell.x_coord - 1, cell.y_coord - 1)
                     temp.setValue(char_water)
                     temp.resetDomain(['.'])
                     temp._curdom = ['.']
-                if check_if_spot_valid(state.board.width, state.board.height, cell.x_coord + 1, cell.y_coord - 1):
-                    temp = get_cell(state.board.cells, cell.x_coord + 1, cell.y_coord - 1)
+                if check_if_spot_valid(state.board.width, cell.x_coord + 1, cell.y_coord - 1):
+                    temp = get_cell(cell.x_coord + 1, cell.y_coord - 1)
                     temp.setValue(char_water)
                     temp.resetDomain(['.'])
                     temp._curdom = ['.']
-                if check_if_spot_valid(state.board.width, state.board.height, cell.x_coord - 1, cell.y_coord + 1):
-                    temp = get_cell(state.board.cells, cell.x_coord - 1, cell.y_coord + 1)
+                if check_if_spot_valid(state.board.width, cell.x_coord - 1, cell.y_coord + 1):
+                    temp = get_cell(cell.x_coord - 1, cell.y_coord + 1)
                     temp.setValue(char_water)
                     temp.resetDomain(['.'])
                     temp._curdom = ['.']
-                if check_if_spot_valid(state.board.width, state.board.height, cell.x_coord + 1, cell.y_coord + 1):
-                    temp = get_cell(state.board.cells, cell.x_coord + 1, cell.y_coord + 1)
+                if check_if_spot_valid(state.board.width, cell.x_coord + 1, cell.y_coord + 1):
+                    temp = get_cell(cell.x_coord + 1, cell.y_coord + 1)
                     temp.setValue(char_water)
                     temp.resetDomain(['.'])
                     temp._curdom = ['.']
             if cell.getValue() == char_submarine:
-                if check_if_spot_valid(state.board.width, state.board.height, cell.x_coord - 1, cell.y_coord - 1):
-                    temp = get_cell(state.board.cells, cell.x_coord - 1, cell.y_coord - 1)
+                if check_if_spot_valid(state.board.width, cell.x_coord - 1, cell.y_coord - 1):
+                    temp = get_cell(cell.x_coord - 1, cell.y_coord - 1)
                     temp.setValue(char_water)
                     temp.resetDomain(['.'])
                     temp._curdom = ['.']
-                if check_if_spot_valid(state.board.width, state.board.height, cell.x_coord, cell.y_coord - 1):
-                    temp = get_cell(state.board.cells, cell.x_coord, cell.y_coord - 1)
+                if check_if_spot_valid(state.board.width, cell.x_coord, cell.y_coord - 1):
+                    temp = get_cell(cell.x_coord, cell.y_coord - 1)
                     temp.setValue(char_water)
                     temp.resetDomain(['.'])
                     temp._curdom = ['.']
-                if check_if_spot_valid(state.board.width, state.board.height, cell.x_coord + 1, cell.y_coord - 1):
-                    temp = get_cell(state.board.cells, cell.x_coord + 1, cell.y_coord - 1)
+                if check_if_spot_valid(state.board.width, cell.x_coord + 1, cell.y_coord - 1):
+                    temp = get_cell(cell.x_coord + 1, cell.y_coord - 1)
                     temp.setValue(char_water)
                     temp.resetDomain(['.'])
                     temp._curdom = ['.']
-                if check_if_spot_valid(state.board.width, state.board.height, cell.x_coord - 1, cell.y_coord):
-                    temp = get_cell(state.board.cells, cell.x_coord - 1, cell.y_coord)
+                if check_if_spot_valid(state.board.width, cell.x_coord - 1, cell.y_coord):
+                    temp = get_cell(cell.x_coord - 1, cell.y_coord)
                     temp.setValue(char_water)
                     temp.resetDomain(['.'])
                     temp._curdom = ['.']
-                if check_if_spot_valid(state.board.width, state.board.height, cell.x_coord + 1, cell.y_coord):
-                    temp = get_cell(state.board.cells, cell.x_coord + 1, cell.y_coord)
+                if check_if_spot_valid(state.board.width, cell.x_coord + 1, cell.y_coord):
+                    temp = get_cell(cell.x_coord + 1, cell.y_coord)
                     temp.setValue(char_water)
                     temp.resetDomain(['.'])
                     temp._curdom = ['.']
-                if check_if_spot_valid(state.board.width, state.board.height, cell.x_coord - 1, cell.y_coord + 1):
-                    temp = get_cell(state.board.cells, cell.x_coord - 1, cell.y_coord + 1)
+                if check_if_spot_valid(state.board.width, cell.x_coord - 1, cell.y_coord + 1):
+                    temp = get_cell(cell.x_coord - 1, cell.y_coord + 1)
                     temp.setValue(char_water)
                     temp.resetDomain(['.'])
                     temp._curdom = ['.']
-                if check_if_spot_valid(state.board.width, state.board.height, cell.x_coord, cell.y_coord + 1):
-                    temp = get_cell(state.board.cells, cell.x_coord, cell.y_coord + 1)
+                if check_if_spot_valid(state.board.width, cell.x_coord, cell.y_coord + 1):
+                    temp = get_cell(cell.x_coord, cell.y_coord + 1)
                     temp.setValue(char_water)
                     temp.resetDomain(['.'])
                     temp._curdom = ['.']
-                if check_if_spot_valid(state.board.width, state.board.height, cell.x_coord + 1, cell.y_coord + 1):
-                    temp = get_cell(state.board.cells, cell.x_coord + 1, cell.y_coord + 1)
+                if check_if_spot_valid(state.board.width, cell.x_coord + 1, cell.y_coord + 1):
+                    temp = get_cell(cell.x_coord + 1, cell.y_coord + 1)
                     temp.setValue(char_water)
                     temp.resetDomain(['.'])
                     temp._curdom = ['.']
@@ -1249,8 +1250,8 @@ def read_from_file(filename):
                 cell.add_constraint(temp_lookup_cc[x])
                 cell.add_constraint(temp_lookup_rc[line_index])
         line_index += 1
-    board = Board(word_index, line_index, cells)
-    wc = WaterConstraint('Water', cells, word_index, line_index)
+    board = Board(line_index, cells)
+    wc = WaterConstraint('Water', cells, line_index, line_index)
     constraints.append(wc)
     for c in constraints:
         if isinstance(c, ShipConstraint):
@@ -1336,8 +1337,8 @@ def forward_checking(cell, state: State, restore):
 
     if cell.getValue() == char_top:
         # position 1
-        if check_if_spot_valid(width, height, cell.x_coord - 1, cell.y_coord - 1):
-            temp = get_cell(scope, cell.x_coord - 1, cell.y_coord - 1)
+        if check_if_spot_valid(width, cell.x_coord - 1, cell.y_coord - 1):
+            temp = get_cell(cell.x_coord - 1, cell.y_coord - 1)
             if temp.getValue() is None:
                 if temp not in restore:
                     restore[temp] = copy.copy(temp._curdom)
@@ -1347,8 +1348,8 @@ def forward_checking(cell, state: State, restore):
                 if len(temp._curdom) == 0:
                     return False
         # position 2
-        if check_if_spot_valid(width, height, cell.x_coord, cell.y_coord - 1):
-            temp = get_cell(scope, cell.x_coord, cell.y_coord - 1)
+        if check_if_spot_valid(width, cell.x_coord, cell.y_coord - 1):
+            temp = get_cell(cell.x_coord, cell.y_coord - 1)
             if temp.getValue() is None:
                 if temp not in restore:
                     restore[temp] = copy.copy(temp._curdom)
@@ -1358,8 +1359,8 @@ def forward_checking(cell, state: State, restore):
                 if len(temp._curdom) == 0:
                     return False
         # position 3
-        if check_if_spot_valid(width, height, cell.x_coord + 1, cell.y_coord - 1):
-            temp = get_cell(scope, cell.x_coord + 1, cell.y_coord - 1)
+        if check_if_spot_valid(width, cell.x_coord + 1, cell.y_coord - 1):
+            temp = get_cell(cell.x_coord + 1, cell.y_coord - 1)
             if temp.getValue() is None:
                 if temp not in restore:
                     restore[temp] = copy.copy(temp._curdom)
@@ -1369,8 +1370,8 @@ def forward_checking(cell, state: State, restore):
                 if len(temp._curdom) == 0:
                     return False
         # position 4
-        if check_if_spot_valid(width, height, cell.x_coord - 1, cell.y_coord):
-            temp = get_cell(scope, cell.x_coord - 1, cell.y_coord)
+        if check_if_spot_valid(width, cell.x_coord - 1, cell.y_coord):
+            temp = get_cell(cell.x_coord - 1, cell.y_coord)
             if temp.getValue() is None:
                 if temp not in restore:
                     restore[temp] = copy.copy(temp._curdom)
@@ -1380,8 +1381,8 @@ def forward_checking(cell, state: State, restore):
                 if len(temp._curdom) == 0:
                     return False
         # position 5
-        if check_if_spot_valid(width, height, cell.x_coord + 1, cell.y_coord):
-            temp = get_cell(scope, cell.x_coord + 1, cell.y_coord)
+        if check_if_spot_valid(width, cell.x_coord + 1, cell.y_coord):
+            temp = get_cell(cell.x_coord + 1, cell.y_coord)
             if temp.getValue() is None:
                 if temp not in restore:
                     restore[temp] = copy.copy(temp._curdom)
@@ -1391,8 +1392,8 @@ def forward_checking(cell, state: State, restore):
                 if len(temp._curdom) == 0:
                     return False
         # position 6
-        if check_if_spot_valid(width, height, cell.x_coord - 1, cell.y_coord + 1):
-            temp = get_cell(scope, cell.x_coord - 1, cell.y_coord + 1)
+        if check_if_spot_valid(width, cell.x_coord - 1, cell.y_coord + 1):
+            temp = get_cell(cell.x_coord - 1, cell.y_coord + 1)
             if temp.getValue() is None:
                 if temp not in restore:
                     restore[temp] = copy.copy(temp._curdom)
@@ -1402,8 +1403,8 @@ def forward_checking(cell, state: State, restore):
                 if len(temp._curdom) == 0:
                     return False
         # position 7
-        if check_if_spot_valid(width, height, cell.x_coord, cell.y_coord + 1):
-            temp = get_cell(scope, cell.x_coord, cell.y_coord + 1)
+        if check_if_spot_valid(width, cell.x_coord, cell.y_coord + 1):
+            temp = get_cell(cell.x_coord, cell.y_coord + 1)
             if temp.getValue() is None:
                 if temp not in restore:
                     restore[temp] = copy.copy(temp._curdom)
@@ -1413,8 +1414,8 @@ def forward_checking(cell, state: State, restore):
                 if len(temp._curdom) == 0:
                     return False
         # position 8
-        if check_if_spot_valid(width, height, cell.x_coord + 1, cell.y_coord + 1):
-            temp = get_cell(scope, cell.x_coord + 1, cell.y_coord + 1)
+        if check_if_spot_valid(width, cell.x_coord + 1, cell.y_coord + 1):
+            temp = get_cell(cell.x_coord + 1, cell.y_coord + 1)
             if temp.getValue() is None:
                 if temp not in restore:
                     restore[temp] = copy.copy(temp._curdom)
@@ -1425,8 +1426,8 @@ def forward_checking(cell, state: State, restore):
                     return False
     if cell.getValue() == char_bottom:
         # position 1
-        if check_if_spot_valid(width, height, cell.x_coord - 1, cell.y_coord - 1):
-            temp = get_cell(scope, cell.x_coord - 1, cell.y_coord - 1)
+        if check_if_spot_valid(width, cell.x_coord - 1, cell.y_coord - 1):
+            temp = get_cell(cell.x_coord - 1, cell.y_coord - 1)
             if temp.getValue() is None:
                 if temp not in restore:
                     restore[temp] = copy.copy(temp._curdom)
@@ -1436,8 +1437,8 @@ def forward_checking(cell, state: State, restore):
                 if len(temp._curdom) == 0:
                     return False
         # position 2
-        if check_if_spot_valid(width, height, cell.x_coord, cell.y_coord - 1):
-            temp = get_cell(scope, cell.x_coord, cell.y_coord - 1)
+        if check_if_spot_valid(width, cell.x_coord, cell.y_coord - 1):
+            temp = get_cell(cell.x_coord, cell.y_coord - 1)
             if temp.getValue() is None:
                 if temp not in restore:
                     restore[temp] = copy.copy(temp._curdom)
@@ -1447,8 +1448,8 @@ def forward_checking(cell, state: State, restore):
                 if len(temp._curdom) == 0:
                     return False
         # position 3
-        if check_if_spot_valid(width, height, cell.x_coord + 1, cell.y_coord - 1):
-            temp = get_cell(scope, cell.x_coord + 1, cell.y_coord - 1)
+        if check_if_spot_valid(width, cell.x_coord + 1, cell.y_coord - 1):
+            temp = get_cell(cell.x_coord + 1, cell.y_coord - 1)
             if temp.getValue() is None:
                 if temp not in restore:
                     restore[temp] = copy.copy(temp._curdom)
@@ -1458,8 +1459,8 @@ def forward_checking(cell, state: State, restore):
                 if len(temp._curdom) == 0:
                     return False
         # position 4
-        if check_if_spot_valid(width, height, cell.x_coord - 1, cell.y_coord):
-            temp = get_cell(scope, cell.x_coord - 1, cell.y_coord)
+        if check_if_spot_valid(width, cell.x_coord - 1, cell.y_coord):
+            temp = get_cell(cell.x_coord - 1, cell.y_coord)
             if temp.getValue() is None:
                 if temp not in restore:
                     restore[temp] = copy.copy(temp._curdom)
@@ -1469,8 +1470,8 @@ def forward_checking(cell, state: State, restore):
                 if len(temp._curdom) == 0:
                     return False
         # position 5
-        if check_if_spot_valid(width, height, cell.x_coord + 1, cell.y_coord):
-            temp = get_cell(scope, cell.x_coord + 1, cell.y_coord)
+        if check_if_spot_valid(width, cell.x_coord + 1, cell.y_coord):
+            temp = get_cell(cell.x_coord + 1, cell.y_coord)
             if temp.getValue() is None:
                 if temp not in restore:
                     restore[temp] = copy.copy(temp._curdom)
@@ -1480,8 +1481,8 @@ def forward_checking(cell, state: State, restore):
                 if len(temp._curdom) == 0:
                     return False
         # position 6
-        if check_if_spot_valid(width, height, cell.x_coord - 1, cell.y_coord + 1):
-            temp = get_cell(scope, cell.x_coord - 1, cell.y_coord + 1)
+        if check_if_spot_valid(width, cell.x_coord - 1, cell.y_coord + 1):
+            temp = get_cell(cell.x_coord - 1, cell.y_coord + 1)
             if temp.getValue() is None:
                 if temp not in restore:
                     restore[temp] = copy.copy(temp._curdom)
@@ -1491,8 +1492,8 @@ def forward_checking(cell, state: State, restore):
                 if len(temp._curdom) == 0:
                     return False
         # position 7
-        if check_if_spot_valid(width, height, cell.x_coord, cell.y_coord + 1):
-            temp = get_cell(scope, cell.x_coord, cell.y_coord + 1)
+        if check_if_spot_valid(width, cell.x_coord, cell.y_coord + 1):
+            temp = get_cell(cell.x_coord, cell.y_coord + 1)
             if temp.getValue() is None:
                 if temp not in restore:
                     restore[temp] = copy.copy(temp._curdom)
@@ -1502,8 +1503,8 @@ def forward_checking(cell, state: State, restore):
                 if len(temp._curdom) == 0:
                     return False
         # position 8
-        if check_if_spot_valid(width, height, cell.x_coord + 1, cell.y_coord + 1):
-            temp = get_cell(scope, cell.x_coord + 1, cell.y_coord + 1)
+        if check_if_spot_valid(width, cell.x_coord + 1, cell.y_coord + 1):
+            temp = get_cell(cell.x_coord + 1, cell.y_coord + 1)
             if temp.getValue() is None:
                 if temp not in restore:
                     restore[temp] = copy.copy(temp._curdom)
@@ -1514,8 +1515,8 @@ def forward_checking(cell, state: State, restore):
                     return False
     if cell.getValue() == char_left:
         # position 1
-        if check_if_spot_valid(width, height, cell.x_coord - 1, cell.y_coord - 1):
-            temp = get_cell(scope, cell.x_coord - 1, cell.y_coord - 1)
+        if check_if_spot_valid(width, cell.x_coord - 1, cell.y_coord - 1):
+            temp = get_cell(cell.x_coord - 1, cell.y_coord - 1)
             if temp.getValue() is None:
                 if temp not in restore:
                     restore[temp] = copy.copy(temp._curdom)
@@ -1525,8 +1526,8 @@ def forward_checking(cell, state: State, restore):
                 if len(temp._curdom) == 0:
                     return False
         # position 2
-        if check_if_spot_valid(width, height, cell.x_coord, cell.y_coord - 1):
-            temp = get_cell(scope, cell.x_coord, cell.y_coord - 1)
+        if check_if_spot_valid(width, cell.x_coord, cell.y_coord - 1):
+            temp = get_cell(cell.x_coord, cell.y_coord - 1)
             if temp.getValue() is None:
                 if temp not in restore:
                     restore[temp] = copy.copy(temp._curdom)
@@ -1536,8 +1537,8 @@ def forward_checking(cell, state: State, restore):
                 if len(temp._curdom) == 0:
                     return False
         # position 3
-        if check_if_spot_valid(width, height, cell.x_coord + 1, cell.y_coord - 1):
-            temp = get_cell(scope, cell.x_coord + 1, cell.y_coord - 1)
+        if check_if_spot_valid(width, cell.x_coord + 1, cell.y_coord - 1):
+            temp = get_cell(cell.x_coord + 1, cell.y_coord - 1)
             if temp.getValue() is None:
                 if temp not in restore:
                     restore[temp] = copy.copy(temp._curdom)
@@ -1547,8 +1548,8 @@ def forward_checking(cell, state: State, restore):
                 if len(temp._curdom) == 0:
                     return False
         # position 4
-        if check_if_spot_valid(width, height, cell.x_coord - 1, cell.y_coord):
-            temp = get_cell(scope, cell.x_coord - 1, cell.y_coord)
+        if check_if_spot_valid(width, cell.x_coord - 1, cell.y_coord):
+            temp = get_cell(cell.x_coord - 1, cell.y_coord)
             if temp.getValue() is None:
                 if temp not in restore:
                     restore[temp] = copy.copy(temp._curdom)
@@ -1558,8 +1559,8 @@ def forward_checking(cell, state: State, restore):
                 if len(temp._curdom) == 0:
                     return False
         # position 5
-        if check_if_spot_valid(width, height, cell.x_coord + 1, cell.y_coord):
-            temp = get_cell(scope, cell.x_coord + 1, cell.y_coord)
+        if check_if_spot_valid(width, cell.x_coord + 1, cell.y_coord):
+            temp = get_cell(cell.x_coord + 1, cell.y_coord)
             if temp.getValue() is None:
                 if temp not in restore:
                     restore[temp] = copy.copy(temp._curdom)
@@ -1569,8 +1570,8 @@ def forward_checking(cell, state: State, restore):
                 if len(temp._curdom) == 0:
                     return False
         # position 6
-        if check_if_spot_valid(width, height, cell.x_coord - 1, cell.y_coord + 1):
-            temp = get_cell(scope, cell.x_coord - 1, cell.y_coord + 1)
+        if check_if_spot_valid(width, cell.x_coord - 1, cell.y_coord + 1):
+            temp = get_cell(cell.x_coord - 1, cell.y_coord + 1)
             if temp.getValue() is None:
                 if temp not in restore:
                     restore[temp] = copy.copy(temp._curdom)
@@ -1580,8 +1581,8 @@ def forward_checking(cell, state: State, restore):
                 if len(temp._curdom) == 0:
                     return False
         # position 7
-        if check_if_spot_valid(width, height, cell.x_coord, cell.y_coord + 1):
-            temp = get_cell(scope, cell.x_coord, cell.y_coord + 1)
+        if check_if_spot_valid(width, cell.x_coord, cell.y_coord + 1):
+            temp = get_cell(cell.x_coord, cell.y_coord + 1)
             if temp.getValue() is None:
                 if temp not in restore:
                     restore[temp] = copy.copy(temp._curdom)
@@ -1591,8 +1592,8 @@ def forward_checking(cell, state: State, restore):
                 if len(temp._curdom) == 0:
                     return False
         # position 8
-        if check_if_spot_valid(width, height, cell.x_coord + 1, cell.y_coord + 1):
-            temp = get_cell(scope, cell.x_coord + 1, cell.y_coord + 1)
+        if check_if_spot_valid(width, cell.x_coord + 1, cell.y_coord + 1):
+            temp = get_cell(cell.x_coord + 1, cell.y_coord + 1)
             if temp.getValue() is None:
                 if temp not in restore:
                     restore[temp] = copy.copy(temp._curdom)
@@ -1603,8 +1604,8 @@ def forward_checking(cell, state: State, restore):
                     return False
     if cell.getValue() == char_right:
         # position 1
-        if check_if_spot_valid(width, height, cell.x_coord - 1, cell.y_coord - 1):
-            temp = get_cell(scope, cell.x_coord - 1, cell.y_coord - 1)
+        if check_if_spot_valid(width, cell.x_coord - 1, cell.y_coord - 1):
+            temp = get_cell(cell.x_coord - 1, cell.y_coord - 1)
             if temp.getValue() is None:
                 if temp not in restore:
                     restore[temp] = copy.copy(temp._curdom)
@@ -1614,8 +1615,8 @@ def forward_checking(cell, state: State, restore):
                 if len(temp._curdom) == 0:
                     return False
         # position 2
-        if check_if_spot_valid(width, height, cell.x_coord, cell.y_coord - 1):
-            temp = get_cell(scope, cell.x_coord, cell.y_coord - 1)
+        if check_if_spot_valid(width, cell.x_coord, cell.y_coord - 1):
+            temp = get_cell(cell.x_coord, cell.y_coord - 1)
             if temp.getValue() is None:
                 if temp not in restore:
                     restore[temp] = copy.copy(temp._curdom)
@@ -1625,8 +1626,8 @@ def forward_checking(cell, state: State, restore):
                 if len(temp._curdom) == 0:
                     return False
         # position 3
-        if check_if_spot_valid(width, height, cell.x_coord + 1, cell.y_coord - 1):
-            temp = get_cell(scope, cell.x_coord + 1, cell.y_coord - 1)
+        if check_if_spot_valid(width, cell.x_coord + 1, cell.y_coord - 1):
+            temp = get_cell(cell.x_coord + 1, cell.y_coord - 1)
             if temp.getValue() is None:
                 if temp not in restore:
                     restore[temp] = copy.copy(temp._curdom)
@@ -1636,8 +1637,8 @@ def forward_checking(cell, state: State, restore):
                 if len(temp._curdom) == 0:
                     return False
         # position 4
-        if check_if_spot_valid(width, height, cell.x_coord - 1, cell.y_coord):
-            temp = get_cell(scope, cell.x_coord - 1, cell.y_coord)
+        if check_if_spot_valid(width, cell.x_coord - 1, cell.y_coord):
+            temp = get_cell(cell.x_coord - 1, cell.y_coord)
             if temp.getValue() is None:
                 if temp not in restore:
                     restore[temp] = copy.copy(temp._curdom)
@@ -1647,8 +1648,8 @@ def forward_checking(cell, state: State, restore):
                 if len(temp._curdom) == 0:
                     return False
         # position 5
-        if check_if_spot_valid(width, height, cell.x_coord + 1, cell.y_coord):
-            temp = get_cell(scope, cell.x_coord + 1, cell.y_coord)
+        if check_if_spot_valid(width, cell.x_coord + 1, cell.y_coord):
+            temp = get_cell(cell.x_coord + 1, cell.y_coord)
             if temp.getValue() is None:
                 if temp not in restore:
                     restore[temp] = copy.copy(temp._curdom)
@@ -1658,8 +1659,8 @@ def forward_checking(cell, state: State, restore):
                 if len(temp._curdom) == 0:
                     return False
         # position 6
-        if check_if_spot_valid(width, height, cell.x_coord - 1, cell.y_coord + 1):
-            temp = get_cell(scope, cell.x_coord - 1, cell.y_coord + 1)
+        if check_if_spot_valid(width, cell.x_coord - 1, cell.y_coord + 1):
+            temp = get_cell(cell.x_coord - 1, cell.y_coord + 1)
             if temp.getValue() is None:
                 if temp not in restore:
                     restore[temp] = copy.copy(temp._curdom)
@@ -1669,8 +1670,8 @@ def forward_checking(cell, state: State, restore):
                 if len(temp._curdom) == 0:
                     return False
         # position 7
-        if check_if_spot_valid(width, height, cell.x_coord, cell.y_coord + 1):
-            temp = get_cell(scope, cell.x_coord, cell.y_coord + 1)
+        if check_if_spot_valid(width, cell.x_coord, cell.y_coord + 1):
+            temp = get_cell(cell.x_coord, cell.y_coord + 1)
             if temp.getValue() is None:
                 if temp not in restore:
                     restore[temp] = copy.copy(temp._curdom)
@@ -1680,8 +1681,8 @@ def forward_checking(cell, state: State, restore):
                 if len(temp._curdom) == 0:
                     return False
         # position 8
-        if check_if_spot_valid(width, height, cell.x_coord + 1, cell.y_coord + 1):
-            temp = get_cell(scope, cell.x_coord + 1, cell.y_coord + 1)
+        if check_if_spot_valid(width, cell.x_coord + 1, cell.y_coord + 1):
+            temp = get_cell(cell.x_coord + 1, cell.y_coord + 1)
             if temp.getValue() is None:
                 if temp not in restore:
                     restore[temp] = copy.copy(temp._curdom)
@@ -1694,17 +1695,17 @@ def forward_checking(cell, state: State, restore):
         flag = 0
         tv1 = 0
         tv2 = 0
-        if check_if_spot_valid(width, height, cell.x_coord, cell.y_coord - 1):
-            tv1 = get_cell(scope, cell.x_coord, cell.y_coord - 1).getValue()
-        if check_if_spot_valid(width, height, cell.x_coord - 1, cell.y_coord):
-            tv2 = get_cell(scope, cell.x_coord - 1, cell.y_coord).getValue()
+        if check_if_spot_valid(width, cell.x_coord, cell.y_coord - 1):
+            tv1 = get_cell(cell.x_coord, cell.y_coord - 1).getValue()
+        if check_if_spot_valid(width, cell.x_coord - 1, cell.y_coord):
+            tv2 = get_cell(cell.x_coord - 1, cell.y_coord).getValue()
         if tv1 == char_top or tv1 == char_middle:
             flag = 'v'
         elif tv2 == char_left or tv2 == char_middle:
             flag = 'h'
         # position 1
-        if check_if_spot_valid(width, height, cell.x_coord - 1, cell.y_coord - 1):
-            temp = get_cell(scope, cell.x_coord - 1, cell.y_coord - 1)
+        if check_if_spot_valid(width, cell.x_coord - 1, cell.y_coord - 1):
+            temp = get_cell(cell.x_coord - 1, cell.y_coord - 1)
             if temp.getValue() is None:
                 if temp not in restore:
                     restore[temp] = copy.copy(temp._curdom)
@@ -1714,8 +1715,8 @@ def forward_checking(cell, state: State, restore):
                 if len(temp._curdom) == 0:
                     return False
         # position 2
-        if check_if_spot_valid(width, height, cell.x_coord, cell.y_coord - 1):
-            temp = get_cell(scope, cell.x_coord, cell.y_coord - 1)
+        if check_if_spot_valid(width, cell.x_coord, cell.y_coord - 1):
+            temp = get_cell(cell.x_coord, cell.y_coord - 1)
             if temp.getValue() is None:
                 if temp not in restore:
                     restore[temp] = copy.copy(temp._curdom)
@@ -1732,8 +1733,8 @@ def forward_checking(cell, state: State, restore):
                     if len(temp._curdom) == 0:
                         return False
         # position 3
-        if check_if_spot_valid(width, height, cell.x_coord + 1, cell.y_coord - 1):
-            temp = get_cell(scope, cell.x_coord + 1, cell.y_coord - 1)
+        if check_if_spot_valid(width, cell.x_coord + 1, cell.y_coord - 1):
+            temp = get_cell(cell.x_coord + 1, cell.y_coord - 1)
             if temp.getValue() is None:
                 if temp not in restore:
                     restore[temp] = copy.copy(temp._curdom)
@@ -1743,8 +1744,8 @@ def forward_checking(cell, state: State, restore):
                 if len(temp._curdom) == 0:
                     return False
         # position 4
-        if check_if_spot_valid(width, height, cell.x_coord - 1, cell.y_coord):
-            temp = get_cell(scope, cell.x_coord - 1, cell.y_coord)
+        if check_if_spot_valid(width, cell.x_coord - 1, cell.y_coord):
+            temp = get_cell(cell.x_coord - 1, cell.y_coord)
             if temp.getValue() is None:
                 if temp not in restore:
                     restore[temp] = copy.copy(temp._curdom)
@@ -1761,8 +1762,8 @@ def forward_checking(cell, state: State, restore):
                     if len(temp._curdom) == 0:
                         return False
         # position 5
-        if check_if_spot_valid(width, height, cell.x_coord + 1, cell.y_coord):
-            temp = get_cell(scope, cell.x_coord + 1, cell.y_coord)
+        if check_if_spot_valid(width, cell.x_coord + 1, cell.y_coord):
+            temp = get_cell(cell.x_coord + 1, cell.y_coord)
             if temp.getValue() is None:
                 if temp not in restore:
                     restore[temp] = copy.copy(temp._curdom)
@@ -1779,8 +1780,8 @@ def forward_checking(cell, state: State, restore):
                     if len(temp._curdom) == 0:
                         return False
         # position 6
-        if check_if_spot_valid(width, height, cell.x_coord - 1, cell.y_coord + 1):
-            temp = get_cell(scope, cell.x_coord - 1, cell.y_coord + 1)
+        if check_if_spot_valid(width, cell.x_coord - 1, cell.y_coord + 1):
+            temp = get_cell(cell.x_coord - 1, cell.y_coord + 1)
             if temp.getValue() is None:
                 if temp not in restore:
                     restore[temp] = copy.copy(temp._curdom)
@@ -1790,8 +1791,8 @@ def forward_checking(cell, state: State, restore):
                 if len(temp._curdom) == 0:
                     return False
         # position 7
-        if check_if_spot_valid(width, height, cell.x_coord, cell.y_coord + 1):
-            temp = get_cell(scope, cell.x_coord, cell.y_coord + 1)
+        if check_if_spot_valid(width, cell.x_coord, cell.y_coord + 1):
+            temp = get_cell(cell.x_coord, cell.y_coord + 1)
             if temp.getValue() is None:
                 if temp not in restore:
                     restore[temp] = copy.copy(temp._curdom)
@@ -1808,8 +1809,8 @@ def forward_checking(cell, state: State, restore):
                     if len(temp._curdom) == 0:
                         return False
         # position 8
-        if check_if_spot_valid(width, height, cell.x_coord + 1, cell.y_coord + 1):
-            temp = get_cell(scope, cell.x_coord + 1, cell.y_coord + 1)
+        if check_if_spot_valid(width, cell.x_coord + 1, cell.y_coord + 1):
+            temp = get_cell(cell.x_coord + 1, cell.y_coord + 1)
             if temp.getValue() is None:
                 if temp not in restore:
                     restore[temp] = copy.copy(temp._curdom)
@@ -1820,8 +1821,8 @@ def forward_checking(cell, state: State, restore):
                     return False
     if cell.getValue() == char_submarine:
         # position 1
-        if check_if_spot_valid(width, height, cell.x_coord - 1, cell.y_coord - 1):
-            temp = get_cell(scope, cell.x_coord - 1, cell.y_coord - 1)
+        if check_if_spot_valid(width, cell.x_coord - 1, cell.y_coord - 1):
+            temp = get_cell(cell.x_coord - 1, cell.y_coord - 1)
             if temp.getValue() is None:
                 if temp not in restore:
                     restore[temp] = copy.copy(temp._curdom)
@@ -1831,8 +1832,8 @@ def forward_checking(cell, state: State, restore):
                 if len(temp._curdom) == 0:
                     return False
         # position 2
-        if check_if_spot_valid(width, height, cell.x_coord, cell.y_coord - 1):
-            temp = get_cell(scope, cell.x_coord, cell.y_coord - 1)
+        if check_if_spot_valid(width, cell.x_coord, cell.y_coord - 1):
+            temp = get_cell(cell.x_coord, cell.y_coord - 1)
             if temp.getValue() is None:
                 if temp not in restore:
                     restore[temp] = copy.copy(temp._curdom)
@@ -1842,8 +1843,8 @@ def forward_checking(cell, state: State, restore):
                 if len(temp._curdom) == 0:
                     return False
         # position 3
-        if check_if_spot_valid(width, height, cell.x_coord + 1, cell.y_coord - 1):
-            temp = get_cell(scope, cell.x_coord + 1, cell.y_coord - 1)
+        if check_if_spot_valid(width, cell.x_coord + 1, cell.y_coord - 1):
+            temp = get_cell(cell.x_coord + 1, cell.y_coord - 1)
             if temp.getValue() is None:
                 if temp not in restore:
                     restore[temp] = copy.copy(temp._curdom)
@@ -1853,8 +1854,8 @@ def forward_checking(cell, state: State, restore):
                 if len(temp._curdom) == 0:
                     return False
         # position 4
-        if check_if_spot_valid(width, height, cell.x_coord - 1, cell.y_coord):
-            temp = get_cell(scope, cell.x_coord - 1, cell.y_coord)
+        if check_if_spot_valid(width, cell.x_coord - 1, cell.y_coord):
+            temp = get_cell(cell.x_coord - 1, cell.y_coord)
             if temp.getValue() is None:
                 if temp not in restore:
                     restore[temp] = copy.copy(temp._curdom)
@@ -1864,8 +1865,8 @@ def forward_checking(cell, state: State, restore):
                 if len(temp._curdom) == 0:
                     return False
         # position 5
-        if check_if_spot_valid(width, height, cell.x_coord + 1, cell.y_coord):
-            temp = get_cell(scope, cell.x_coord + 1, cell.y_coord)
+        if check_if_spot_valid(width, cell.x_coord + 1, cell.y_coord):
+            temp = get_cell(cell.x_coord + 1, cell.y_coord)
             if temp.getValue() is None:
                 if temp not in restore:
                     restore[temp] = copy.copy(temp._curdom)
@@ -1875,8 +1876,8 @@ def forward_checking(cell, state: State, restore):
                 if len(temp._curdom) == 0:
                     return False
         # position 6
-        if check_if_spot_valid(width, height, cell.x_coord - 1, cell.y_coord + 1):
-            temp = get_cell(scope, cell.x_coord - 1, cell.y_coord + 1)
+        if check_if_spot_valid(width, cell.x_coord - 1, cell.y_coord + 1):
+            temp = get_cell(cell.x_coord - 1, cell.y_coord + 1)
             if temp.getValue() is None:
                 if temp not in restore:
                     restore[temp] = copy.copy(temp._curdom)
@@ -1886,8 +1887,8 @@ def forward_checking(cell, state: State, restore):
                 if len(temp._curdom) == 0:
                     return False
         # position 7
-        if check_if_spot_valid(width, height, cell.x_coord, cell.y_coord + 1):
-            temp = get_cell(scope, cell.x_coord, cell.y_coord + 1)
+        if check_if_spot_valid(width, cell.x_coord, cell.y_coord + 1):
+            temp = get_cell(cell.x_coord, cell.y_coord + 1)
             if temp.getValue() is None:
                 if temp not in restore:
                     restore[temp] = copy.copy(temp._curdom)
@@ -1897,8 +1898,8 @@ def forward_checking(cell, state: State, restore):
                 if len(temp._curdom) == 0:
                     return False
         # position 8
-        if check_if_spot_valid(width, height, cell.x_coord + 1, cell.y_coord + 1):
-            temp = get_cell(scope, cell.x_coord + 1, cell.y_coord + 1)
+        if check_if_spot_valid(width, cell.x_coord + 1, cell.y_coord + 1):
+            temp = get_cell(cell.x_coord + 1, cell.y_coord + 1)
             if temp.getValue() is None:
                 if temp not in restore:
                     restore[temp] = copy.copy(temp._curdom)
@@ -1908,10 +1909,6 @@ def forward_checking(cell, state: State, restore):
                 if len(temp._curdom) == 0:
                     return False
     return True
-    # for c in state.board.cells:
-    #     if len(c._curdom) == 0:
-    #         return False
-    # return True
 
 
 def backtrack(state: State):
@@ -1937,11 +1934,6 @@ def backtrack(state: State):
                         return result
                 recover_var(restore)
             var.pruneValue(value)
-            # for cell in state.board.cells:
-            #     if cell._curdom != cell._dom:
-            #         print('a')
-            # if all(cell._curdom == cell._dom for cell in state.board.cells):
-            #     print('a')
     else:
         return []
     var.reset()
