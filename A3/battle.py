@@ -2,6 +2,7 @@ import math
 import argparse
 import time
 import copy
+import filecmp
 
 char_submarine = 'S'
 char_water = '.'
@@ -336,296 +337,140 @@ def check_if_spot_valid(width, x_coord, y_coord):
     return False
 
 
-def check_water_constraints(width, height, cell: Cell, scope):
-    if cell.getValue() == char_top:
-        # position 1
-        if check_if_spot_valid(width, cell.x_coord - 1, cell.y_coord - 1):
-            temp = get_cell(cell.x_coord - 1, cell.y_coord - 1)
-            if temp.getValue() != '.' and temp.getValue() is not None:
-                return 2
-        # position 2
-        if check_if_spot_valid(width, cell.x_coord, cell.y_coord - 1):
-            temp = get_cell(cell.x_coord, cell.y_coord - 1)
-            if temp.getValue() != '.' and temp.getValue() is not None:
-                return 2
-        # position 3
-        if check_if_spot_valid(width, cell.x_coord + 1, cell.y_coord - 1):
-            temp = get_cell(cell.x_coord + 1, cell.y_coord - 1)
-            if temp.getValue() != '.' and temp.getValue() is not None:
-                return 2
-        # position 4
-        if check_if_spot_valid(width, cell.x_coord - 1, cell.y_coord):
-            temp = get_cell(cell.x_coord - 1, cell.y_coord)
-            if temp.getValue() != '.' and temp.getValue() is not None:
-                return 2
-        # position 5
-        if check_if_spot_valid(width, cell.x_coord + 1, cell.y_coord):
-            temp = get_cell(cell.x_coord + 1, cell.y_coord)
-            if temp.getValue() != '.' and temp.getValue() is not None:
-                return 2
-        # position 6
-        if check_if_spot_valid(width, cell.x_coord - 1, cell.y_coord + 1):
-            temp = get_cell(cell.x_coord - 1, cell.y_coord + 1)
-            if temp.getValue() != '.' and temp.getValue() is not None:
-                return 2
-        # position 7
-        if check_if_spot_valid(width, cell.x_coord, cell.y_coord + 1):
-            temp = get_cell(cell.x_coord, cell.y_coord + 1)
-            if (temp.getValue() != char_bottom and temp.getValue() != char_middle) and temp.getValue() is not None:
-                return 2
-        else:
-            return 2
-        # position 8
-        if check_if_spot_valid(width, cell.x_coord + 1, cell.y_coord + 1):
-            temp = get_cell(cell.x_coord + 1, cell.y_coord + 1)
-            if temp.getValue() != '.' and temp.getValue() is not None:
-                return 2
-    if cell.getValue() == char_bottom:
-        # position 1
-        if check_if_spot_valid(width, cell.x_coord - 1, cell.y_coord - 1):
-            temp = get_cell(cell.x_coord - 1, cell.y_coord - 1)
-            if temp.getValue() != '.' and temp.getValue() is not None:
-                return 2
-        # position 2
-        if check_if_spot_valid(width, cell.x_coord, cell.y_coord - 1):
-            temp = get_cell(cell.x_coord, cell.y_coord - 1)
-            if (temp.getValue() != char_middle and temp.getValue() != char_top) and temp.getValue() is not None:
-                return 2
-        else:
-            return 2
-        # position 3
-        if check_if_spot_valid(width, cell.x_coord + 1, cell.y_coord - 1):
-            temp = get_cell(cell.x_coord + 1, cell.y_coord - 1)
-            if temp.getValue() != '.' and temp.getValue() is not None:
-                return 2
-        # position 4
-        if check_if_spot_valid(width, cell.x_coord - 1, cell.y_coord):
-            temp = get_cell(cell.x_coord - 1, cell.y_coord)
-            if temp.getValue() != '.' and temp.getValue() is not None:
-                return 2
-        # position 5
-        if check_if_spot_valid(width, cell.x_coord + 1, cell.y_coord):
-            temp = get_cell(cell.x_coord + 1, cell.y_coord)
-            if temp.getValue() != '.' and temp.getValue() is not None:
-                return 2
-        # position 6
-        if check_if_spot_valid(width, cell.x_coord - 1, cell.y_coord + 1):
-            temp = get_cell(cell.x_coord - 1, cell.y_coord + 1)
-            if temp.getValue() != '.' and temp.getValue() is not None:
-                return 2
-        # position 7
-        if check_if_spot_valid(width, cell.x_coord, cell.y_coord + 1):
-            temp = get_cell(cell.x_coord, cell.y_coord + 1)
-            if temp.getValue() != '.' and temp.getValue() is not None:
-                return 2
-        # position 8
-        if check_if_spot_valid(width, cell.x_coord + 1, cell.y_coord + 1):
-            temp = get_cell(cell.x_coord + 1, cell.y_coord + 1)
-            if temp.getValue() != '.' and temp.getValue() is not None:
-                return 2
-    if cell.getValue() == char_left:
-        # position 1
-        if check_if_spot_valid(width, cell.x_coord - 1, cell.y_coord - 1):
-            temp = get_cell(cell.x_coord - 1, cell.y_coord - 1)
-            if temp.getValue() != '.' and temp.getValue() is not None:
-                return 2
-        # position 2
-        if check_if_spot_valid(width, cell.x_coord, cell.y_coord - 1):
-            temp = get_cell(cell.x_coord, cell.y_coord - 1)
-            if temp.getValue() != '.' and temp.getValue() is not None:
-                return 2
-        # position 3
-        if check_if_spot_valid(width, cell.x_coord + 1, cell.y_coord - 1):
-            temp = get_cell(cell.x_coord + 1, cell.y_coord - 1)
-            if temp.getValue() != '.' and temp.getValue() is not None:
-                return 2
-        # position 4
-        if check_if_spot_valid(width, cell.x_coord - 1, cell.y_coord):
-            temp = get_cell(cell.x_coord - 1, cell.y_coord)
-            if temp.getValue() != '.' and temp.getValue() is not None:
-                return 2
-        # position 5
-        if check_if_spot_valid(width, cell.x_coord + 1, cell.y_coord):
-            temp = get_cell(cell.x_coord + 1, cell.y_coord)
-            if (temp.getValue() != char_middle and temp.getValue() != char_right) and temp.getValue() is not None:
-                return 2
-        else:
-            return 2
-        # position 6
-        if check_if_spot_valid(width, cell.x_coord - 1, cell.y_coord + 1):
-            temp = get_cell(cell.x_coord - 1, cell.y_coord + 1)
-            if temp.getValue() != '.' and temp.getValue() is not None:
-                return 2
-        # position 7
-        if check_if_spot_valid(width, cell.x_coord, cell.y_coord + 1):
-            temp = get_cell(cell.x_coord, cell.y_coord + 1)
-            if temp.getValue() != '.' and temp.getValue() is not None:
-                return 2
-        # position 8
-        if check_if_spot_valid(width, cell.x_coord + 1, cell.y_coord + 1):
-            temp = get_cell(cell.x_coord + 1, cell.y_coord + 1)
-            if temp.getValue() != '.' and temp.getValue() is not None:
-                return 2
-    if cell.getValue() == char_right:
-        # position 1
-        if check_if_spot_valid(width, cell.x_coord - 1, cell.y_coord - 1):
-            temp = get_cell(cell.x_coord - 1, cell.y_coord - 1)
-            if temp.getValue() != '.' and temp.getValue() is not None:
-                return 2
-        # position 2
-        if check_if_spot_valid(width, cell.x_coord, cell.y_coord - 1):
-            temp = get_cell(cell.x_coord, cell.y_coord - 1)
-            if temp.getValue() != '.' and temp.getValue() is not None:
-                return 2
-        # position 3
-        if check_if_spot_valid(width, cell.x_coord + 1, cell.y_coord - 1):
-            temp = get_cell(cell.x_coord + 1, cell.y_coord - 1)
-            if temp.getValue() != '.' and temp.getValue() is not None:
-                return 2
-        # position 4
-        if check_if_spot_valid(width, cell.x_coord - 1, cell.y_coord):
-            temp = get_cell(cell.x_coord - 1, cell.y_coord)
-            if (temp.getValue() != char_middle and temp.getValue() != char_left) and temp.getValue() is not None:
-                return 2
-        else:
-            return 2
-        # position 5
-        if check_if_spot_valid(width, cell.x_coord + 1, cell.y_coord):
-            temp = get_cell(cell.x_coord + 1, cell.y_coord)
-            if temp.getValue() != '.' and temp.getValue() is not None:
-                return 2
-        # position 6
-        if check_if_spot_valid(width, cell.x_coord - 1, cell.y_coord + 1):
-            temp = get_cell(cell.x_coord - 1, cell.y_coord + 1)
-            if temp.getValue() != '.' and temp.getValue() is not None:
-                return 2
-        # position 7
-        if check_if_spot_valid(width, cell.x_coord, cell.y_coord + 1):
-            temp = get_cell(cell.x_coord, cell.y_coord + 1)
-            if temp.getValue() != '.' and temp.getValue() is not None:
-                return 2
-        # position 8
-        if check_if_spot_valid(width, cell.x_coord + 1, cell.y_coord + 1):
-            temp = get_cell(cell.x_coord + 1, cell.y_coord + 1)
-            if temp.getValue() != '.' and temp.getValue() is not None:
-                return 2
-    if cell.getValue() == char_middle:
-        flag = 0
-        tv1 = 0
-        tv2 = 0
-        if check_if_spot_valid(width, cell.x_coord, cell.y_coord - 1):
-            tv1 = get_cell(cell.x_coord, cell.y_coord - 1).getValue()
-        if check_if_spot_valid(width, cell.x_coord - 1, cell.y_coord):
-            tv2 = get_cell(cell.x_coord - 1, cell.y_coord).getValue()
-        if tv1 == char_top or tv1 == char_middle:
-            flag = 'v'
-        elif tv2 == char_left or tv2 == char_middle:
-            flag = 'h'
-        if (cell.x_coord == 0 and cell.y_coord == 0) or (cell.x_coord == width - 1 and cell.y_coord == height - 1) or \
-                (cell.x_coord == 0 and cell.y_coord == height - 1) or (cell.x_coord == width - 1 and cell.y_coord == 0):
-            return 2
-        if flag == 'v':
-            if cell.y_coord == 0 or cell.y_coord == width - 1:
-                return 2
-        elif flag == 'h':
-            if cell.x_coord == 0 or cell.x_coord == width - 1:
-                return 2
-        # position 1
-        if check_if_spot_valid(width, cell.x_coord - 1, cell.y_coord - 1):
-            temp = get_cell(cell.x_coord - 1, cell.y_coord - 1)
-            if temp.getValue() != '.' and temp.getValue() is not None:
-                return 2
-        # position 2
-        if check_if_spot_valid(width, cell.x_coord, cell.y_coord - 1):
-            temp = get_cell(cell.x_coord, cell.y_coord - 1)
-            if (
-                    temp.getValue() != char_middle and temp.getValue() != char_top) and temp.getValue() is not None and flag == 0:
-                return 2
-        # position 3
-        if check_if_spot_valid(width, cell.x_coord + 1, cell.y_coord - 1):
-            temp = get_cell(cell.x_coord + 1, cell.y_coord - 1)
-            if temp.getValue() != '.' and temp.getValue() is not None:
-                return 2
-        # position 4
-        if check_if_spot_valid(width, cell.x_coord - 1, cell.y_coord):
-            temp = get_cell(cell.x_coord - 1, cell.y_coord)
-            if (
-                    temp.getValue() != char_middle and temp.getValue() != char_left) and temp.getValue() is not None and flag == 0:
-                return 2
-        # position 5
-        if check_if_spot_valid(width, cell.x_coord + 1, cell.y_coord):
-            temp = get_cell(cell.x_coord + 1, cell.y_coord)
-            if (
-                    temp.getValue() != char_middle and temp.getValue() != char_right) and temp.getValue() is not None and flag == 0:
-                return 2
-        # position 6
-        if check_if_spot_valid(width, cell.x_coord - 1, cell.y_coord + 1):
-            temp = get_cell(cell.x_coord - 1, cell.y_coord + 1)
-            if temp.getValue() != '.' and temp.getValue() is not None:
-                return 2
-        # position 7
-        if check_if_spot_valid(width, cell.x_coord, cell.y_coord + 1):
-            temp = get_cell(cell.x_coord, cell.y_coord + 1)
-            if temp.getValue() != char_middle and temp.getValue() != char_bottom and temp.getValue() is not None and flag == 0:
-                return 2
-        # position 8
-        if check_if_spot_valid(width, cell.x_coord + 1, cell.y_coord + 1):
-            temp = get_cell(cell.x_coord + 1, cell.y_coord + 1)
-            if temp.getValue() != '.' and temp.getValue() is not None:
-                return 2
-    if cell.getValue() == char_submarine:
-        # position 1
-        if check_if_spot_valid(width, cell.x_coord - 1, cell.y_coord - 1):
-            temp = get_cell(cell.x_coord - 1, cell.y_coord - 1)
-            if temp.getValue() != '.' and temp.getValue() is not None:
-                return 2
-        # position 2
-        if check_if_spot_valid(width, cell.x_coord, cell.y_coord - 1):
-            temp = get_cell(cell.x_coord, cell.y_coord - 1)
-            if temp.getValue() != '.' and temp.getValue() is not None:
-                return 2
-        # position 3
-        if check_if_spot_valid(width, cell.x_coord + 1, cell.y_coord - 1):
-            temp = get_cell(cell.x_coord + 1, cell.y_coord - 1)
-            if temp.getValue() != '.' and temp.getValue() is not None:
-                return 2
-        # position 4
-        if check_if_spot_valid(width, cell.x_coord - 1, cell.y_coord):
-            temp = get_cell(cell.x_coord - 1, cell.y_coord)
-            if temp.getValue() != '.' and temp.getValue() is not None:
-                return 2
-        # position 5
-        if check_if_spot_valid(width, cell.x_coord + 1, cell.y_coord):
-            temp = get_cell(cell.x_coord + 1, cell.y_coord)
-            if temp.getValue() != '.' and temp.getValue() is not None:
-                return 2
-        # position 6
-        if check_if_spot_valid(width, cell.x_coord - 1, cell.y_coord + 1):
-            temp = get_cell(cell.x_coord - 1, cell.y_coord + 1)
-            if temp.getValue() != '.' and temp.getValue() is not None:
-                return 2
-        # position 7
-        if check_if_spot_valid(width, cell.x_coord, cell.y_coord + 1):
-            temp = get_cell(cell.x_coord, cell.y_coord + 1)
-            if temp.getValue() != '.' and temp.getValue() is not None:
-                return 2
-        # position 8
-        if check_if_spot_valid(width, cell.x_coord + 1, cell.y_coord + 1):
-            temp = get_cell(cell.x_coord + 1, cell.y_coord + 1)
-            if temp.getValue() != '.' and temp.getValue() is not None:
-                return 2
-    if cell.getValue() == char_water:
-        return 1
-
-
-class WaterConstraint(Constraint):
-    def __init__(self, name, scope, width, height):
+class P1Constraint(Constraint):
+    def __init__(self, name, scope):
         Constraint.__init__(self, name, scope)
-        self.width = width
-        self.height = height
 
-    def check(self, cell):
-        return check_water_constraints(self.width, self.height, cell, self._scope)
+    def check(self):
+        x = self.scope()[0].getValue()
+        y = self.scope()[1].getValue()
+        if y is not None:
+            if x in {char_top, char_bottom, char_left, char_right, char_middle, char_submarine}:
+                if y != '.':
+                    return 2
+        return 0
+
+
+class P2Constraint(Constraint):
+    def __init__(self, name, scope):
+        Constraint.__init__(self, name, scope)
+
+    def check(self):
+        x = self.scope()[0].getValue()
+        y = self.scope()[1].getValue()
+        if y is not None:
+            if x in {char_top, char_left, char_right, char_submarine}:
+                if y != '.':
+                    return 2
+            elif x == char_middle:
+                if y not in {char_top, char_water, char_middle}:
+                    return 2
+            elif x == char_bottom:
+                if y not in {char_top, char_middle}:
+                    return 2
+        return 0
+
+
+class P3Constraint(Constraint):
+    def __init__(self, name, scope):
+        Constraint.__init__(self, name, scope)
+
+    def check(self):
+        x = self.scope()[0].getValue()
+        y = self.scope()[1].getValue()
+        if y is not None:
+            if x in {char_top, char_bottom, char_left, char_right, char_middle, char_submarine}:
+                if y != '.':
+                    return 2
+        return 0
+
+
+class P4Constraint(Constraint):
+    def __init__(self, name, scope):
+        Constraint.__init__(self, name, scope)
+
+    def check(self):
+        x = self.scope()[0].getValue()
+        y = self.scope()[1].getValue()
+        if y is not None:
+            if x in {char_top, char_left, char_bottom, char_submarine}:
+                if y != '.':
+                    return 2
+            elif x == char_middle:
+                if y not in {char_left, char_water, char_middle}:
+                    return 2
+            elif x == char_right:
+                if y not in {char_left, char_middle}:
+                    return 2
+        return 0
+
+
+class P5Constraint(Constraint):
+    def __init__(self, name, scope):
+        Constraint.__init__(self, name, scope)
+
+    def check(self):
+        x = self.scope()[0].getValue()
+        y = self.scope()[1].getValue()
+        if y is not None:
+            if x in {char_top, char_right, char_bottom, char_submarine}:
+                if y != '.':
+                    return 2
+            elif x == char_middle:
+                if y not in {char_right, char_water, char_middle}:
+                    return 2
+            elif x == char_left:
+                if y not in {char_right, char_middle}:
+                    return 2
+        return 0
+
+
+class P6Constraint(Constraint):
+    def __init__(self, name, scope):
+        Constraint.__init__(self, name, scope)
+
+    def check(self):
+        x = self.scope()[0].getValue()
+        y = self.scope()[1].getValue()
+        if y is not None:
+            if x in {char_top, char_bottom, char_left, char_right, char_middle, char_submarine}:
+                if y != '.':
+                    return 2
+        return 0
+
+
+class P7Constraint(Constraint):
+    def __init__(self, name, scope):
+        Constraint.__init__(self, name, scope)
+
+    def check(self):
+        x = self.scope()[0].getValue()
+        y = self.scope()[1].getValue()
+        if y is not None:
+            if x in {char_bottom, char_left, char_right, char_submarine}:
+                if y != '.':
+                    return 2
+            elif x == char_middle:
+                if y not in {char_bottom, char_water, char_middle}:
+                    return 2
+            elif x == char_top:
+                if y not in {char_bottom, char_middle}:
+                    return 2
+        return 0
+
+
+class P8Constraint(Constraint):
+    def __init__(self, name, scope):
+        Constraint.__init__(self, name, scope)
+
+    def check(self):
+        x = self.scope()[0].getValue()
+        y = self.scope()[1].getValue()
+        if y is not None:
+            if x in {char_top, char_bottom, char_left, char_right, char_middle, char_submarine}:
+                if y != '.':
+                    return 2
+        return 0
 
 
 # object for holding a constraint problem
@@ -683,43 +528,6 @@ class CSP:
         for v in self.variables():
             v.unAssign()
 
-    # def check(self, solutions):
-    #     '''each solution is a list of (var, value) pairs. Check to see
-    #        if these satisfy all the constraints. Return list of
-    #        erroneous solutions'''
-    #
-    #     # save values to restore later
-    #     current_values = [(var, var.getValue()) for var in self.variables()]
-    #     errs = []
-    #
-    #     for s in solutions:
-    #         s_vars = [var for (var, val) in s]
-    #
-    #         if len(s_vars) != len(self.variables()):
-    #             errs.append([s, "Solution has incorrect number of variables in it"])
-    #             continue
-    #
-    #         if len(set(s_vars)) != len(self.variables()):
-    #             errs.append([s, "Solution has duplicate variable assignments"])
-    #             continue
-    #
-    #         if set(s_vars) != set(self.variables()):
-    #             errs.append([s, "Solution has incorrect variable in it"])
-    #             continue
-    #
-    #         for (var, val) in s:
-    #             var.setValue(val)
-    #
-    #         for c in self.constraints():
-    #             if not c.check():
-    #                 errs.append([s, "Solution does not satisfy constraint {}".format(c.name())])
-    #                 break
-    #
-    #     for (var, val) in current_values:
-    #         var.setValue(val)
-    #
-    #     return errs
-
     def __str__(self):
         return "CSP {}".format(self.name())
 
@@ -731,12 +539,11 @@ class Board:
 
     def __init__(self, width, cells: list[Cell]):
         """
-        :param pieces: The list of Pieces
-        :type pieces: List[Variable]
+        :param width: The width of the board
+        :type cells: List[Cell]
         """
 
         self.width = width
-
         self.cells = cells
         # self.grid is a 2-d (size * size) array automatically generated
         # using the information on the pieces when a board is being created.
@@ -846,30 +653,57 @@ class State(CSP):
         return False
 
     def partial_check(self, cell: Cell):
-        if cell.getValue() == '.':
-            return True
-        assert(len(cell.constraint) == 2)
         for c in cell.constraint:
             if c.check() == 2:
                 return False
-        if self.constraints()[-1].check(cell) == 2:
-            return False
-        # for c in self.constraints():
-        #     if not isinstance(c, WaterConstraint) and not isinstance(c, ShipConstraint):
-        #         if c.check() == 2:
-        #             return False
-        #     elif isinstance(c, WaterConstraint):
-        #         if c.check(cell) == 2:
-        #             return False
+        for c in self.board.cells:
+            if c.getValue() == char_middle:
+                flag = 0
+                tv1 = 0
+                tv2 = 0
+                tv11 = 0
+                tv22 = 0
+                if check_if_spot_valid(self.board.width, c.x_coord, c.y_coord - 1):
+                    tv1 = get_cell(c.x_coord, c.y_coord - 1).getValue()
+                if check_if_spot_valid(self.board.width, c.x_coord - 1, c.y_coord):
+                    tv2 = get_cell(c.x_coord - 1, c.y_coord).getValue()
+                if check_if_spot_valid(self.board.width, c.x_coord, c.y_coord + 1):
+                    tv11 = get_cell(c.x_coord, c.y_coord + 1).getValue()
+                if check_if_spot_valid(self.board.width, c.x_coord + 1, c.y_coord):
+                    tv22 = get_cell(c.x_coord + 1, c.y_coord).getValue()
+                if tv1 == char_top or tv1 == char_middle or tv11 == char_bottom or tv11 == char_middle or tv2 == char_water or tv22 == char_water:
+                    flag = 'v'
+                elif tv2 == char_left or tv2 == char_middle or tv22 == char_right or tv22 == char_middle or tv1 == char_water or tv11 == char_water:
+                    flag = 'h'
+                if (c.x_coord == 0 and c.y_coord == 0) or (
+                        c.x_coord == self.board.width - 1 and c.y_coord == self.board.width - 1) or \
+                        (c.x_coord == 0 and c.y_coord == self.board.width - 1) or (
+                        c.x_coord == self.board.width - 1 and c.y_coord == 0):
+                    return False
+                if flag == 'v':
+                    if c.y_coord == 0 or c.y_coord == self.board.width - 1:
+                        return False
+                    if tv1 is not None:
+                        if tv1 not in {char_middle, char_top}:
+                            return False
+                    if tv11 is not None:
+                        if tv11 not in {char_middle, char_bottom}:
+                            return False
+                elif flag == 'h':
+                    if c.x_coord == 0 or c.x_coord == self.board.width - 1:
+                        return False
+                    if tv2 is not None:
+                        if tv2 not in {char_middle, char_left}:
+                            return False
+                    if tv22 is not None:
+                        if tv22 not in {char_middle, char_right}:
+                            return False
         return True
 
     def full_check(self):
         for c in self.constraints():
-            if not isinstance(c, WaterConstraint):
-                # if isinstance(c, ShipConstraint):
-                #     print('a')
-                if c.check() == 1 or c.check() == 2:
-                    return False
+            if c.check() == 1 or c.check() == 2:
+                return False
         for cell in self.board.cells:
             if cell.getValue() is None:
                 return False
@@ -1148,7 +982,6 @@ def read_from_file(filename):
     puzzle_file = open(filename, "r")
 
     line_index = 0
-    word_index = 0
     cells = []
     constraints = []
     temp_lookup_rc = dict()
@@ -1186,7 +1019,6 @@ def read_from_file(filename):
 
     line_index = 0
     for line in puzzle_file:
-        word_index = len(line)
         for x, ch in enumerate(line):
             if ch == '0':
                 cell = Cell('Cell', [char_water, char_middle, char_top, char_bottom, char_left,
@@ -1261,9 +1093,33 @@ def read_from_file(filename):
                 cell.add_constraint(temp_lookup_cc[x])
                 cell.add_constraint(temp_lookup_rc[line_index])
         line_index += 1
+    for cell in cells:
+        if check_if_spot_valid(line_index, cell.x_coord - 1, cell.y_coord - 1):
+            tempc = P1Constraint('p1', [cell, get_cell(cell.x_coord - 1, cell.y_coord - 1)])
+            cell.add_constraint(tempc)
+        if check_if_spot_valid(line_index, cell.x_coord, cell.y_coord - 1):
+            tempc = P2Constraint('p2', [cell, get_cell(cell.x_coord, cell.y_coord - 1)])
+            cell.add_constraint(tempc)
+        if check_if_spot_valid(line_index, cell.x_coord + 1, cell.y_coord - 1):
+            tempc = P3Constraint('p3', [cell, get_cell(cell.x_coord + 1, cell.y_coord - 1)])
+            cell.add_constraint(tempc)
+        if check_if_spot_valid(line_index, cell.x_coord - 1, cell.y_coord):
+            tempc = P4Constraint('p4', [cell, get_cell(cell.x_coord - 1, cell.y_coord)])
+            cell.add_constraint(tempc)
+        if check_if_spot_valid(line_index, cell.x_coord + 1, cell.y_coord):
+            tempc = P5Constraint('p5', [cell, get_cell(cell.x_coord + 1, cell.y_coord)])
+            cell.add_constraint(tempc)
+        if check_if_spot_valid(line_index, cell.x_coord - 1, cell.y_coord + 1):
+            tempc = P6Constraint('p6', [cell, get_cell(cell.x_coord - 1, cell.y_coord + 1)])
+            cell.add_constraint(tempc)
+        if check_if_spot_valid(line_index, cell.x_coord, cell.y_coord + 1):
+            tempc = P7Constraint('p7', [cell, get_cell(cell.x_coord, cell.y_coord + 1)])
+            cell.add_constraint(tempc)
+        if check_if_spot_valid(line_index, cell.x_coord + 1, cell.y_coord + 1):
+            tempc = P8Constraint('p8', [cell, get_cell(cell.x_coord + 1, cell.y_coord + 1)])
+            cell.add_constraint(tempc)
+
     board = Board(line_index, cells)
-    wc = WaterConstraint('Water', cells, line_index, line_index)
-    constraints.append(wc)
     for c in constraints:
         if isinstance(c, ShipConstraint):
             c._scope = cells
@@ -1274,20 +1130,7 @@ def read_from_file(filename):
 
 
 def select_unassigned_var(state: State):
-    # TODO MRV
-    # temp = []
-    # for c in state.board.cells:
-    #     if c.getValue() is None:
-    #         temp.append(c)
-    # if len(temp) != 0:
-    #     return min(temp)
-    # else:
-    #     return False
-    # for c in state.board.cells:
-    #     if c.getValue() is None:
-    #         return c
-    # return False
-
+    # MRV
     ret = 0
     minv = math.inf
     for c in state.board.cells:
@@ -1314,33 +1157,19 @@ def recover_var(restore):
 
 def forward_checking(cell, state: State, restore):
     width = state.board.width
-    # Row col forward checking
-    # for c in state.constraints():
-    #     if isinstance(c, RowConstraint) or isinstance(c, ColConstraint):
-    #         if c.check() == 0:
-    #             for ce in c.scope():
-    #                 if ce.getValue() is None:
-    #                     restore[ce] = copy.copy(ce._curdom)
-    #                     for dom in ce.curDomain():
-    #                         if dom != '.':
-    #                             ce.pruneValue(dom)
-    #                     if len(ce._curdom) == 0:
-    #                         return False
-    #                     # cell.add_restore(ce)
     if cell.getValue() == '.':
         return True
     for c in cell.constraint:
-        if c.check() == 0:
-            for ce in c.scope():
-                if ce.getValue() is None:
-                    restore[ce] = copy.copy(ce._curdom)
-                    for dom in ce.curDomain():
-                        if dom != '.':
-                            ce.pruneValue(dom)
-                    if len(ce._curdom) == 0:
-                        return False
-                    # cell.add_restore(ce)
-
+        if isinstance(c, RowConstraint) or isinstance(c, ColConstraint):
+            if c.check() == 0:
+                for ce in c.scope():
+                    if ce.getValue() is None:
+                        restore[ce] = copy.copy(ce._curdom)
+                        for dom in ce.curDomain():
+                            if dom != '.':
+                                ce.pruneValue(dom)
+                        if len(ce._curdom) == 0:
+                            return False
     if cell.getValue() == char_top:
         # position 1
         if check_if_spot_valid(width, cell.x_coord - 1, cell.y_coord - 1):
@@ -1922,12 +1751,8 @@ def backtrack(state: State):
         return [([c.x_coord, c.y_coord], c.getValue()) for c in state.board.cells]
     var = select_unassigned_var(state)
     if var is not False:
-        # store = copy.copy(var._curdom)
         for value in var.curDomain():
             var.setValue(value)
-            # print(var.x_coord, var.y_coord, var.getValue())
-            # if var.x_coord == 5 and var.y_coord == 5 and var.getValue() == '.':
-            #         print('a')
             if value != '.':
                 var.is_ship = True
             else:
@@ -1939,15 +1764,9 @@ def backtrack(state: State):
                     if len(result) != 0:
                         return result
                 recover_var(restore)
-            # var.pruneValue(value)
     else:
         return []
-    # if var.domain() != store:
-    #     print(var.domain())
-    #     print(store)
-
-    # var.reset()
-    # var._curdom = store
+    # reset var
     var._value = None
     var.is_ship = None
     return []
@@ -1988,7 +1807,7 @@ if __name__ == "__main__":
     # write_solution(instate, args.outputfile)
 
     start = time.time()
-    instate = read_from_file('test_input88_1.txt')
+    instate = read_from_file('test_input88_3.txt')
     preprocessing(instate)
     write_solution(instate, 'sol.txt')
     end = time.time()
