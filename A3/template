@@ -1,0 +1,20 @@
+def backtrack():
+    if check_contraints():
+        # 检查ship contraint等
+        return solution
+    v = select_unassigned() #选取没有value的variable
+    for value in v.curDomain():
+        #在curdomain里选择一个值
+        var.setValue(value)
+        # 检查row，col和周边constraints
+        if check_contraints():
+            #要复原的variable，即forward checking中被reduce curdomain的variables
+            recover = []
+            if forward_checking(recover):
+                # 如果forwardchecking 没有错误，即没有curdomain为空的variables
+                ret = backtrack(state)
+                if ret.isempty():
+                    return result
+             # 如果forwardchecking 有错误，复原受影响的variables
+            recover(recover)
+    return []
