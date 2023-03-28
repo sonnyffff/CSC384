@@ -1,3 +1,4 @@
+import math
 import os
 import sys
 import argparse
@@ -13,6 +14,7 @@ trans_prob_table = {}
 # observation probability P(E | S)
 observe_prob_table = {}
 
+occurrence_table = {}
 
 def read_test_file(file: str):
     test_file = open(file, "r")
@@ -21,9 +23,18 @@ def read_test_file(file: str):
     for line in test_file:
         new_parts = line.strip()
         if prev in ENDING_PUNCTUATIONS and new_parts not in ENDING_PUNCTUATIONS:
-            print(sentence)
-            viterbi(sentence)
+            prob, prev = viterbi(sentence)
+            largest_indexes = []
+            largest_index = prob[len(sentence) - 1].index(max(prob[len(sentence) - 1]))
+            largest_indexes.append(largest_index)
+            for i in range(len(sentence) - 1, 1, -1):
+                largest_index = prev[i][largest_index]
+                largest_indexes.append(largest_index)
+            largest_indexes.reverse()
+            print([POS_TAGS[i] for i in largest_indexes])
             sentence = []
+
+
         sentence.append(new_parts)
         prev = new_parts[0]
 
@@ -39,6 +50,9 @@ def pos_tag_indexing():
 
 
 def viterbi(sentence: list):
+    pos_pos = pos_tag_indexing()
+    pos_with_max_value = max(occurrence_table, key=occurrence_table.get)
+    position_of_max = pos_pos[pos_with_max_value]
     prob = [[0 for j in range(len(POS_TAGS))] for i in range(len(sentence))]
     prev = [[0 for j in range(len(POS_TAGS))] for i in range(len(sentence))]
     for i in range(len(POS_TAGS)):
@@ -50,7 +64,26 @@ def viterbi(sentence: list):
                     prob[0][i] *= observe_prob_table[POS_TAGS[i]][sentence[0]]
         else:
             prob[0][i] = 0
-    print(prob)
+    for t in range(1, len(sentence)):
+        for i in range(len(POS_TAGS)):
+            x = -100
+            max_val = -math.inf
+            for j in range(len(POS_TAGS)):
+                if POS_TAGS[j] in trans_prob_table and POS_TAGS[i] in trans_prob_table[POS_TAGS[j]]:
+                    temp_x = prob[t - 1][j] * trans_prob_table[POS_TAGS[j]][POS_TAGS[i]]
+                    if POS_TAGS[i] in observe_prob_table and sentence[t] in observe_prob_table[POS_TAGS[i]]:
+                        temp_x *= observe_prob_table[POS_TAGS[i]][sentence[t]]
+                        if temp_x > max_val:
+                            x = j
+                            max_val = temp_x
+            if x == -100:
+                if i == position_of_max:
+                    prob[t][i] = -math.inf
+                prev[t][i] = position_of_max
+            else:
+                prob[t][i] = prob[t - 1][x] * trans_prob_table[POS_TAGS[x]][POS_TAGS[i]] * observe_prob_table[POS_TAGS[i]][sentence[t]]
+                prev[t][i] = x
+    return prob, prev
 
 
 
@@ -101,6 +134,10 @@ def read_files(training_list: list):
                     observation[new_parts[1]][new_parts[0]] = 1
                 else:
                     observation[new_parts[1]][new_parts[0]] += 1
+            if new_parts[1] not in occurrence_table:
+                occurrence_table[new_parts[1]] = 1
+            else:
+                occurrence_table[new_parts[1]] += 1
             total_transitions += 1
             if new_parts[1] not in ['PUL', 'PUQ', 'PUR']:
                 prev_word = new_parts[0]
