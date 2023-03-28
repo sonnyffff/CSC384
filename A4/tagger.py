@@ -22,16 +22,18 @@ def read_test_file(file: str):
     prev = ' '
     for line in test_file:
         new_parts = line.strip()
+        # TODO separate sentences
         if prev in ENDING_PUNCTUATIONS and new_parts not in ENDING_PUNCTUATIONS:
             prob, prev = viterbi(sentence)
             largest_indexes = []
             largest_index = prob[len(sentence) - 1].index(max(prob[len(sentence) - 1]))
             largest_indexes.append(largest_index)
-            for i in range(len(sentence) - 1, 1, -1):
+            for i in range(len(sentence) - 1, 0, -1):
                 largest_index = prev[i][largest_index]
                 largest_indexes.append(largest_index)
             largest_indexes.reverse()
-            print([POS_TAGS[i] for i in largest_indexes])
+            sol = [POS_TAGS[i] for i in largest_indexes]
+            write_solution_file('solution.txt', sol, sentence)
             sentence = []
 
 
@@ -39,9 +41,14 @@ def read_test_file(file: str):
         prev = new_parts[0]
 
 
-# def write_solution_file(file, sol):
-#     # TODO
-#
+def write_solution_file(file, sol, sentence):
+    sol_file = open(file, "w+")
+    for i in range(len(sentence)):
+        sol_file.write(sentence[i] + ' ' + ':' + ' ' + sol[i])
+        sol_file.write('\n')
+
+
+
 def pos_tag_indexing():
     ret = {}
     for i in range(len(POS_TAGS)):
@@ -76,6 +83,7 @@ def viterbi(sentence: list):
                         if temp_x > max_val:
                             x = j
                             max_val = temp_x
+            # TODO
             if x == -100:
                 if i == position_of_max:
                     prob[t][i] = -math.inf
@@ -141,7 +149,7 @@ def read_files(training_list: list):
             total_transitions += 1
             if new_parts[1] not in ['PUL', 'PUQ', 'PUR']:
                 prev_word = new_parts[0]
-                print(prev_word)
+                # print(prev_word)
             prev_pos = new_parts[1]
     # calculate initial probability
     for pos in init_occurrence:
@@ -207,9 +215,9 @@ if __name__ == '__main__':
     #
     # print("Starting the tagging process.")
     read_files(['training_simple.txt'])
-    print(init_prob_table)
+    # print(init_prob_table)
     # print(len(POS_TAGS))
     # print(read_all_tags())
-    print(trans_prob_table)
-    print(observe_prob_table)
+    # print(trans_prob_table)
+    # print(observe_prob_table)
     read_test_file('test1_simple.txt')
