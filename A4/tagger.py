@@ -2,6 +2,7 @@ import math
 import os
 import sys
 import argparse
+import time
 
 ENDING_PUNCTUATIONS = {'.', '!', '?', ')', ']', '"'}
 POS_TAGS = ['AJ0', 'AJC', 'AJS', 'AT0', 'AV0', 'AVP', 'AVQ', 'CJC', 'CJS', 'CJT', 'CRD', 'DPS', 'DT0', 'DTQ', 'EX0',
@@ -19,7 +20,8 @@ init_prob_table = {}
 trans_prob_table = {}
 # observation probability P(E | S)
 observe_prob_table = {}
-
+# observation probability P(S | E)
+reverse_prb_table = {}
 occurrence_table = {}
 
 
@@ -77,42 +79,93 @@ def pos_tag_indexing():
     return ret
 
 
+def pos_tag_hard_coded_check(time_stamp, word: str):
+    if time_stamp != 0:
+        if word[0].isupper():
+            return 'NP0'
+    if word in {'(', '['}:
+        return 'PUL'
+    elif word in {'.', '!', ':', ';', '-', '?'}:
+        return 'PUN'
+    elif word in {"'", '"'}:
+        return 'PUQ'
+    elif word in {')', ']'}:
+        return 'PUR'
+    elif word == 'be' or word == 'Be':
+        return 'VBI'
+    elif word == 'is':
+        return 'VBZ'
+    return 0
+
+
+def pos_tag_defensive_check(time_stamp, word: str):
+    if time_stamp != 0:
+        if word[0].isupper():
+            return 'NP0'
+    return 0
+
+
 def viterbi(sentence: list):
     pos_pos = pos_tag_indexing()
     pos_with_max_value = max(occurrence_table, key=occurrence_table.get)
     position_of_max = pos_pos[pos_with_max_value]
     prob = [[0 for j in range(len(POS_TAGS))] for i in range(len(sentence))]
     prev = [[0 for j in range(len(POS_TAGS))] for i in range(len(sentence))]
-    for i in range(len(POS_TAGS)):
-        prev[0][i] = "N"
-        if POS_TAGS[i] in init_prob_table:
-            prob[0][i] = init_prob_table[POS_TAGS[i]]
-            if POS_TAGS[i] in observe_prob_table:
-                if sentence[0] in observe_prob_table[POS_TAGS[i]]:
-                    prob[0][i] *= observe_prob_table[POS_TAGS[i]][sentence[0]]
-        else:
-            prob[0][i] = 0
-    for t in range(1, len(sentence)):
+    # make guess by P(S|E)
+    if sentence[0] in reverse_prb_table:
+        max_tag = max(reverse_prb_table[sentence[0]], key=reverse_prb_table[sentence[0]].get)
+        pos_max_tag = pos_pos[max_tag]
         for i in range(len(POS_TAGS)):
-            x = -100
-            max_val = -math.inf
-            for j in range(len(POS_TAGS)):
-                if POS_TAGS[j] in trans_prob_table and POS_TAGS[i] in trans_prob_table[POS_TAGS[j]]:
-                    temp_x = prob[t - 1][j] * trans_prob_table[POS_TAGS[j]][POS_TAGS[i]]
-                    if POS_TAGS[i] in observe_prob_table and sentence[t] in observe_prob_table[POS_TAGS[i]]:
-                        temp_x *= observe_prob_table[POS_TAGS[i]][sentence[t]]
-                        if temp_x > max_val:
-                            x = j
-                            max_val = temp_x
-            # TODO
-            if x == -100:
-                if i == position_of_max:
-                    prob[t][i] = -math.inf
-                prev[t][i] = position_of_max
+            prev[0][i] = "N"
+            if i == pos_max_tag:
+                prob[0][i] = 1
             else:
-                prob[t][i] = prob[t - 1][x] * trans_prob_table[POS_TAGS[x]][POS_TAGS[i]] * \
-                             observe_prob_table[POS_TAGS[i]][sentence[t]]
-                prev[t][i] = x
+                prob[0][i] = 0
+    # if the word never appears in the training file, choose the POS tag that occurs at initial most often
+    else:
+        for i in range(len(POS_TAGS)):
+            prev[0][i] = "N"
+            if POS_TAGS[i] in init_prob_table:
+                prob[0][i] = init_prob_table[POS_TAGS[i]]
+                if POS_TAGS[i] in observe_prob_table:
+                    if sentence[0] in observe_prob_table[POS_TAGS[i]]:
+                        prob[0][i] *= observe_prob_table[POS_TAGS[i]][sentence[0]]
+            else:
+                prob[0][i] = 0
+    for t in range(1, len(sentence)):
+        if pos_tag_hard_coded_check(t, sentence[t]) != 0:
+            index = pos_pos[pos_tag_hard_coded_check(t, sentence[t])]
+            for i in range(len(POS_TAGS)):
+                if i == index:
+                    prob[t][i] = 1
+                else:
+                    prob[t][i] = 0
+                prev[t][i] = prob[t - 1].index(max(prob[t - 1]))
+        else:
+            for i in range(len(POS_TAGS)):
+                x = -100
+                max_val = -math.inf
+                for j in range(len(POS_TAGS)):
+                    if POS_TAGS[j] in trans_prob_table and POS_TAGS[i] in trans_prob_table[POS_TAGS[j]]:
+                        temp_x = prob[t - 1][j] * trans_prob_table[POS_TAGS[j]][POS_TAGS[i]]
+                        if POS_TAGS[i] in observe_prob_table and sentence[t] in observe_prob_table[POS_TAGS[i]]:
+                            temp_x *= observe_prob_table[POS_TAGS[i]][sentence[t]]
+                            if temp_x > max_val:
+                                x = j
+                                max_val = temp_x
+                # if one of transition/observation probability is not found
+                if x == -100:
+                    # if pos_tag_defensive_check(t, sentence[t]) != 0:
+                    #     index = pos_pos[pos_tag_defensive_check(t, sentence[t])]
+                    #     if index == i:
+                    #         prob[t][i] = -math.inf
+                    if i == position_of_max:
+                        prob[t][i] = -math.inf
+                    prev[t][i] = prob[t - 1].index(max(prob[t - 1]))
+                else:
+                    prob[t][i] = prob[t - 1][x] * trans_prob_table[POS_TAGS[x]][POS_TAGS[i]] * \
+                                 observe_prob_table[POS_TAGS[i]][sentence[t]]
+                    prev[t][i] = x
     return prob, prev
 
 
@@ -126,6 +179,7 @@ def read_files(training_list: list):
     init_occurrence = {}
     transition = {}
     observation = {}
+    reverse = {}
     prev_word = ' '
     prev_pos = ' '
     total_sentences = 0
@@ -163,6 +217,15 @@ def read_files(training_list: list):
                     observation[new_parts[1]][new_parts[0]] = 1
                 else:
                     observation[new_parts[1]][new_parts[0]] += 1
+            # check SE
+            if new_parts[0] not in reverse:
+                reverse[new_parts[0]] = {new_parts[1]: 1}
+            else:
+                if new_parts[1] not in reverse[new_parts[0]]:
+                    reverse[new_parts[0]][new_parts[1]] = 1
+                else:
+                    reverse[new_parts[0]][new_parts[1]] += 1
+            # check occurrence
             if new_parts[1] not in occurrence_table:
                 occurrence_table[new_parts[1]] = 1
             else:
@@ -189,8 +252,15 @@ def read_files(training_list: list):
             sample_size += observation[pos][word]
         for word in observation[pos]:
             observe_prob_table[pos][word] = observation[pos][word] / sample_size
-
-    print(transition)
+    # calculate SE
+    for pos in reverse:
+        reverse_prb_table[pos] = {}
+        sample_size = 0
+        for word in reverse[pos]:
+            sample_size += reverse[pos][word]
+        for word in reverse[pos]:
+            reverse_prb_table[pos][word] = reverse[pos][word] / sample_size
+    # print(transition)
     return init_occurrence
 
 
@@ -217,7 +287,7 @@ def check_matches(test_file, answer_file):
         if line1 == line2:
             matches += 1
         total += 1
-    print(matches / total)
+    print("accuracy: " + str(matches / total))
 
 
 if __name__ == '__main__':
@@ -246,17 +316,16 @@ if __name__ == '__main__':
     # training_list = args.trainingfiles[0]
     # read_files(training_list)
     # read_test_file(args.testfile, args.outputfile)
-
-
-
-
-
+    start = time.time()
     read_files(['training1.txt'])
-    read_test_file('test1.txt')
-    check_matches('solution.txt', 'training1.txt')
+    read_test_file('test1.txt', 'solution.txt')
+    check_matches('solution.txt', 'answer1.txt')
+    end = time.time()
+    print("runtime: " + str(end - start))
+
     # print(init_prob_table)
     # print(len(POS_TAGS))
     # print(read_all_tags())
     # print(trans_prob_table)
     # print(observe_prob_table)
-
+    # print(reverse_prb_table)
