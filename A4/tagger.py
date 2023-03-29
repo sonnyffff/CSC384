@@ -4,8 +4,14 @@ import sys
 import argparse
 
 ENDING_PUNCTUATIONS = {'.', '!', '?', ')', ']', '"'}
-POS_TAGS = ['AJ0', 'AJC', 'AJS', 'AT0', 'AV0', 'AVP', 'AVQ', 'CJC', 'CJS', 'CJT', 'CRD', 'DPS', 'DT0', 'DTQ', 'EX0', 'ITJ', 'NN0', 'NN1', 'NN2', 'NP0', 'ORD', 'PNI', 'PNP', 'PNQ', 'PNX', 'POS', 'PRF', 'PRP', 'PUL', 'PUN', 'PUQ', 'PUR', 'TO0', 'UNC', 'VBB', 'VBD', 'VBG', 'VBI', 'VBN', 'VBZ', 'VDB', 'VDD', 'VDG', 'VDI', 'VDN', 'VDZ', 'VHB', 'VHD', 'VHG', 'VHI', 'VHN', 'VHZ', 'VM0', 'VVB', 'VVD', 'VVG', 'VVI', 'VVN', 'VVZ', 'XX0', 'ZZ0', 'AJ0-AV0', 'AJ0-VVN', 'AJ0-VVD', 'AJ0-NN1', 'AJ0-VVG', 'AVP-PRP', 'AVQ-CJS', 'CJS-PRP', 'CJT-DT0', 'CRD-PNI', 'NN1-NP0', 'NN1-VVB', 'NN1-VVG', 'NN2-VVZ', 'VVD-VVN']
-AMBIGUITY_TAGS = {'AJ0-AV0', 'AJ0-VVN', 'AJ0-VVD', 'AJ0-NN1', 'AJ0-VVG', 'AVP-PRP', 'AVQ-CJS', 'CJS-PRP', 'CJT-DT0', 'CRD-PNI', 'NN1-NP0', 'NN1-VVB', 'NN1-VVG', 'NN2-VVZ', 'VVD-VVN'}
+POS_TAGS = ['AJ0', 'AJC', 'AJS', 'AT0', 'AV0', 'AVP', 'AVQ', 'CJC', 'CJS', 'CJT', 'CRD', 'DPS', 'DT0', 'DTQ', 'EX0',
+            'ITJ', 'NN0', 'NN1', 'NN2', 'NP0', 'ORD', 'PNI', 'PNP', 'PNQ', 'PNX', 'POS', 'PRF', 'PRP', 'PUL', 'PUN',
+            'PUQ', 'PUR', 'TO0', 'UNC', 'VBB', 'VBD', 'VBG', 'VBI', 'VBN', 'VBZ', 'VDB', 'VDD', 'VDG', 'VDI', 'VDN',
+            'VDZ', 'VHB', 'VHD', 'VHG', 'VHI', 'VHN', 'VHZ', 'VM0', 'VVB', 'VVD', 'VVG', 'VVI', 'VVN', 'VVZ', 'XX0',
+            'ZZ0', 'AJ0-AV0', 'AJ0-VVN', 'AJ0-VVD', 'AJ0-NN1', 'AJ0-VVG', 'AVP-PRP', 'AVQ-CJS', 'CJS-PRP', 'CJT-DT0',
+            'CRD-PNI', 'NN1-NP0', 'NN1-VVB', 'NN1-VVG', 'NN2-VVZ', 'VVD-VVN']
+AMBIGUITY_TAGS = {'AJ0-AV0', 'AJ0-VVN', 'AJ0-VVD', 'AJ0-NN1', 'AJ0-VVG', 'AVP-PRP', 'AVQ-CJS', 'CJS-PRP', 'CJT-DT0',
+                  'CRD-PNI', 'NN1-NP0', 'NN1-VVB', 'NN1-VVG', 'NN2-VVZ', 'VVD-VVN'}
 # P(S_0)
 init_prob_table = {}
 # transition probability P(S_k | S_k-1)
@@ -16,14 +22,17 @@ observe_prob_table = {}
 
 occurrence_table = {}
 
-def read_test_file(file: str):
-    test_file = open(file, "r")
+
+def read_test_file(file_read: str, file_write: str):
+    test_file = open(file_read, "r")
+    sentences = []
+    sols = []
     sentence = []
     prev = ' '
     for line in test_file:
         new_parts = line.strip()
         # TODO separate sentences
-        if prev in ENDING_PUNCTUATIONS and new_parts not in ENDING_PUNCTUATIONS:
+        if (prev in ENDING_PUNCTUATIONS and new_parts not in ENDING_PUNCTUATIONS):
             prob, prev = viterbi(sentence)
             largest_indexes = []
             largest_index = prob[len(sentence) - 1].index(max(prob[len(sentence) - 1]))
@@ -33,20 +42,32 @@ def read_test_file(file: str):
                 largest_indexes.append(largest_index)
             largest_indexes.reverse()
             sol = [POS_TAGS[i] for i in largest_indexes]
-            write_solution_file('solution.txt', sol, sentence)
+            sentences.append(sentence)
+            sols.append(sol)
             sentence = []
-
-
         sentence.append(new_parts)
         prev = new_parts[0]
+    else:
+        prob, prev = viterbi(sentence)
+        largest_indexes = []
+        largest_index = prob[len(sentence) - 1].index(max(prob[len(sentence) - 1]))
+        largest_indexes.append(largest_index)
+        for i in range(len(sentence) - 1, 0, -1):
+            largest_index = prev[i][largest_index]
+            largest_indexes.append(largest_index)
+        largest_indexes.reverse()
+        sol = [POS_TAGS[i] for i in largest_indexes]
+        sentences.append(sentence)
+        sols.append(sol)
+    write_solution_file(file_write, sols, sentences)
 
 
-def write_solution_file(file, sol, sentence):
+def write_solution_file(file, sols, sentences):
     sol_file = open(file, "w+")
-    for i in range(len(sentence)):
-        sol_file.write(sentence[i] + ' ' + ':' + ' ' + sol[i])
-        sol_file.write('\n')
-
+    for i in range(len(sentences)):
+        for j in range(len(sentences[i])):
+            sol_file.write(sentences[i][j] + ' ' + ':' + ' ' + sols[i][j])
+            sol_file.write('\n')
 
 
 def pos_tag_indexing():
@@ -89,10 +110,10 @@ def viterbi(sentence: list):
                     prob[t][i] = -math.inf
                 prev[t][i] = position_of_max
             else:
-                prob[t][i] = prob[t - 1][x] * trans_prob_table[POS_TAGS[x]][POS_TAGS[i]] * observe_prob_table[POS_TAGS[i]][sentence[t]]
+                prob[t][i] = prob[t - 1][x] * trans_prob_table[POS_TAGS[x]][POS_TAGS[i]] * \
+                             observe_prob_table[POS_TAGS[i]][sentence[t]]
                 prev[t][i] = x
     return prob, prev
-
 
 
 def translate_ambiguity(pos: str):
@@ -172,6 +193,7 @@ def read_files(training_list: list):
     print(transition)
     return init_occurrence
 
+
 def read_all_tags():
     tag_file = open('postags.txt', "r")
     ret = []
@@ -180,6 +202,22 @@ def read_all_tags():
             parts = line.split()
             ret.append(parts[0])
     return ret
+
+
+def check_matches(test_file, answer_file):
+    test_file = open(test_file, 'r')
+    answer_file = open(answer_file, 'r')
+    matches = 0
+    total = 0
+    while 1:
+        line1 = test_file.readline()
+        line2 = answer_file.readline()
+        if not line1:
+            break
+        if line1 == line2:
+            matches += 1
+        total += 1
+    print(matches / total)
 
 
 if __name__ == '__main__':
@@ -204,20 +242,21 @@ if __name__ == '__main__':
     #     help="The output file."
     # )
     # args = parser.parse_args()
-    #
+
     # training_list = args.trainingfiles[0]
-    # print("training files are {}".format(training_list))
-    #
-    # print("test file is {}".format(args.testfile))
-    #
-    # print("output file is {}".format(args.outputfile))
-    #
-    #
-    # print("Starting the tagging process.")
-    read_files(['training_simple.txt'])
+    # read_files(training_list)
+    # read_test_file(args.testfile, args.outputfile)
+
+
+
+
+
+    read_files(['training1.txt'])
+    read_test_file('test1.txt')
+    check_matches('solution.txt', 'training1.txt')
     # print(init_prob_table)
     # print(len(POS_TAGS))
     # print(read_all_tags())
     # print(trans_prob_table)
     # print(observe_prob_table)
-    read_test_file('test1_simple.txt')
+
