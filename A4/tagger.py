@@ -87,7 +87,7 @@ def pos_tag_hard_coded_check(time_stamp, word: str):
         return 'AT0'
     elif word in {'How', 'Why', 'Where'}:
         return 'AVQ'
-    elif word in {'Or', 'and', 'or', 'nor', 'Nor', 'And'}:
+    elif word in {'Or', 'and', 'or', 'nor', 'Nor', 'And', 'but'}:
         return 'CJC'
     elif word in {'if', 'Because', 'If', 'because', 'whether', 'Whether', 'although', 'Although'}:
         return 'CJS'
@@ -95,7 +95,9 @@ def pos_tag_hard_coded_check(time_stamp, word: str):
         return 'CRD'
     elif word in {'their', 'My', 'Your', 'your', 'our', 'Our', 'Their', 'my'}:
         return 'DPS'
-    elif word in {'you', 'we', 'me', 'us', 'yours', 'he', 'I', 'they', 'them', 'she', 'him'}:
+    elif word == 'this':
+        return 'DT0'
+    elif word in {'you', 'we', 'me', 'us', 'yours', 'he', 'I', 'they', 'them', 'she', 'him', 'his'}:
         return 'PNP'
     elif word in {'himself', 'myself', 'oneself', 'itself', 'yourself', 'themselves', 'herself'}:
         return 'PNX'
@@ -119,14 +121,46 @@ def pos_tag_hard_coded_check(time_stamp, word: str):
         return 'XX0'
     elif len(word) == 1 and word.isalpha():
         return 'ZZ0'
+    elif word in {'for', 'with'}:
+        return 'PRP'
+    elif word in {'yes', 'Oh'}:
+        return 'ITJ'
+    elif word == 'people':
+        return 'NN0'
+    elif word in {'last', 'first', 'next'}:
+        return 'ORD'
+    elif word in {'who'}:
+        return 'PNQ'
+    elif word in {"'m", 'are', 'am', "'re"}:
+        return 'VBB'
+    elif word in {'doing'}:
+        return 'VDG'
+    elif word in {'does'}:
+        return 'VDZ'
+    elif word in {'has'}:
+        return 'VHZ'
+    elif word in {'was'}:
+        return 'VBD'
+    elif word in {'being'}:
+        return 'VBG'
+    elif word in {'been'}:
+        return 'VBN'
+    elif word in {'did'}:
+        return 'VDD'
     return 0
 
 
 def pos_tag_defensive_check(time_stamp, word: str):
     if word in reverse_prb_table:
         return max(reverse_prb_table[word], key=reverse_prb_table[word].get)
-    # elif word.endswith('est'):
-    #     return 'AJS'
+    elif word == 'to':
+        return 'PRP'
+    elif word in {'back', 'out', 'up'}:
+        return 'AVP'
+    elif word == 'all':
+        return 'DT0'
+    elif word in {'what', 'which'}:
+        return 'DTQ'
     return 0
 
 
@@ -301,6 +335,15 @@ def read_all_tags():
     return ret
 
 
+def generate_test(file, out):
+    tag_file = open(file, "r")
+    out_file = open(out, "w")
+    for line in tag_file:
+        parts = line.split()
+        out_file.write(parts[0].strip())
+        out_file.write('\n')
+
+
 def check_matches(test_file, answer_file):
     test_file = open(test_file, 'r')
     answer_file = open(answer_file, 'r')
@@ -313,8 +356,8 @@ def check_matches(test_file, answer_file):
             break
         if line1 == line2:
             matches += 1
-        else:
-            print(total)
+        # else:
+        #     print(total)
         total += 1
     print("accuracy: " + str(matches / total))
 
@@ -323,13 +366,16 @@ def check_hard_code_pos(pos):
     keys = set()
     print(observe_prob_table[pos])
     for key in observe_prob_table[pos]:
-        print(reverse_prb_table[key])
+        if observe_prob_table[pos][key] > 0.5:
+            print(key)
+            print(reverse_prb_table[key])
     for key in observe_prob_table[pos]:
-        if len(reverse_prb_table[key]) == 1:
+        if observe_prob_table[pos][key] > 0.5 and reverse_prb_table[key][pos] > 0.85:
             keys.add(key)
-    print("elif word in ")
-    print(keys)
-    print("return " + "'" + pos + "'")
+    if len(keys) != 0:
+        print("elif word in ")
+        print(keys)
+        print("return " + "'" + pos + "'")
 
 
 if __name__ == '__main__':
@@ -358,16 +404,19 @@ if __name__ == '__main__':
     # training_list = args.trainingfiles[0]
     # read_files(training_list)
     # read_test_file(args.testfile, args.outputfile)
+
     start = time.time()
-    read_files(['training3.txt'])
+    read_files(['training2.txt'])
     read_test_file('test1.txt', 'solution.txt')
-    check_matches('solution.txt', 'answer3.txt')
+    check_matches('solution.txt', 'answer1.txt')
     end = time.time()
     print("runtime: " + str(end - start))
 
+    # generate_test('training2.txt', 'test2.txt')
     # print(init_prob_table)
     # print(len(POS_TAGS))
     # print(read_all_tags())
     # print(trans_prob_table)
-    # check_hard_code_pos('AT0')
+    # for pos in POS_TAGS:
+    #     check_hard_code_pos(pos)
     # print(reverse_prb_table)
