@@ -359,9 +359,9 @@ if __name__ == '__main__':
     # read_files(training_list)
     # read_test_file(args.testfile, args.outputfile)
     start = time.time()
-    read_files(['training1.txt'])
+    read_files(['training3.txt'])
     read_test_file('test1.txt', 'solution.txt')
-    check_matches('solution.txt', 'answer1.txt')
+    check_matches('solution.txt', 'answer3.txt')
     end = time.time()
     print("runtime: " + str(end - start))
 
