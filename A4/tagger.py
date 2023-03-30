@@ -411,7 +411,6 @@ if __name__ == '__main__':
     check_matches('solution.txt', 'answer1.txt')
     end = time.time()
     print("runtime: " + str(end - start))
-
     # generate_test('training2.txt', 'test2.txt')
     # print(init_prob_table)
     # print(len(POS_TAGS))
