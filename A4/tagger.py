@@ -83,11 +83,31 @@ def pos_tag_hard_coded_check(time_stamp, word: str):
     if time_stamp != 0:
         if word[0].isupper():
             return 'NP0'
-    if word in {'(', '['}:
+    if word in {'an', 'the', 'An', 'a', 'A', 'The'}:
+        return 'AT0'
+    elif word in {'How', 'Why', 'Where'}:
+        return 'AVQ'
+    elif word in {'Or', 'and', 'or', 'nor', 'Nor', 'And'}:
+        return 'CJC'
+    elif word in {'if', 'Because', 'If', 'because', 'whether', 'Whether', 'although', 'Although'}:
+        return 'CJS'
+    elif word.isnumeric():
+        return 'CRD'
+    elif word in {'their', 'My', 'Your', 'your', 'our', 'Our', 'Their', 'my'}:
+        return 'DPS'
+    elif word in {'you', 'we', 'me', 'us', 'yours', 'he', 'I', 'they', 'them', 'she', 'him'}:
+        return 'PNP'
+    elif word in {'himself', 'myself', 'oneself', 'itself', 'yourself', 'themselves', 'herself'}:
+        return 'PNX'
+    elif word in {'of'}:
+        return 'PRF'
+    elif word in {"'"}:
+        return 'POS'
+    elif word in {'(', '['}:
         return 'PUL'
-    elif word in {'.', '!', ':', ';', '-', '?'}:
+    elif word in {'.', '!', ':', ';', ',', '-', '?'}:
         return 'PUN'
-    elif word in {"'", '"'}:
+    elif word in {'"'}:
         return 'PUQ'
     elif word in {')', ']'}:
         return 'PUR'
@@ -95,13 +115,18 @@ def pos_tag_hard_coded_check(time_stamp, word: str):
         return 'VBI'
     elif word == 'is':
         return 'VBZ'
+    elif word in {'not', 'Not', "n't"}:
+        return 'XX0'
+    elif len(word) == 1 and word.isalpha():
+        return 'ZZ0'
     return 0
 
 
 def pos_tag_defensive_check(time_stamp, word: str):
-    if time_stamp != 0:
-        if word[0].isupper():
-            return 'NP0'
+    if word in reverse_prb_table:
+        return max(reverse_prb_table[word], key=reverse_prb_table[word].get)
+    # elif word.endswith('est'):
+    #     return 'AJS'
     return 0
 
 
@@ -155,11 +180,13 @@ def viterbi(sentence: list):
                                 max_val = temp_x
                 # if one of transition/observation probability is not found
                 if x == -100:
-                    # if pos_tag_defensive_check(t, sentence[t]) != 0:
-                    #     index = pos_pos[pos_tag_defensive_check(t, sentence[t])]
-                    #     if index == i:
-                    #         prob[t][i] = -math.inf
-                    if i == position_of_max:
+                    flag = 0
+                    if pos_tag_defensive_check(t, sentence[t]) != 0:
+                        flag = 1
+                        index = pos_pos[pos_tag_defensive_check(t, sentence[t])]
+                        if index == i:
+                            prob[t][i] = 1
+                    elif i == position_of_max and flag == 0:
                         prob[t][i] = -math.inf
                     prev[t][i] = prob[t - 1].index(max(prob[t - 1]))
                 else:
@@ -286,8 +313,23 @@ def check_matches(test_file, answer_file):
             break
         if line1 == line2:
             matches += 1
+        else:
+            print(total)
         total += 1
     print("accuracy: " + str(matches / total))
+
+
+def check_hard_code_pos(pos):
+    keys = set()
+    print(observe_prob_table[pos])
+    for key in observe_prob_table[pos]:
+        print(reverse_prb_table[key])
+    for key in observe_prob_table[pos]:
+        if len(reverse_prb_table[key]) == 1:
+            keys.add(key)
+    print("elif word in ")
+    print(keys)
+    print("return " + "'" + pos + "'")
 
 
 if __name__ == '__main__':
@@ -327,5 +369,5 @@ if __name__ == '__main__':
     # print(len(POS_TAGS))
     # print(read_all_tags())
     # print(trans_prob_table)
-    # print(observe_prob_table)
+    # check_hard_code_pos('AT0')
     # print(reverse_prb_table)
